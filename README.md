@@ -12,16 +12,22 @@ OP-1 (Hundekraft 3.1.4)                         Windows PC
              ◄── settings + keep-alive as CCs ──
 ```
 
-Status: works on Windows with a real OP-1 running Hundekraft 3.1.4: about 40 fps on the OP-1 side, no lost messages,
-no audible effect on audio. Android is next.
+Status: works on Windows and Android with a real OP-1 running Hundekraft 3.1.4: about 40 fps on the OP-1 side, no
+lost messages, no audible effect on audio.
+
+Shared as-is, in the hope it helps. It is a personal project and not actively supported: issues and pull requests
+may sit unanswered, so fork freely.
 
 ## Requirements
 
 1. An original OP-1 running [Hundekraft](https://hundekraft.github.io/op1-workshop/) 3.1.4 (the plugin uses its
    feature-plugin runtime and addresses specific to that build).
-2. Windows with the .NET 8 SDK or later.
-3. To build the plugin yourself: WSL (Ubuntu 24.04) with a `bfin-elf` toolchain and the Hundekraft 3.1.4 source
-   (for its SDK headers and packer).
+2. Windows 10/11 (64-bit) or an Android 8+ phone with USB-C.
+
+No need to build anything: the [Releases](../../releases) page has `mirror.knl`, `Op1Mirror.exe` (Windows, .NET
+included) and `op1-mirror.apk` (Android). To build from source you also need the .NET 8 SDK or later, and for the
+plugin, WSL (Ubuntu 24.04) with a `bfin-elf` toolchain and the Hundekraft 3.1.4 source (for its SDK headers and
+packer).
 
 ## Use it
 
@@ -29,7 +35,7 @@ no audible effect on audio. Android is next.
    **Review changes → Send to OP-1** and press **T1** on the OP-1 to confirm.
 2. **Close the browser completely.** Windows MIDI ports are single-client; while the workshop tab is open, the
    viewer can't connect (it says the OP-1 is busy).
-3. Run the viewer:
+3. Run the viewer: `Op1Mirror.exe` from a release, or from source:
    ```bash
    dotnet run --project desktop/Op1Mirror
    ```
@@ -51,7 +57,8 @@ no audible effect on audio. Android is next.
 
 ### On an Android phone
 
-Same plugin, different viewer: `mobile/Op1Mirror.Mobile` (.NET MAUI, Android 8+ with USB host support).
+Same plugin, different viewer: `mobile/Op1Mirror.Mobile` (.NET MAUI, Android 8+ with USB host support). From a
+release, install `op1-mirror.apk` (allow installs from unknown sources) and skip to step 3. From source:
 
 1. Put the machine's SDK paths in `mobile/Directory.Build.local.props` (Git ignores it):
    ```xml
@@ -79,6 +86,7 @@ Same plugin, different viewer: `mobile/Op1Mirror.Mobile` (.NET MAUI, Android 8+ 
 | `mobile/Op1Mirror.Mobile/` | The Android viewer (C#, .NET MAUI, SkiaSharp); shares the Windows viewer's decoder. |
 | `tools/build-bfin-toolchain.sh` | Builds binutils 2.42 + GCC 13.3.0 for `bfin-elf` into `~/bfin` (WSL). |
 | `tools/pack-plugin.sh` | Packs a plugin folder into a `.knl` with Hundekraft's packer. |
+| `tools/release.sh` | Builds the three release files and, with `--publish`, the GitHub release. |
 | `docs/audit-001-framebuffer.md` | How the framebuffer was found and measured. |
 
 ## Build the plugin
@@ -115,6 +123,27 @@ dotnet run --project desktop/Op1Mirror -- --replay mirror.syx replay.bmp
 
 It writes the picture plus `replay.bmp.txt` (messages, lost, bytes, frames) and exits non-zero on losses.
 
+## Make a release
+
+From Git Bash, on a clean commit:
+
+1. Once: make an Android signing key and keep it, and its password, somewhere safe outside the repository. Every
+   later version of the app must be signed with the same key, or phones refuse the update.
+   ```bash
+   keytool -genkeypair -keystore op1mirror.keystore -alias op1mirror -keyalg RSA -keysize 2048 -validity 36500
+   ```
+   (`keytool` is in the JDK's `bin` folder.)
+2. Set `HUNDEKRAFT_KENNEL` (WSL path of the Hundekraft source's `ext/kennel`), `OP1_KEYSTORE` and
+   `OP1_KEYSTORE_PASS`, then build into `build/release/<tag>/`:
+   ```bash
+   tools/release.sh
+   ```
+   The tag defaults to `v` plus the plugin's version. Add `--allow-dirty` for a trial build.
+3. Tag and push the commit, then publish (or run the `gh` command it prints):
+   ```bash
+   tools/release.sh --publish
+   ```
+
 ## How it works
 
 1. **On the OP-1:** the plugin's Gfx overlay hook notes which framebuffer was just drawn (RGB565, portrait, 512-byte
@@ -133,4 +162,9 @@ It writes the picture plus `replay.bmp.txt` (messages, lost, bytes, frames) and 
 
 ## License
 
-MIT, see [LICENSE](LICENSE).
+1. **The plugin** (`firmware/mirror/`, and so `mirror.knl`): GPL-3.0-or-later with the OP-1 firmware permission, the
+   same terms as the Hundekraft SDK it is built with. See [its LICENSE](firmware/mirror/LICENSE) and
+   [NOTICE](firmware/mirror/NOTICE).
+2. **Everything else** (the viewers, tools and docs): MIT, see [LICENSE](LICENSE).
+
+No Teenage Engineering firmware is included or needed beyond what is already on your OP-1.

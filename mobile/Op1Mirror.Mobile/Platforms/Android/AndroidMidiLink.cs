@@ -27,7 +27,9 @@ public sealed class AndroidMidiLink : IMidiLink
 	{
 		framer = new SysExFramer(m => SysEx?.Invoke(m));
 		removal = new Removal(this);
+#pragma warning disable CA1422                                // the Executor overload needs API 33; this one covers 26..
 		manager?.RegisterDeviceCallback(removal, handler);
+#pragma warning restore CA1422
 	}
 
 	public void TryConnect()

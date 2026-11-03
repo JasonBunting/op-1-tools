@@ -159,3 +159,7 @@ build/
 
 # Machine-specific SDK paths
 Directory.Build.local.props
+
+# Android signing keys: never commit
+*.keystore
+*.jks
