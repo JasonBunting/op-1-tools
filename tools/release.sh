@@ -65,10 +65,14 @@ Mirror the OP-1's screen on Windows or Android. Built from $commit. Shared as-is
 
 1. **mirror.knl**: the OP-1 plugin. In the Hundekraft workshop: Your plugins → drop it in → Review changes → Send to
    OP-1 → T1 on the OP-1. Then close the browser completely (it holds the OP-1's MIDI port).
-2. **Op1Mirror.exe**: the Windows viewer (64-bit, no install, .NET included). Windows may warn that it is
-   unrecognised: More info → Run anyway.
-3. **op1-mirror.apk**: the Android viewer (Android 8+ on 64-bit ARM, which is nearly every recent phone). Allow
-   installs from unknown sources, then plug the OP-1 into the phone with a USB-C OTG cable or adapter.
+2. **Op1Mirror.exe**: the Windows viewer for 64-bit Windows 10 or 11 (no install, .NET included). Windows may warn
+   that it is unrecognised: More info → Run anyway.
+3. **op1-mirror.apk**: the Android viewer for Android 8 or later on 64-bit ARM (nearly every recent phone).
+   - Allow installs from unknown sources for the app you open it with (browser or files app).
+   - Play Protect may warn about an unknown developer: More details → Install anyway.
+   - Plug the OP-1 into the phone with a USB-C OTG cable or adapter.
+
+The OP-1 talks to one viewer at a time: unplug it from the PC (or close the Windows viewer) before using the phone.
 
 Licenses: the plugin is GPL-3.0-or-later with the OP-1 firmware permission (source: firmware/mirror at this tag);
 the viewers are MIT. See the README.
