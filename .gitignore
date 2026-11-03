@@ -156,3 +156,6 @@ obj/
 
 # Packed plugins and probe output
 build/
+
+# Machine-specific SDK paths
+Directory.Build.local.props

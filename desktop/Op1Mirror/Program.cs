@@ -196,7 +196,8 @@ sealed class MirrorWindow : Window
                 Send(KeepAliveCc, 127);
                 SendAll();
                 string frames = wholeFrames.IsChecked != true ? "" :
-                                decoder.HasFrameBuffer ? $"   frames {decoder.FramesSent}" : "   (no frame buffer on the OP-1: live)";
+                                !decoder.HasFrameBuffer ? "   (no frame buffer on the OP-1: live)" :
+                                decoder.SendingFrames ? $"   frames {decoder.FramesSent}" : "   (screen too big for whole frames: live)";
                 status.Text = $"{connection}   {kbps,6:F1} KB/s   lost {decoder.Lost}   OP-1: {fps,3:F0} fps  " +
                               $"{pps,4:F0} passes/s  {tps,5:F0} tiles/s   screen {decoder.Width}x{decoder.Height}{frames}";
             }

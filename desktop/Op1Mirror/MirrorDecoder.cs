@@ -25,6 +25,11 @@ public sealed class MirrorDecoder
     public uint FramesSent { get; private set; }
     /// <summary>The plugin got its whole-frame buffer (STAT status bit 0).</summary>
     public bool HasFrameBuffer { get; private set; }
+    /// <summary>The plugin is sending whole frames right now (STAT status bit 1); on a screen larger than its buffer
+    /// it stays live, and so does the picture here.</summary>
+    public bool SendingFrames { get; private set; }
+
+    bool ShowingFrames => WholeFrames && SendingFrames;
 
     /// <summary>OP-1-side rates per second, measured between consecutive STAT messages.</summary>
     public (double Fps, double Passes, double Tiles) Rates { get; private set; }
@@ -57,7 +62,7 @@ public sealed class MirrorDecoder
                 (Width, Height) = (w, h);
                 return true;
             case 0x11:
-                return DecodeTiles(p) && !WholeFrames;
+                return DecodeTiles(p) && !ShowingFrames;
             case 0x12 when p.Length >= 18:
                 uint frames = U32(p, 2), passes = U32(p, 6), tiles = U32(p, 14);
                 var now = clock.Elapsed;
@@ -65,12 +70,14 @@ public sealed class MirrorDecoder
                 if (lastStatAt > TimeSpan.Zero && secs > 0.1 && passes >= Passes)
                     Rates = ((frames - Frames) / secs, (passes - Passes) / secs, (tiles - TilesSent) / secs);
                 (Frames, Passes, TilesSent, lastStatAt) = (frames, passes, tiles, now);
-                if (p.Length >= 22) HasFrameBuffer = (U32(p, 18) & 1) != 0;
-                return false;
+                if (p.Length < 22) return false;
+                bool was = ShowingFrames;
+                (HasFrameBuffer, SendingFrames) = ((U32(p, 18) & 1) != 0, (U32(p, 18) & 2) != 0);
+                return ShowingFrames != was;
             case 0x13 when p.Length >= 6:
                 FramesSent = U32(p, 2);
                 Array.Copy(Pixels, Shown, Pixels.Length);
-                return WholeFrames;
+                return ShowingFrames;
         }
         return false;
     }
@@ -121,7 +128,7 @@ public sealed class MirrorDecoder
     public void RenderLandscape(int[] bgr32)
     {
         int lw = Height, lh = Width;
-        var src = WholeFrames ? Shown : Pixels;
+        var src = ShowingFrames ? Shown : Pixels;
         for (int ly = 0; ly < lh; ly++)
             for (int lx = 0; lx < lw; lx++)
             {

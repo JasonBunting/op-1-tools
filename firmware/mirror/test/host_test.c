@@ -60,7 +60,7 @@ int main(int argc, char **argv)
     for (int y = 100; y < 130; y++) for (int x = 60; x < 80; x++) fb[y * 256 + x] = 0xF800;   /* red box */
     run(raster, 60);
 
-    static uint8_t snap[MAX_W * MAX_H * 2];                         /* whole frames: the core grants the buffer */
+    static uint8_t snap[SNAP_STRIDE * SNAP_H * 2];                         /* whole frames: the core grants the buffer */
     mirror_snap.ptr = snap; mirror_snap.size = sizeof snap;
     static const uint8_t frames_on[3] = { 0xBF, CC_MODE, MODE_FRAMES | MODE_PALETTE | MODE_RLE };
     midi_raw(frames_on, 3);

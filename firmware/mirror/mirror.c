@@ -13,7 +13,8 @@
  * budget. Reads may tear against the next frame; the next scan resends such tiles.
  * Whole frames: the overlay copies one finished frame into the declared buffer (bigbuf), the service sends its changed
  * tiles over as many passes as that takes, then a FRAME marker, and asks the overlay for the next frame. The viewer
- * shows the picture only at FRAME markers, so it never shows parts of two frames. Without the buffer it stays live.
+ * shows the picture only at FRAME markers, so it never shows parts of two frames. The buffer holds a 188 x 376 screen
+ * (as measured) in rows of 192 pixels; without it, or on a larger screen, the plugin stays live.
  *
  * Raster (docs/audit-001-framebuffer.md): r[0] RGB565 LE buffer, 0x02000000 or 0x03000000 (double buffered), r[1]
  * width, r[2] stride 512 bytes, r[3] height; portrait, the visible area is the top-left r[1] x r[3].
@@ -24,7 +25,7 @@
  *               n = 1..42: n runs of (u8 count - 1, u16 colour); n = 0x80 | (k - 1): k colours (u16), then 64 indexes
  *               of 1 (k <= 2), 2 (k <= 4) or 4 bits, packed from bit 0 of each byte
  *   0x12 STAT   u16 seq, u32 frames, u32 passes, u32 bytes sent, u32 tiles sent, u32 status    about once a second
- *               status bit 0: the whole-frame buffer exists
+ *               status bit 0: the whole-frame buffer exists, bit 1: whole frames are being sent
  *   0x13 FRAME  u16 seq, u32 frames sent                                          after each whole frame
  */
 #include "op1_feature.h"
@@ -40,6 +41,9 @@
 #define TILE           8u
 #define TILES_X        (MAX_W / TILE)
 #define TILES_Y        (MAX_H / TILE)
+#define SNAP_W         188u               /* the whole-frame buffer: the measured screen size, */
+#define SNAP_H         376u
+#define SNAP_STRIDE    192u               /* rows padded to whole tiles so the last tile column stays inside */
 #define MSG_RAW_MAX    200u               /* payload bytes per message: <= 229 packed + 6 framing */
 #define MAX_RUNS       42u                /* runs * 3 < 128: beyond that raw is smaller */
 #define BUDGET(v)      (256u + 20u * (v))
@@ -56,7 +60,7 @@
 #define ALIVE_PASSES   370u               /* ~3 s */
 #define STAT_PASSES    123u
 
-OP1_BIGBUF(mirror_snap, 0, MAX_W * MAX_H * 2u);   /* plugin.json "bigbuf"; 0 min: without it, live mode only */
+OP1_BIGBUF(mirror_snap, 0, SNAP_STRIDE * SNAP_H * 2u);   /* plugin.json "bigbuf"; 0 min: without it, live mode only */
 
 static volatile uint32_t r_words[4], frames, heard, budget_v = 64, scan_v = 64, mode = MODE_PALETTE | MODE_RLE,
                          refresh_n = 1;
@@ -85,7 +89,8 @@ static int known(const volatile uint32_t *r)
         && r[3] && r[3] <= MAX_H;
 }
 
-static int have_snap(void) { return mirror_snap.ptr && mirror_snap.size >= MAX_W * MAX_H * 2u; }
+static int have_snap(void) { return mirror_snap.ptr && mirror_snap.size >= SNAP_STRIDE * SNAP_H * 2u; }
+static int fits_snap(const volatile uint32_t *r) { return known(r) && r[1] <= SNAP_W && r[3] <= SNAP_H; }
 
 static void overlay(void *raster, int32_t screen)
 {
@@ -94,10 +99,10 @@ static void overlay(void *raster, int32_t screen)
     const uint32_t *r = raster;
     for (int i = 0; i < 4; i++) r_words[i] = r[i];
     frames++;
-    if (snap_want && !snap_ready && known(r) && have_snap()) {   /* a finished frame: copy its visible part */
+    if (snap_want && !snap_ready && fits_snap(r) && have_snap()) {   /* a finished frame: copy its visible part */
         const uint32_t *src = (const uint32_t *)(uintptr_t)r[0];
         uint32_t *dst = mirror_snap.ptr, words = (r[1] + 1u) / 2u;
-        for (uint32_t y = 0; y < r[3]; y++, src += STRIDE_PX / 2u, dst += STRIDE_PX / 2u)
+        for (uint32_t y = 0; y < r[3]; y++, src += STRIDE_PX / 2u, dst += SNAP_STRIDE / 2u)
             for (uint32_t x = 0; x < words; x++) dst[x] = src[x];
         snap_w = r[1]; snap_h = r[3];
         snap_want = 0;
@@ -152,12 +157,12 @@ static int flush(void)
     return n;
 }
 
-/* Copies tile (tx, ty) into px[] and returns its hash. */
-static uint32_t grab(const uint16_t *fb, uint32_t tx, uint32_t ty, uint16_t *px)
+/* Copies tile (tx, ty) of a buffer with rows of stride pixels into px[] and returns its hash. */
+static uint32_t grab(const uint16_t *fb, uint32_t stride, uint32_t tx, uint32_t ty, uint16_t *px)
 {
     uint32_t h = 2166136261u;
     for (uint32_t y = 0; y < TILE; y++) {
-        const uint16_t *row = fb + (ty * TILE + y) * STRIDE_PX + tx * TILE;
+        const uint16_t *row = fb + (ty * TILE + y) * stride + tx * TILE;
         for (uint32_t x = 0; x < TILE; x++) { px[y * TILE + x] = row[x]; h = (h ^ row[x]) * 16777619u; }
     }
     return h;
@@ -211,12 +216,12 @@ static uint32_t encode(const uint16_t *px, uint32_t tx, uint32_t ty, uint8_t *ti
 }
 
 /* Hashes tile (tx, ty) and queues it if changed (or forced). Returns 0 when the budget is spent before it fit. */
-static int visit(const uint16_t *fb, uint32_t tx, uint32_t ty, int force, uint32_t *budget, uint32_t m)
+static int visit(const uint16_t *fb, uint32_t stride, uint32_t tx, uint32_t ty, int force, uint32_t *budget, uint32_t m)
 {
     static uint8_t tile[3 + TILE * TILE * 2];
     static uint16_t px[TILE * TILE];
     uint32_t *slot = &hashes[ty * TILES_X + tx];
-    uint32_t h = grab(fb, tx, ty, px);
+    uint32_t h = grab(fb, stride, tx, ty, px);
     if (h == *slot && !force) return 1;
     uint32_t len = encode(px, tx, ty, tile, m);                 /* only changed (or forced) tiles are encoded */
     if (out_n + len > MSG_RAW_MAX) {
@@ -240,7 +245,7 @@ static void service(void)
     if (!active) { active = 1; geom_w = geom_h = 0; return; }  /* a new stream: the next pass resends everything */
 
     uint32_t m = mode;
-    int want_frames = (m & MODE_FRAMES) && have_snap();
+    int want_frames = (m & MODE_FRAMES) && have_snap() && fits_snap(r_words);
     if (want_frames != framing) {                                /* switching: start a fresh sweep */
         framing = want_frames;
         scan_pos = 0;
@@ -251,6 +256,7 @@ static void service(void)
     if (!framing && !known(r_words)) return;
     const uint16_t *fb = framing ? (const uint16_t *)mirror_snap.ptr : (const uint16_t *)(uintptr_t)r_words[0];
     uint32_t w = framing ? snap_w : r_words[1], h = framing ? snap_h : r_words[3];
+    uint32_t stride = framing ? SNAP_STRIDE : STRIDE_PX;
     uint32_t tx_n = (w + TILE - 1) / TILE, ty_n = (h + TILE - 1) / TILE, n = tx_n * ty_n;
     uint8_t p[22];
 
@@ -264,20 +270,20 @@ static void service(void)
     }
     if (passes % STAT_PASSES == 1) {
         put16(p, seq++); put32(p + 2, frames); put32(p + 6, passes); put32(p + 10, bytes_sent); put32(p + 14, tiles_sent);
-        put32(p + 18, have_snap() ? 1u : 0u);
+        put32(p + 18, (have_snap() ? 1u : 0u) | (framing ? 2u : 0u));
         send(0x12, p, 22);
     }
 
     uint32_t budget = BUDGET(budget_v), scan = SCAN_TILES(scan_v), refresh = refresh_n;
     for (uint32_t k = 0; k < refresh; k++) {
         refresh_pos %= n;
-        if (!visit(fb, refresh_pos % tx_n, refresh_pos / tx_n, 1, &budget, m)) break;
+        if (!visit(fb, stride, refresh_pos % tx_n, refresh_pos / tx_n, 1, &budget, m)) break;
         refresh_pos++;
     }
     for (uint32_t k = 0; k < scan; k++) {
         if (framing && scan_pos >= n) break;
         scan_pos %= n;
-        if (!visit(fb, scan_pos % tx_n, scan_pos / tx_n, 0, &budget, m)) break;   /* resume here next pass */
+        if (!visit(fb, stride, scan_pos % tx_n, scan_pos / tx_n, 0, &budget, m)) break;   /* resume here next pass */
         scan_pos++;
     }
     flush();

@@ -4,7 +4,7 @@
   "symbol": "FEATURE_mirror",
   "loadable": true,
   "author": "Jason Bunting",
-  "version": "0.5",
+  "version": "0.6",
   "bigbuf": "mirror_snap",
   "sources": ["mirror.c"]
 }

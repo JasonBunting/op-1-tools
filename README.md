@@ -49,6 +49,26 @@ no audible effect on audio. Android is next.
 | F11 / Esc | Fullscreen (hides the controls) / leave it. |
 | T | Always on top. |
 
+### On an Android phone
+
+Same plugin, different viewer: `mobile/Op1Mirror.Mobile` (.NET MAUI, Android 8+ with USB host support).
+
+1. Put the machine's SDK paths in `mobile/Directory.Build.local.props` (Git ignores it):
+   ```xml
+   <Project>
+     <PropertyGroup>
+       <AndroidSdkDirectory>C:\Program Files (x86)\Android\android-sdk</AndroidSdkDirectory>
+       <JavaSdkDirectory>C:\Users\you\AppData\Local\Microsoft\OpenJDK\17</JavaSdkDirectory>
+     </PropertyGroup>
+   </Project>
+   ```
+2. With the phone plugged into the PC (USB debugging on), build and install:
+   ```bash
+   dotnet build mobile/Op1Mirror.Mobile -t:Run -f net10.0-android
+   ```
+3. Unplug the phone from the PC and plug the OP-1 into the phone with a USB-C OTG cable or adapter. The app finds
+   it on its own. Tap the screen for the controls; they match the Windows viewer.
+
 ## Repository layout
 
 | Path | What |
@@ -56,6 +76,7 @@ no audible effect on audio. Android is next.
 | `firmware/mirror/` | The OP-1 plugin (C). `mirror.c` documents the wire protocol at the top. |
 | `firmware/mirror/test/host_test.c` | Runs the plugin on Linux/WSL against a fake framebuffer and records its SysEx. |
 | `desktop/Op1Mirror/` | The Windows viewer (C#, WPF, [DryWetMIDI](https://github.com/melanchall/drywetmidi)). |
+| `mobile/Op1Mirror.Mobile/` | The Android viewer (C#, .NET MAUI, SkiaSharp); shares the Windows viewer's decoder. |
 | `tools/build-bfin-toolchain.sh` | Builds binutils 2.42 + GCC 13.3.0 for `bfin-elf` into `~/bfin` (WSL). |
 | `tools/pack-plugin.sh` | Packs a plugin folder into a `.knl` with Hundekraft's packer. |
 | `docs/audit-001-framebuffer.md` | How the framebuffer was found and measured. |

@@ -1,0 +1,5 @@
+<Project>
+  <!-- Machine-specific SDK paths (JavaSdkDirectory, AndroidSdkDirectory) go in Directory.Build.local.props, which Git ignores -->
+  <Import Project="$(MSBuildThisFileDirectory)Directory.Build.local.props"
+          Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.local.props')" />
+</Project>
