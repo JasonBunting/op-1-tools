@@ -147,3 +147,12 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# .NET
+bin/
+obj/
+*.user
+.vs/
+
+# Packed plugins and probe output
+build/
