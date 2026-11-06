@@ -5,9 +5,9 @@
   "loadable": true,
   "sequencer": true,
   "author": "Jason Bunting",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "claims": [],
-  "sources": ["patternplus.c", "pp_player.c"],
+  "sources": ["patternplus.c", "pp_player.c", "pp_store.c"],
   "screen": {
     "svg": "patternplus.svg",
     "symbol": "SCREEN_patternplus"

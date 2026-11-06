@@ -1,5 +1,5 @@
 /* Pattern+: a stock-Pattern-style grid sequencer with multiple pages, as a Hundekraft 3.1.4 sequencer type.
- * This build has the grid, pages and chains. Saving comes later (docs/pattern-plus-poc-spec.md).
+ * This build has the grid, pages, chains and saving (docs/pattern-plus-poc-spec.md).
  * Screen layout and colors measured from a capture of stock Pattern on the device; the artwork is drawn here.
  * Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see LICENSE and NOTICE). */
 #pragma GCC optimize("no-tree-loop-distribute-patterns")      /* the firmware has no memcpy / memset */
@@ -7,6 +7,7 @@
 #include "op1_synth.h"
 #include "seq/seq_text.h"
 #include "pp_player.h"
+#include "op1_feature.h"
 
 #define PP_NAME       "patternplus"
 #define PP_SCREEN_ID  0x2D                                /* finger's slot, shared by every kennel sequencer */
@@ -24,6 +25,7 @@ enum { PP_BLUE, PP_GREEN, PP_WHITE, PP_ORANGE };
 
 static volatile uint8_t pp_arrow_taken[2];                /* its release is ours too, wherever the press went on to */
 static int32_t pp_acc[2][4];
+static void pp_changed(void);
 static volatile int16_t pp_swing_flash, pp_section_flash, pp_dir_flash, pp_full_flash;   /* ms left to show brightly */
 
 int pp_out_on(int mode, int key, int transpose, int vel)
@@ -43,7 +45,7 @@ static int pp_pkey_down(void *self, int key)
     if (key < 0 || key > 23) return 0;
     int m = PP_MODE(), shown = PP_SCREEN() == PP_SCREEN_ID;
     if (shown) {                                          /* as stock: the key sounds and the arrow moves */
-        if (PP_SHIFT() && !pp_bank[m].view) pp_note_entry(m, key);   /* never onto a grid that isn't showing */
+        if (PP_SHIFT() && !pp_bank[m].view) { pp_note_entry(m, key); pp_changed(); }   /* never onto a grid out of sight */
         else pp_set_pitch(m, key);
         return 0;
     }
@@ -57,6 +59,145 @@ static void pp_pkey_up(void *self, int key)               /* both modes: the mod
     pp_key_up(0, key);
     pp_key_up(1, key);
 }
+/* ---- saving: the current work follows every change into op1.db (sq_store, a background thread, as stock's sequencers
+ * save). Named collections are files, one per slot, written and read only on the main loop. ---- */
+#define PP_SLOTS     8
+#define PP_NAME_MAX  24
+#define PP_DIR       "/yaffs2/user/patternplus"
+static int pp_store_ser(int pos, char *out, int n) { return pp_serialize(pos, out, n); }
+static int pp_store_parse(int pos, const char *s, int len)
+{
+    int r = pp_parse(pos, s, len);
+    if (r) op1_toast("PATTERN+ SAVE UNREADABLE");
+    return r;
+}
+static char pp_sql[1024];
+static sq_store_t pp_store = { .name = "patternplus", .ser = pp_store_ser, .parse = pp_store_parse,
+                               .sql = pp_sql, .cap = sizeof pp_sql, .maxlen = PP_STORE_MAX + 1 };
+static void pp_changed(void) { sq_store_dirty(&pp_store); }
+
+enum { PP_JOB_NONE, PP_JOB_SCAN, PP_JOB_LOAD };
+enum { PP_ASK_NONE, PP_ASK_LOAD, PP_ASK_NEW };
+static char pp_slot_name[2][PP_SLOTS][PP_NAME_MAX + 1];   /* upper case; empty: nothing in the slot */
+static char pp_file_buf[PP_NAME_MAX + 1 + PP_STORE_MAX];
+static int8_t pp_loaded[2] = { -1, -1 };
+static volatile uint8_t pp_slot_at[2], pp_job, pp_job_mode, pp_job_slot, pp_ask, pp_save_mode, pp_save_slot;
+static const char *volatile pp_msg;
+static volatile int16_t pp_msg_ms;
+#define PP_MSG_MS 3000
+static void pp_say(const char *m) { pp_msg = m; pp_msg_ms = PP_MSG_MS; }
+
+static void pp_slot_path(char *p, int mode, int slot)
+{
+    p = sq_cat(p, PP_DIR "/");
+    *p++ = mode ? 'd' : 's';
+    *p++ = (char)('1' + slot);
+    sq_cat(p, ".txt");
+}
+static void pp_set_name(int mode, int slot, const char *s, int n)
+{
+    char *d = pp_slot_name[mode][slot];
+    int i = 0;
+    for (; i < n && i < PP_NAME_MAX; i++) d[i] = s[i] >= 'a' && s[i] <= 'z' ? (char)(s[i] - 32) : s[i];
+    d[i] = 0;
+}
+/* the slot's name line from its file's start; -1 if the file isn't a slot's */
+static int pp_name_len(const char *buf, int n)
+{
+    for (int i = 0; i < n && i <= PP_NAME_MAX; i++) if (buf[i] == '\n') return i ? i : -1;
+    return -1;
+}
+static void pp_do_scan(int mode)
+{
+    char path[48];
+    for (int s = 0; s < PP_SLOTS; s++) {
+        pp_slot_path(path, mode, s);
+        int fd = op1_file_open(path, OP1_FILE_READ), n = -1;
+        if (fd >= 0) { n = op1_file_read(fd, pp_file_buf, PP_NAME_MAX + 1); op1_file_close(fd); }
+        int len = n > 0 ? pp_name_len(pp_file_buf, n) : -1;
+        pp_set_name(mode, s, pp_file_buf, len > 0 ? len : 0);
+    }
+}
+static void pp_do_load(int mode, int slot)
+{
+    char path[48];
+    pp_slot_path(path, mode, slot);
+    int fd = op1_file_open(path, OP1_FILE_READ), n = -1;
+    if (fd >= 0) { n = op1_file_read(fd, pp_file_buf, sizeof pp_file_buf); op1_file_close(fd); }
+    int len = n > 0 ? pp_name_len(pp_file_buf, n) : -1;
+    if (len <= 0 || pp_parse(mode, pp_file_buf + len + 1, n - len - 1)) { pp_say("NOT LOADED  FILE UNREADABLE"); return; }
+    pp_loaded[mode] = (int8_t)slot;
+    pp_say("LOADED");
+    pp_changed();
+}
+static void pp_save_done(const char *text, int ok)        /* main loop */
+{
+    if (!ok) return;
+    int mode = pp_save_mode, slot = pp_save_slot, n = 0;
+    char path[48];
+    if (!text || !text[0]) text = "UNTITLED";
+    while (text[n] && n < PP_NAME_MAX) { pp_file_buf[n] = text[n]; n++; }
+    pp_file_buf[n] = '\n';
+    int total = n + 1 + pp_serialize(mode, pp_file_buf + n + 1, PP_STORE_MAX);
+    op1_file_mkdir(PP_DIR);
+    pp_slot_path(path, mode, slot);
+    int fd = op1_file_open(path, OP1_FILE_WRITE | OP1_FILE_CREATE | OP1_FILE_TRUNC), wrote = -1;
+    if (fd >= 0) { wrote = op1_file_write(fd, pp_file_buf, total); op1_file_close(fd); }
+    if (wrote != total) { pp_say("SAVE FAILED"); pp_job_mode = (uint8_t)mode; pp_job = PP_JOB_SCAN; return; }
+    pp_set_name(mode, slot, text, n);
+    pp_loaded[mode] = (int8_t)slot;
+    pp_say("SAVED");
+}
+static op1_text_entry_t pp_entry = { "COLLECTION NAME", 0, 0, PP_NAME_MAX, 0, pp_save_done, 0 };
+static void pp_event(int id, int32_t arg)
+{
+    (void)arg;
+    if (id != OP1_EV_SERVICE || !pp_job) return;
+    int job = pp_job;
+    if (job == PP_JOB_SCAN) pp_do_scan(pp_job_mode);
+    if (job == PP_JOB_LOAD) pp_do_load(pp_job_mode, pp_job_slot);
+    pp_job = PP_JOB_NONE;
+}
+static void pp_slot_move(int mode, int delta)
+{
+    int at = pp_slot_at[mode] + delta;
+    pp_slot_at[mode] = (uint8_t)(at < 0 ? 0 : at >= PP_SLOTS ? PP_SLOTS - 1 : at);
+    pp_ask = PP_ASK_NONE;
+    pp_msg_ms = 0;
+}
+static void pp_saved_press(int mode, int knob, int shift)
+{
+    int slot = pp_slot_at[mode];
+    if (shift) {
+        if (knob != PP_GREEN) return;
+        if (pp_ask == PP_ASK_NEW) {
+            pp_ask = PP_ASK_NONE;
+            pp_clear(mode);
+            pp_loaded[mode] = -1;
+            pp_say("NEW");
+            pp_changed();
+        } else {
+            pp_ask = PP_ASK_NEW;
+            pp_say("PUSH AGAIN TO CLEAR ALL");
+        }
+    } else if (knob == PP_GREEN) {
+        if (!pp_slot_name[mode][slot][0]) { pp_ask = PP_ASK_NONE; pp_say("EMPTY"); return; }
+        if (pp_ask == PP_ASK_LOAD) {
+            pp_ask = PP_ASK_NONE;
+            if (!pp_job) { pp_job_mode = (uint8_t)mode; pp_job_slot = (uint8_t)slot; pp_job = PP_JOB_LOAD; }
+        } else {
+            pp_ask = PP_ASK_LOAD;
+            pp_say("PUSH AGAIN TO REPLACE WORK");
+        }
+    } else if (knob == PP_WHITE) {
+        pp_ask = PP_ASK_NONE;
+        pp_save_mode = (uint8_t)mode;
+        pp_save_slot = (uint8_t)slot;
+        pp_entry.initial = pp_slot_name[mode][slot][0] ? pp_slot_name[mode][slot] : 0;
+        if (op1_text_entry(&pp_entry)) pp_say("SAVE FAILED");
+    }
+}
+
 static void pp_preset(void *self) { (void)self; pp_rewind(PP_MODE()); }
 static void pp_ptick(void *self, int counter) { (void)self; (void)counter; pp_tick(PP_MODE()); }
 static void pp_pstop(void *self) { (void)self; pp_silence_all(0); pp_silence_all(1); }
@@ -68,6 +209,7 @@ static void *pp_player_get(void)
 {
     pp_init(0);
     pp_init(1);
+    sq_store_load(&pp_store);
     return &pp_player;
 }
 
@@ -88,7 +230,8 @@ static int pp_input(const op1_input *in)
     if (in->pressed) {
         if (!pp_is_shown()) return 0;
         pp_arrow_taken[i] = 1;
-        if (pp_bank[PP_MODE()].view) pp_chain_move(PP_MODE(), i ? 1 : -1);
+        if (pp_bank[PP_MODE()].view == PP_VIEW_SAVED) pp_slot_move(PP_MODE(), i ? 1 : -1);
+        else if (pp_bank[PP_MODE()].view) pp_chain_move(PP_MODE(), i ? 1 : -1);
         else pp_move_cursor(PP_MODE(), i ? 1 : -1);
     } else {
         if (!pp_arrow_taken[i]) return 0;
@@ -104,16 +247,24 @@ static int pp_key_ev(int mode, int code, int pressed, int shift)
 static void pp_press_ev(int mode, int knob, int shift)
 {
     int chain_view = pp_bank[mode & 1].view;
+    if (shift && knob == PP_WHITE) {
+        pp_view_toggle(mode);
+        pp_ask = PP_ASK_NONE;
+        pp_msg_ms = 0;
+        if (pp_bank[mode & 1].view == PP_VIEW_SAVED && !pp_job) { pp_job_mode = (uint8_t)(mode & 1); pp_job = PP_JOB_SCAN; }
+        return;
+    }
+    if (chain_view == PP_VIEW_SAVED) { pp_saved_press(mode & 1, knob, shift); return; }
     if (shift) {
-        if (knob == PP_WHITE) pp_view_toggle(mode);
         if (knob == PP_ORANGE) pp_resume_follow(mode);
-        if (chain_view) return;
+        if (chain_view) { pp_changed(); return; }
         if (knob == PP_BLUE) pp_page_prev(mode);
         if (knob == PP_GREEN && pp_page_next(mode) < 0) pp_full_flash = PP_FLASH_MS;
     } else if (chain_view) {
         if (knob == PP_GREEN && pp_chain_insert(mode) < 0) pp_full_flash = PP_FLASH_MS;
         if (knob == PP_WHITE) pp_chain_remove(mode);
     }
+    pp_changed();
 }
 static void pp_turn_ev(int mode, int knob, int delta, int shift)
 {
@@ -125,8 +276,13 @@ static void pp_turn_ev(int mode, int knob, int delta, int shift)
     *acc -= st * 1024;
     if (pp_bank[mode & 1].view) {                         /* the grid's own settings don't change out of sight */
         if (knob == PP_ORANGE && !shift) pp_set_hold(mode, st > 0);
+        if (pp_bank[mode & 1].view == PP_VIEW_SAVED) {
+            if (knob == PP_BLUE && !shift) pp_slot_move(mode & 1, st);
+            return;
+        }
         if (knob == PP_BLUE && !shift) pp_chain_move(mode, st);
         if (knob == PP_GREEN && !shift) pp_chain_pick(mode, st);
+        pp_changed();
         return;
     }
     switch (knob) {
@@ -146,6 +302,7 @@ static void pp_turn_ev(int mode, int knob, int delta, int shift)
         else pp_set_hold(mode, st > 0);
         break;
     }
+    pp_changed();
 }
 static int pp_shift_wants(int key) { return key >= 0 && key <= 23; }
 static void pp_midi_start(void) { pp_rewind(0); pp_rewind(1); }
@@ -276,6 +433,26 @@ static void pp_draw_chain(void *r, const pp_bank_t *b, int running)
     if (pp_full_flash) sq_text(r, OP1_Q10(24), OP1_Q10(142), OP1_Q10(1.3), "FULL", 0x400, pp_c_red);
     else if (!len) sq_text(r, OP1_Q10(24), OP1_Q10(142), OP1_Q10(1.3), "NO CHAIN  PAGE LOOPS", 0x400, pp_c_grey);
 }
+static void pp_draw_saved(void *r, int m, const pp_bank_t *b)
+{
+    char t[PP_NAME_MAX + 3];
+    sq_text(r, OP1_Q10(24), OP1_Q10(10), OP1_Q10(1.5), "SAVED", 0x400, pp_c_grey);
+    sq_text(r, OP1_Q10(263), OP1_Q10(10), OP1_Q10(1.3), "HOLD", 0x400, b->hold ? pp_c_red : pp_c_red_dim);
+    for (int s = 0; s < PP_SLOTS; s++) {
+        int32_t y = OP1_Q10(28 + s * 14);
+        const char *name = pp_slot_name[m][s];
+        char *e = t;
+        *e++ = (char)('1' + s);
+        *e++ = ' ';
+        sq_cat(e, name[0] ? name : "EMPTY");
+        int at = s == pp_slot_at[m];
+        sq_text(r, OP1_Q10(24), y, OP1_Q10(1.3), t, 0x400,
+                s == pp_loaded[m] ? pp_c_dot : at ? pp_c_white : name[0] ? pp_c_grey : pp_c_minor);
+        if (at) pp_draw_arrow(r, OP1_Q10(8), OP1_Q10(19), y + OP1_Q10(5), OP1_Q10(4), pp_c_cursor);
+    }
+    if (pp_msg_ms > 0 && pp_msg) sq_text(r, OP1_Q10(24), OP1_Q10(144), OP1_Q10(1.3), pp_msg, 0x400, pp_c_white);
+    else sq_text(r, OP1_Q10(24), OP1_Q10(144), OP1_Q10(1.1), "PUSH GREEN LOAD   PUSH WHITE SAVE", 0x300, pp_c_grey);
+}
 static void pp_scr_init(void *scr) { (void)scr; }
 static void pp_scr_update(void *scr, int dt)
 {
@@ -292,6 +469,8 @@ static void pp_scr_update(void *scr, int dt)
     pp_flash_down(&pp_section_flash, dt);
     pp_flash_down(&pp_dir_flash, dt);
     pp_flash_down(&pp_full_flash, dt);
+    if (pp_msg_ms > 0) { pp_msg_ms = (int16_t)(pp_msg_ms > dt ? pp_msg_ms - dt : 0); if (!pp_msg_ms) pp_ask = PP_ASK_NONE; }
+    if (b->view == PP_VIEW_SAVED) { pp_draw_saved(r, m, b); return; }
     if (b->view) { pp_draw_chain(r, b, running); return; }
 
     pp_draw_grid(r, p);
@@ -312,4 +491,4 @@ static const op1_seq_type_t pp_type = {
     .key = pp_key_ev, .press = pp_press_ev, .turn = pp_turn_ev, .shift_wants = pp_shift_wants,
     .midi_start = pp_midi_start };
 const op1_feature_t FEATURE_patternplus = {
-    .api = OP1_FEATURE_API, .priority = 1000, .name = PP_NAME, .seq = &pp_type, .input = pp_input };
+    .api = OP1_FEATURE_API, .priority = 1000, .name = PP_NAME, .seq = &pp_type, .input = pp_input, .event = pp_event };

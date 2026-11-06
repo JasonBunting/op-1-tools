@@ -180,7 +180,9 @@ void pp_note_entry(int mode, int key)
     if (key < 0 || key >= PP_KEYS) return;
     pp_init(mode);
     b->pitch_key = (uint8_t)key;
-    sel_page(b)->notes[pp_edit_col(mode)] |= 1u << key;
+    volatile uint32_t *col = &sel_page(b)->notes[pp_edit_col(mode)];
+    if (*col >> key & 1) { *col &= ~(1u << key); return; }  /* already there: erase it, and the cursor stays */
+    *col |= 1u << key;
     if (!on_playhead(b)) b->cursor = (uint8_t)((b->cursor + 1) % PP_COLS);
 }
 void pp_move_cursor(int mode, int delta)
@@ -262,14 +264,41 @@ int pp_page_next(int mode)
     return 1;
 }
 
+void pp_clear(int mode)
+{
+    pp_bank_t *b = bank(mode);
+    pp_init(mode);
+    b->hold = 0;
+    b->down = 0;
+    silence(b);
+    b->chain_len = 0;
+    b->chain_cursor = 0;
+    b->chain_pick = 0;
+    b->chain_pos = 0;
+    b->sel = 0;
+    b->play_page = 0;
+    b->count = 1;
+    b->cursor = 0;
+    b->pitch_key = PP_ROOT_KEY;
+    b->transpose = 0;
+    b->follow = 1;
+    b->elapsed = 0;
+    b->started = 0;
+    for (int i = 0; i < PP_PAGES; i++) {
+        for (int c = 0; c < PP_COLS; c++) b->pages[i].notes[c] = 0;
+        page_defaults(&b->pages[i]);
+    }
+    place_first(b);
+}
+
 /* ---- chain: keys run on another thread than ticks, so the tick may see an edit half done. Every entry is always a
  * page that exists and pages are never removed, so the worst it can do is pick a neighbouring occurrence once. ---- */
 void pp_view_toggle(int mode)
 {
     pp_bank_t *b = bank(mode);
     pp_init(mode);
-    b->view = !b->view;
-    if (b->view) b->chain_pick = b->chain_cursor < b->chain_len ? b->chain[b->chain_cursor] : b->sel;
+    b->view = (uint8_t)((b->view + 1) % PP_VIEWS);
+    if (b->view == PP_VIEW_CHAIN) b->chain_pick = b->chain_cursor < b->chain_len ? b->chain[b->chain_cursor] : b->sel;
 }
 void pp_chain_move(int mode, int delta)
 {

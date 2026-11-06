@@ -1,5 +1,5 @@
 /* Host test of Pattern+'s pages, grid editing and playback.
- *   gcc -Wall -I firmware/patternplus firmware/patternplus/test/host_test.c firmware/patternplus/pp_player.c -o /tmp/pp_test && /tmp/pp_test
+ *   gcc -Wall -I firmware/patternplus firmware/patternplus/test/host_test.c firmware/patternplus/pp_player.c firmware/patternplus/pp_store.c -o /tmp/pp_test && /tmp/pp_test
  * Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see LICENSE and NOTICE). */
 #include <stdio.h>
 #include <string.h>
@@ -36,6 +36,27 @@ static void fresh(void)
 }
 static void ticks(int mode, int n) { while (n--) { now++; pp_tick(mode); } }
 static pp_page_t *page(int mode, int i) { return &pp_bank[mode].pages[i]; }
+
+/* a save text with its check digits made right again, so a test reaches the check it means to */
+static void fix_sum(char *s, int len)
+{
+    unsigned sum = 0;
+    for (int i = 0; i < len - 4; i++) sum += (unsigned char)s[i];
+    for (int i = 3; i >= 0; i--, sum >>= 4) s[len - 4 + i] = "0123456789ABCDEF"[sum & 15];
+}
+static void fill_all(int mode)
+{
+    pp_bank_t *b = &pp_bank[mode];
+    while (b->count < PP_PAGES) pp_page_next(mode);
+    for (int i = 0; i < PP_PAGES; i++) {
+        pp_page_t *g = &b->pages[i];
+        for (int c = 0; c < PP_COLS; c++) g->notes[c] = (0xFFFFFFu >> (i + c % 8)) | 1u << 23;
+        g->start = (uint8_t)i; g->len = (uint8_t)(PP_COLS - i); g->swing = (uint8_t)(PP_SWING_MIN + i * 5); g->dir = (uint8_t)(i % PP_DIRS);
+    }
+    for (int i = 0; i < PP_CHAIN_MAX; i++) b->chain[i] = (uint8_t)(i % PP_PAGES);
+    b->chain_len = PP_CHAIN_MAX;
+    b->sel = 5; b->pitch_key = 19;
+}
 
 /* the columns visited for n steps, as a page's notes (one distinct key per column) play them */
 static void expect_order(const char *what, const int *want, int n)
@@ -357,6 +378,128 @@ int main(void)
     pp_set_hold(0, 0);
     ticks(0, 1);
     check("chain: every note released", offs, ons);
+
+    /* --- Shift + a note already there erases just that note --- */
+    fresh();
+    pp_note_entry(0, 3);
+    check("entry moves the cursor", pp_bank[0].cursor, 1);
+    pp_move_cursor(0, -1);
+    pp_note_entry(0, 5);
+    check("stacks", page(0, 0)->notes[0], 1 << 3 | 1 << 5);
+    pp_move_cursor(0, -1);
+    pp_note_entry(0, 3);
+    check("erases only that note", page(0, 0)->notes[0], 1 << 5);
+    check("erasing keeps the cursor", pp_bank[0].cursor, 0);
+    pp_note_entry(0, 3);
+    check("enters it again", page(0, 0)->notes[0], 1 << 5 | 1 << 3);
+    /* while playing: at the playhead; the erased note still gets its note-off */
+    fresh();
+    page(0, 0)->notes[0] = 1 << 4;
+    pp_set_hold(0, 1);
+    ticks(0, 1);
+    check("note sounding", sounding, 1);
+    pp_note_entry(0, 4);
+    check("erased at the playhead", page(0, 0)->notes[0], 0);
+    pp_note_entry(0, 6);
+    check("added at the playhead", page(0, 0)->notes[0], 1 << 6);
+    ticks(0, 24);
+    check("erased note released", sounding, 0);
+    { int n = ons; ticks(0, 24 * 15 - 1); check("nothing else plays", ons, n);
+      ticks(0, 1); check("added note plays next time", last_key, 6); }
+    pp_set_hold(0, 0);
+    ticks(0, 1);
+    check("erase: every note released", offs, ons);
+
+    /* --- saving: everything comes back, in the mode it belongs to --- */
+    { static char text[PP_STORE_MAX + 8], again[PP_STORE_MAX + 8], bad[PP_STORE_MAX + 8];
+      static pp_bank_t saved;
+      fresh();
+      fill_all(0);
+      int n = pp_serialize(0, text, sizeof text);
+      check("largest save fits", n, PP_STORE_MAX);
+      check("too small a buffer refuses", pp_serialize(0, text, n - 1), 0);
+      n = pp_serialize(0, text, sizeof text);
+      memcpy(&saved, &pp_bank[0], sizeof saved);
+      check("reads in another mode", pp_parse(1, text, n), 0);
+      check("pages back", pp_bank[1].count, PP_PAGES);
+      check("selected page back", pp_bank[1].sel, 5);
+      check("pitch arrow back", pp_bank[1].pitch_key, 19);
+      check("chain back", pp_bank[1].chain_len, PP_CHAIN_MAX);
+      for (int i = 0; i < PP_CHAIN_MAX; i++) check("chain entry", pp_bank[1].chain[i], saved.chain[i]);
+      check("same text again", pp_serialize(1, again, sizeof again), n);
+      check("identical", memcmp(text, again, n), 0);
+      for (int i = 0; i < PP_PAGES; i++) {
+          check("start", pp_bank[1].pages[i].start, saved.pages[i].start);
+          check("len", pp_bank[1].pages[i].len, saved.pages[i].len);
+          check("swing", pp_bank[1].pages[i].swing, saved.pages[i].swing);
+          check("dir", pp_bank[1].pages[i].dir, saved.pages[i].dir);
+          for (int c = 0; c < PP_COLS; c++) check("notes", (int)pp_bank[1].pages[i].notes[c], (int)saved.pages[i].notes[c]);
+      }
+      /* a smaller collection leaves nothing of the larger one behind */
+      fresh();
+      pp_note_entry(0, 2);
+      int small = pp_serialize(0, again, sizeof again);
+      fill_all(1);
+      check("small reads", pp_parse(1, again, small), 0);
+      check("one page", pp_bank[1].count, 1);
+      check("no chain", pp_bank[1].chain_len, 0);
+      check("its note", (int)pp_bank[1].pages[0].notes[0], 1 << 2);
+      check("later columns empty", (int)pp_bank[1].pages[0].notes[1], 0);
+      check("later pages empty", (int)pp_bank[1].pages[1].notes[0], 0);
+      pp_page_next(1);
+      check("next page is blank", (int)pp_bank[1].pages[1].len, PP_COLS);
+      /* bad saves are refused and change nothing */
+      fresh();
+      fill_all(0);
+      n = pp_serialize(0, text, sizeof text);
+      fresh();
+      pp_note_entry(0, 9);
+      memcpy(&saved, &pp_bank[0], sizeof saved);
+      #define REFUSED(what) do { check(what, pp_parse(0, bad, n), -1); check(what " keeps the work", memcmp(&saved, &pp_bank[0], sizeof saved), 0); } while (0)
+      check("null", pp_parse(0, 0, 0), -1);
+      check("empty", pp_parse(0, text, 0), -1);
+      check("truncated", pp_parse(0, text, n - 1), -1);
+      check("too long", pp_parse(0, text, n + 1), -1);
+      memcpy(bad, text, n); bad[0] = 'X'; fix_sum(bad, n); REFUSED("wrong format");
+      memcpy(bad, text, n); bad[2] = '2'; fix_sum(bad, n); REFUSED("newer version");
+      memcpy(bad, text, n); bad[n - 1] = bad[n - 1] == '0' ? '1' : '0'; REFUSED("bad check");
+      memcpy(bad, text, n); bad[40] = bad[40] == '0' ? '1' : '0'; REFUSED("one changed character");
+      memcpy(bad, text, n); bad[3] = '0'; bad[4] = '9'; fix_sum(bad, n); REFUSED("too many pages");
+      memcpy(bad, text, n); bad[5] = '0'; bad[6] = '8'; fix_sum(bad, n); REFUSED("selected page doesn't exist");
+      memcpy(bad, text, n); bad[7] = '1'; bad[8] = '8'; fix_sum(bad, n); REFUSED("bad pitch");
+      memcpy(bad, text, n); bad[11] = '0'; bad[12] = '8'; fix_sum(bad, n); REFUSED("chain names a missing page");
+      { int page0 = 11 + PP_CHAIN_MAX * 2;
+        memcpy(bad, text, n); bad[page0 + 2] = '0'; bad[page0 + 3] = '0'; fix_sum(bad, n); REFUSED("zero length");
+        memcpy(bad, text, n); bad[page0 + 2] = '1'; bad[page0 + 3] = '1'; fix_sum(bad, n); REFUSED("section past the end");
+        memcpy(bad, text, n); bad[page0 + 4] = '0'; bad[page0 + 5] = '0'; fix_sum(bad, n); REFUSED("bad swing");
+        memcpy(bad, text, n); bad[page0 + 6] = '0'; bad[page0 + 7] = '3'; fix_sum(bad, n); REFUSED("bad direction");
+        memcpy(bad, text, n); bad[page0 + 8] = 'g'; fix_sum(bad, n); REFUSED("not hex"); }
+      /* loading while playing stops cleanly */
+      fresh();
+      page(0, 0)->notes[0] = 1;
+      n = pp_serialize(0, text, sizeof text);
+      pp_set_hold(0, 1);
+      ticks(0, 1);
+      check("playing before load", sounding, 1);
+      check("loads", pp_parse(0, text, n), 0);
+      check("load silences", sounding, 0);
+      check("load stops", pp_running(0), 0);
+      ticks(0, 50);
+      check("nothing plays after load", sounding, 0);
+      check("load: every note released", offs, ons);
+      /* new */
+      fill_all(0);
+      pp_clear(0);
+      check("new: one page", pp_bank[0].count, 1);
+      check("new: no chain", pp_bank[0].chain_len, 0);
+      check("new: blank", (int)pp_bank[0].pages[0].notes[0], 0);
+      check("new: settings", pp_bank[0].pages[0].len, PP_COLS);
+      /* the views cycle and leave playback alone */
+      fresh();
+      pp_view_toggle(0); check("chain view", pp_bank[0].view, PP_VIEW_CHAIN);
+      pp_view_toggle(0); check("saved view", pp_bank[0].view, PP_VIEW_SAVED);
+      pp_view_toggle(0); check("back to the grid", pp_bank[0].view, PP_VIEW_GRID);
+    }
 
     /* --- ticks before the player is set up --- */
     memset(pp_bank, 0, sizeof pp_bank);

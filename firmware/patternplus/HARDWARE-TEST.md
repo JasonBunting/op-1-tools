@@ -1,6 +1,10 @@
-# Pattern+ chains test
+# Pattern+ couch sheet and tests
 
-The grid and pages passed on the device on November 5, 2026. This build adds chains. Saving isn't in it yet, so **your notes and chains are lost when you power off**.
+The grid, pages and basic chain playback have passed on the device. This build adds saving. Your work is saved automatically and comes back after a power off. Saved collections are a separate list you can name, load and start over from.
+
+## Before you trust it with a good idea
+
+Saving hasn't been tried on the device yet, so run the **Saving test** below first.
 
 ## Build
 
@@ -13,7 +17,7 @@ bash tools/pack-plugin.sh hundekraft-3.1.4-source/ext/kennel firmware/patternplu
 Host test of the logic:
 
 ```bash
-gcc -Wall -I firmware/patternplus firmware/patternplus/test/host_test.c firmware/patternplus/pp_player.c -o /tmp/pp_test && /tmp/pp_test
+gcc -Wall -I firmware/patternplus firmware/patternplus/test/host_test.c firmware/patternplus/pp_player.c firmware/patternplus/pp_store.c -o /tmp/pp_test && /tmp/pp_test
 ```
 
 ## Install
@@ -25,7 +29,7 @@ Open the Hundekraft workshop, go to **Your plugins**, add `build/patternplus.knl
 | Control | Action | Source |
 | --- | --- | --- |
 | Note key | Sounds the note and moves the left arrow | Stock |
-| Shift + note key | Adds a note. Stopped: at the cursor, then the cursor moves on. Playing: at the playhead | Stock |
+| Shift + note key | Adds a note. Stopped: at the cursor, then the cursor moves on. Playing: at the playhead. If that note is already there, erases it and the cursor stays | Stock, except erasing |
 | Left / right, or blue turn | Moves the cursor while stopped | Stock |
 | Shift + blue turn | Moves the cursor while stopped, clearing each column it leaves | Stock |
 | Green turn | Swing | Stock |
@@ -36,7 +40,7 @@ Open the Hundekraft workshop, go to **Your plugins**, add `build/patternplus.knl
 | Shift + orange turn | Direction | Stock |
 | Shift + blue push | Previous page | New |
 | Shift + green push | Next page, or a new blank page after the last one | New |
-| Shift + white push | Switches between the grid and the chain, without disturbing playback | New |
+| Shift + white push | Next view: grid, chain, saved, then grid again. Playback isn't disturbed | New |
 | Shift + orange push | Makes the grid follow the playing page again | New |
 
 In the chain view:
@@ -49,7 +53,19 @@ In the chain view:
 | White push | Removes the entry at the underline |
 | Orange turn | HOLD, as in the grid |
 
-The grid's other controls, including Shift + note key, do nothing in the chain view.
+In the saved view:
+
+| Control | Action |
+| --- | --- |
+| Blue turn, or left / right | Moves the arrow along slots 1 to 8 |
+| White push | Saves all pages and the chain to this slot, then asks for a name. Blue and green pick a letter, white push adds it, left deletes, orange push finishes. Pressing a mode key cancels |
+| Green push, twice | Loads this slot, replacing your current work, and stops playback |
+| Shift + green push, twice | Clears your work: one empty page, no chain. Saved slots are untouched |
+| Orange turn | HOLD, as in the grid |
+
+Saving onto a used slot replaces it after you finish the name. Synth and Drum each have their own 8 slots. Green text marks the slot you last loaded or saved.
+
+The grid's other controls, including Shift + note key, do nothing in the chain and saved views.
 
 On the Synth, Drum, Tape and Mixer screens, holding a note key plays the page transposed, or changes the transposition if HOLD is on.
 
@@ -66,6 +82,25 @@ On the Synth, Drum, Tape and Mixer screens, holding a note key plays the page tr
 2. Pages change when a page finishes its cycle, including its direction and section. Repeats of a page share its notes, so editing B changes every B.
 3. The grid follows the playing page. Changing page by hand during chain playback stops that and shows `FREE`, and the cursor works on any page that isn't playing. Shift + orange push, or starting playback again, resumes following.
 4. Limits: 8 pages, 32 chain entries, one chain per mode.
+
+## Saving test
+
+**Automatic**
+
+1. Enter some notes on a page, make a second page, and build a short chain.
+2. Turn the OP-1 off and on, then select `patternplus`. Your pages and chain are back, on the page you were on, and nothing is playing. Waiting a few seconds before powering off gives the background save time to finish. Tell me if a quick power off loses anything.
+3. Do the same in Drum mode. Synth and Drum keep separate work.
+
+**Collections**
+
+4. Press Shift + white push twice to reach `SAVED`. Slots read `EMPTY`.
+5. Press white on slot 1, enter a name, and push orange to finish. `SAVED` shows and the name appears in green.
+6. Press Shift + green push twice. The message warns you first, then your work clears. Press Shift + white push once to see the empty grid.
+7. Enter different notes. Back in `SAVED`, turn blue to slot 2 and save it under another name.
+8. Turn blue to slot 1 and push green twice. Check the grid: slot 1's work is back. Do the same for slot 2.
+9. Turn the OP-1 off and on. Both names are still there, and each loads correctly.
+10. Start a save, then press a mode key instead of finishing the name. Nothing changes.
+11. Load a slot while a pattern plays. It stops with no stuck notes.
 
 ## Chain test
 
@@ -99,9 +134,15 @@ Note what happens if a step doesn't match. On a fresh start, in Synth or Drum mo
     4. Pick another sequencer in the selector.
 12. Remove every entry from the chain. The current page should just loop, as before.
 
+**Erasing with Shift + note**
+
+13. Stopped: hold Shift and press a key, turn blue left one step, then hold Shift and press the same key. The dot disappears and the cursor stays on that column.
+14. Hold Shift and press two different keys on one column, turning blue left one step between them. Turn blue left one step and erase one of them. The other stays.
+15. Turn orange right. While it plays, hold Shift and press a key: a dot appears at the playhead. When the playhead comes back to that column, press the same key again with Shift. The dot disappears. Does this feel right?
+
 **Also new in this build**
 
-13. Drums use stock's pitch. Notes now last the whole step and play at stock's velocity. On a synth with a long sound, compare a pattern against stock Pattern by ear: does anything sound different?
+16. Drums use stock's pitch. Notes now last the whole step and play at stock's velocity. On a synth with a long sound, compare a pattern against stock Pattern by ear: does anything sound different?
 
 ## Grid and pages test
 

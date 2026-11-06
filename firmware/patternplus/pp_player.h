@@ -10,6 +10,8 @@
 #define PP_KEYS       24
 #define PP_PAGES      8
 #define PP_CHAIN_MAX  32
+#define PP_STORE_MAX  911                   /* the longest save text: 8 pages and a full chain */
+enum { PP_VIEW_GRID, PP_VIEW_CHAIN, PP_VIEW_SAVED, PP_VIEWS };
 #define PP_PAIR_TICKS 48                    /* two 1/16 steps at 96 ticks per beat: swing divides this */
 #define PP_VELOCITY   127                   /* stock R246 Pattern plays every note at 0x7F */
 #define PP_SWING_MIN  20                    /* stock's range, read from the device */
@@ -46,7 +48,7 @@ int pp_running(int mode);
 int pp_edit_col(int mode);                  /* where a note goes: the playhead while it runs on this page, else the cursor */
 
 /* editing (KeyHandler thread) */
-void pp_note_entry(int mode, int key);      /* running: at the playhead. Stopped: at the cursor, which then moves on */
+void pp_note_entry(int mode, int key);      /* at the playhead, or at the cursor, which then moves on. A note already there is erased instead */
 void pp_set_pitch(int mode, int key);       /* the keyboard-position arrow */
 void pp_move_cursor(int mode, int delta);   /* stopped only */
 void pp_erase_move(int mode, int delta);    /* stopped only: clears each column the cursor leaves */
@@ -59,12 +61,17 @@ void pp_page_prev(int mode);
 int pp_page_next(int mode);                 /* 0 moved, 1 created a blank page, -1 at the limit (nothing changed) */
 
 /* chain */
-void pp_view_toggle(int mode);              /* grid <-> chain: playback is not touched */
+void pp_view_toggle(int mode);              /* grid, chain, saved, grid: playback is not touched */
 void pp_chain_move(int mode, int delta);    /* over the entries and the free slot after them */
 void pp_chain_pick(int mode, int delta);    /* the page to add; on an entry, also changes that entry */
 int pp_chain_insert(int mode);              /* the picked page, before the cursor. 0, or -1 when full */
 void pp_chain_remove(int mode);             /* the entry at the cursor */
 void pp_resume_follow(int mode);            /* the grid goes back to showing the playing page */
+
+/* saving (pp_store.c): text that can be stored anywhere; nothing here touches the database or files */
+void pp_clear(int mode);                    /* stop this mode and start over with one empty page */
+int pp_serialize(int mode, char *out, int cap);     /* -> length, 0 if it doesn't fit; no terminator */
+int pp_parse(int mode, const char *s, int len);     /* 0 replaced this mode's work (stopped); -1 refused, nothing changed */
 
 /* playback */
 void pp_key_down(int mode, int key);        /* start, or change the transposition */
