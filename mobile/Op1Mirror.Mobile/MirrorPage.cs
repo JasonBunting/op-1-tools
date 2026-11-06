@@ -8,36 +8,33 @@ namespace Op1Mirror.Mobile;
 /// <summary>
 /// The OP-1's screen, full screen in landscape. Tap to show or hide the controls, which work as in the Windows viewer
 /// (desktop/Op1Mirror): the plugin's settings go out as control changes on channel 16 (firmware/mirror/mirror.c).
+/// The controls' settings are remembered between launches. The MIDI ports are held only while the app is on screen.
 /// </summary>
 public sealed class MirrorPage : ContentPage
 {
 	readonly MirrorDecoder decoder = new();
 	readonly object gate = new();
-	readonly IMidiLink link;
 	readonly SKCanvasView canvas = new();
 	readonly Label status = NewLabel(), notice = NewLabel();
-	readonly Slider budget = NewSlider(127, 64), scan = NewSlider(127, 64), refresh = NewSlider(16, 1);
-	readonly Switch auto = new() { IsToggled = true }, wholeFrames = new(), wholeZoom = new() { IsToggled = true };
+	readonly Slider budget = NewSlider("Budget", 127, 64), scan = NewSlider("Scan", 127, 64), refresh = NewSlider("Refresh", 16, 1);
+	readonly Switch auto = NewSwitch("Auto", true), wholeFrames = NewSwitch("Whole frames", false),
+	                wholeZoom = NewSwitch("Whole-number zoom", true);
 	readonly VerticalStackLayout panel;
 	readonly IDispatcherTimer timer;
+	IMidiLink? link;
 	SKImage? image;
 	int[] pixels = [];
 	bool dirty = true;
-	DateTime lastStatus = DateTime.MinValue, lastConnectTry = DateTime.MinValue;
+	DateTime lastStatus = DateTime.MinValue, lastConnectTry = DateTime.MinValue, lastData = DateTime.Now;
 	long lastBytes, lastLost;
 	double bestPasses;
 
 	const int ControlChannel = 15, KeepAliveCc = 118, BudgetCc = 119, ScanCc = 120, ModeCc = 121, RefreshCc = 122;
 	const int ModeFrames = 1, ModePalette = 2, ModeRle = 4;
+	static readonly TimeSpan NoDataNotice = TimeSpan.FromSeconds(3), NoDataReconnect = TimeSpan.FromSeconds(6);
 
 	public MirrorPage()
 	{
-#if ANDROID
-		link = new AndroidMidiLink();
-#else
-		throw new PlatformNotSupportedException("No MIDI link for this platform yet.");
-#endif
-		link.SysEx += OnSysEx;
 		BackgroundColor = Colors.Black;
 		canvas.PaintSurface += OnPaint;
 		var tap = new TapGestureRecognizer();
@@ -62,7 +59,11 @@ public sealed class MirrorPage : ContentPage
 			lock (gate) { decoder.WholeFrames = wholeFrames.IsToggled; dirty = true; }
 		};
 		wholeZoom.Toggled += (_, _) => canvas.InvalidateSurface();
+		decoder.WholeFrames = wholeFrames.IsToggled;
 		notice.HorizontalOptions = notice.VerticalOptions = LayoutOptions.Center;
+		(notice.BackgroundColor, notice.TextColor, notice.FontSize, notice.Padding) = (Colors.Black, Colors.LightGray, 16, new Thickness(16, 8));
+		notice.HorizontalTextAlignment = TextAlignment.Center;
+		notice.IsVisible = false;
 
 		Content = new Grid { Children = { canvas, notice, panel } };
 		timer = Dispatcher.CreateTimer();
@@ -73,24 +74,61 @@ public sealed class MirrorPage : ContentPage
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
-		DeviceDisplay.Current.KeepScreenOn = true;
-		timer.Start();
+		Start();
 	}
 
 	protected override void OnDisappearing()
 	{
+		Stop();
+		base.OnDisappearing();
+	}
+
+	/// <summary>The app came on screen. Safe to call again; see <see cref="App"/>.</summary>
+	public void Start()
+	{
+		if (link is not null) return;
+#if ANDROID
+		link = new AndroidMidiLink();
+#else
+		throw new PlatformNotSupportedException("No MIDI link for this platform yet.");
+#endif
+		link.SysEx += OnSysEx;
+		lastData = DateTime.Now;
+		lastConnectTry = DateTime.MinValue;
+		DeviceDisplay.Current.KeepScreenOn = true;
+		timer.Start();
+	}
+
+	/// <summary>The app left the screen: the keep-alive stops, so the OP-1 goes quiet, and the ports are free again.</summary>
+	public void Stop()
+	{
+		if (link is null) return;
 		timer.Stop();
 		DeviceDisplay.Current.KeepScreenOn = false;
-		base.OnDisappearing();
+		link.SysEx -= OnSysEx;
+		link.Dispose();
+		link = null;
 	}
 
 	static Label NewLabel() => new() { TextColor = Colors.Gray, FontSize = 12 };
 
-	static Slider NewSlider(int max, int value) => new()
+	static Slider NewSlider(string name, int max, int value)
 	{
-		Maximum = max, Minimum = 0, Value = value, WidthRequest = 220, MinimumTrackColor = Colors.Gray,
-		MaximumTrackColor = Colors.DimGray, ThumbColor = Colors.LightGray
-	};
+		var slider = new Slider
+		{
+			Maximum = max, Minimum = 0, Value = Math.Clamp(Preferences.Default.Get(name, value), 0, max), WidthRequest = 220,
+			MinimumTrackColor = Colors.Gray, MaximumTrackColor = Colors.DimGray, ThumbColor = Colors.LightGray
+		};
+		slider.ValueChanged += (_, _) => Preferences.Default.Set(name, (int)Math.Round(slider.Value));
+		return slider;
+	}
+
+	static Switch NewSwitch(string name, bool on)
+	{
+		var toggle = new Switch { IsToggled = Preferences.Default.Get(name, on) };
+		toggle.Toggled += (_, _) => Preferences.Default.Set(name, toggle.IsToggled);
+		return toggle;
+	}
 
 	static HorizontalStackLayout Row(params View[] views)
 	{
@@ -121,11 +159,15 @@ public sealed class MirrorPage : ContentPage
 	void OnSysEx(byte[] message)
 	{
 		lock (gate)
+		{
+			lastData = DateTime.Now;
 			if (decoder.Feed(message)) dirty = true;
+		}
 	}
 
 	void Tick()
 	{
+		if (link is null) return;
 		if (!link.Connected && DateTime.Now - lastConnectTry > TimeSpan.FromSeconds(2))
 		{
 			lastConnectTry = DateTime.Now;
@@ -160,7 +202,15 @@ public sealed class MirrorPage : ContentPage
 				                !decoder.HasFrameBuffer ? "   (no frame buffer on the OP-1: live)" :
 				                decoder.SendingFrames ? $"   frames {decoder.FramesSent}" : "   (screen too big for whole frames: live)";
 				status.Text = $"{link.Status}   {kbps:F1} KB/s   lost {decoder.Lost}   OP-1 {fps:F0} fps   {pps:F0} passes/s{frames}";
-				notice.Text = decoder.Messages == 0 ? $"{link.Status}\nTap for controls." : "";
+				var silent = DateTime.Now - lastData;
+				if (!link.Connected) lastData = DateTime.Now;
+				else if (silent > NoDataReconnect)                    // connected but nothing arrives: start over
+				{
+					link.Reconnect();
+					lastData = DateTime.Now;
+				}
+				notice.Text = !link.Connected ? link.Status : "Connected, waiting for the OP-1's screen.\nIs the mirror plugin installed?";
+				notice.IsVisible = !link.Connected || silent > NoDataNotice;
 			}
 		}
 	}
@@ -203,5 +253,5 @@ public sealed class MirrorPage : ContentPage
 		SendMode();
 	}
 
-	void Send(int cc, int value) => link.Send([(byte)(0xB0 | ControlChannel), (byte)cc, (byte)value]);
+	void Send(int cc, int value) => link?.Send([(byte)(0xB0 | ControlChannel), (byte)cc, (byte)value]);
 }

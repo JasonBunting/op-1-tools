@@ -14,16 +14,16 @@
 
 		<ApplicationTitle>OP-1 Mirror</ApplicationTitle>
 		<ApplicationId>com.op1tools.mirror</ApplicationId>
-		<ApplicationDisplayVersion>0.1</ApplicationDisplayVersion>
-		<ApplicationVersion>1</ApplicationVersion>
+		<ApplicationDisplayVersion>0.2</ApplicationDisplayVersion>
+		<ApplicationVersion>2</ApplicationVersion>
 
 		<!-- android.media.midi needs API 23; 26 keeps the code simple -->
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">26.0</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#000000" />
-		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#000000" BaseSize="128,128" />
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#101418" />
+		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#101418" BaseSize="128,128" />
 		<MauiFont Include="Resources\Fonts\*" />
 	</ItemGroup>
 

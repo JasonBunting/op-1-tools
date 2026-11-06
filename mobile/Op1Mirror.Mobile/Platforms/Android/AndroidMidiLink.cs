@@ -16,6 +16,8 @@ public sealed class AndroidMidiLink : IMidiLink
 	readonly Removal removal;
 	MidiDevice? device;
 	MidiDeviceInfo? opening;
+	DateTime openingSince;
+	bool disposed;
 	MidiOutputPort? fromOp1;                                  // Android names ports from the device's side
 	MidiInputPort? toOp1;
 
@@ -35,12 +37,13 @@ public sealed class AndroidMidiLink : IMidiLink
 	public void TryConnect()
 	{
 		if (manager is null) { Status = "This phone has no MIDI support."; return; }
-		if (Connected || opening is not null) return;
+		if (Connected) return;
+		if (opening is not null && DateTime.UtcNow - openingSince < TimeSpan.FromSeconds(5)) return;
 #pragma warning disable CA1422                                // GetDevices: still works, and covers API 26..32
 		var info = manager.GetDevices()?.FirstOrDefault(IsOp1);
 #pragma warning restore CA1422
 		if (info is null) { Status = "No OP-1 found: plug it in with a USB OTG cable."; return; }
-		opening = info;
+		(opening, openingSince) = (info, DateTime.UtcNow);
 		Status = "Opening the OP-1…";
 		manager.OpenDevice(info, new Opened(this, info), handler);
 	}
@@ -55,6 +58,7 @@ public sealed class AndroidMidiLink : IMidiLink
 	void OnOpened(MidiDeviceInfo info, MidiDevice? opened)
 	{
 		opening = null;
+		if (disposed || device is not null) { Quietly(() => opened?.Close()); return; }   // closed or timed out meanwhile
 		if (opened is null) { Status = "The OP-1 is busy: close other MIDI apps."; return; }
 		device = opened;
 		fromOp1 = opened.OpenOutputPort(0);
@@ -68,19 +72,33 @@ public sealed class AndroidMidiLink : IMidiLink
 	{
 		if (toOp1 is null) return;
 		try { toOp1.Send(message, 0, message.Length); }
-		catch (Java.IO.IOException) { Close(); Status = "Lost the OP-1; reconnecting…"; }
+		catch (Java.Lang.Exception) { Close(); Status = "Lost the OP-1; reconnecting…"; }
+	}
+
+	public void Reconnect()
+	{
+		Close();
+		Status = "Reconnecting to the OP-1…";
 	}
 
 	void Close()
 	{
-		fromOp1?.Close();
-		toOp1?.Close();
-		device?.Close();
+		var (from, to, dev) = (fromOp1, toOp1, device);
 		(fromOp1, toOp1, device) = (null, null, null);
+		Quietly(() => from?.Close());                          // these throw when the cable is already gone
+		Quietly(() => to?.Close());
+		Quietly(() => dev?.Close());
+	}
+
+	static void Quietly(Action close)
+	{
+		try { close(); }
+		catch (Java.Lang.Exception) { }
 	}
 
 	public void Dispose()
 	{
+		disposed = true;
 		manager?.UnregisterDeviceCallback(removal);
 		Close();
 	}
@@ -94,7 +112,9 @@ public sealed class AndroidMidiLink : IMidiLink
 	{
 		public override void OnDeviceRemoved(MidiDeviceInfo? info)
 		{
-			if (info is null || link.device?.Info?.Id != info.Id) return;
+			if (info is null) return;
+			if (link.opening?.Id == info.Id) link.opening = null;
+			if (link.device?.Info?.Id != info.Id) return;
 			link.Close();
 			link.Status = "The OP-1 was unplugged.";
 		}

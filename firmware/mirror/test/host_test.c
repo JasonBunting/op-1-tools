@@ -77,6 +77,13 @@ int main(int argc, char **argv)
     uint32_t after_stop = bytes_sent;
     for (int i = 0; i < 200; i++) event(OP1_EV_SERVICE, 0);
     if (bytes_sent != after_stop) { fprintf(stderr, "still sending after the keep-alive stopped\n"); return 1; }
+    uint32_t frames_before = frames_sent, bytes_before = bytes_sent;
+    run(raster, 200);                                               /* the viewer comes back, whole frames still on */
+    if (frames_sent == frames_before || bytes_sent == bytes_before) {
+        fprintf(stderr, "whole frames stuck after the viewer came back (bytes +%u, frames +%u)\n",
+                bytes_sent - bytes_before, frames_sent - frames_before);
+        return 1;
+    }
     printf("passes %u, bytes %u (stream %u), tiles %u, frames %u, stopped ok\n", passes, bytes_sent, sent_before,
            tiles_sent, frames_sent);
     return 0;

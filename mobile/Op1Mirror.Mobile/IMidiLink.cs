@@ -15,4 +15,7 @@ public interface IMidiLink : IDisposable
 	void TryConnect();
 
 	void Send(byte[] message);
+
+	/// <summary>Drops the connection; the next <see cref="TryConnect"/> opens it afresh.</summary>
+	void Reconnect();
 }

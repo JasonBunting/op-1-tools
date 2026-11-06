@@ -242,7 +242,10 @@ static void service(void)
     passes++;
     uint32_t h_now = heard;
     if (h_now != heard_seen) { heard_seen = h_now; alive_until = passes + ALIVE_PASSES; }
-    if ((int32_t)(alive_until - passes) <= 0) { active = 0; snap_want = snap_ready = 0; return; }
+    if ((int32_t)(alive_until - passes) <= 0) {                  /* framing too, so a returning viewer asks for a frame */
+        active = 0; framing = 0; snap_want = snap_ready = 0;
+        return;
+    }
     if (!active) { active = 1; geom_w = geom_h = 0; return; }  /* a new stream: the next pass resends everything */
 
     uint32_t m = mode;
