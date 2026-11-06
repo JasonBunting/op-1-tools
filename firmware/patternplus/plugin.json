@@ -1,0 +1,15 @@
+{
+  "name": "patternplus",
+  "kind": "feature",
+  "symbol": "FEATURE_patternplus",
+  "loadable": true,
+  "sequencer": true,
+  "author": "Jason Bunting",
+  "version": "0.2.0",
+  "claims": [],
+  "sources": ["patternplus.c", "pp_player.c"],
+  "screen": {
+    "svg": "patternplus.svg",
+    "symbol": "SCREEN_patternplus"
+  }
+}
