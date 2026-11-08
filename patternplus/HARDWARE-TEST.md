@@ -59,8 +59,9 @@ In the saved view:
 | --- | --- |
 | Blue turn, or left / right | Moves the arrow along slots 1 to 8 |
 | White push | Saves all pages and the chain to this slot, then asks for a name. Blue and green pick a letter, white push adds it, left deletes, orange push finishes. Pressing a mode key cancels |
-| Green push, twice | Loads this slot, replacing your current work, and stops playback |
-| Shift + green push, twice | Clears your work: one empty page, no chain. Saved slots are untouched |
+| Green push | Asks before loading this slot, which replaces your current work and stops playback |
+| Shift + green push | Asks before clearing your work: one empty page, no chain. Saved slots are untouched |
+| Green push / orange push, while asked | Green confirms, orange cancels. The question stays until you answer, move the arrow or leave the view |
 | Orange turn | HOLD, as in the grid |
 
 Saving onto a used slot replaces it after you finish the name. Synth and Drum each have their own 8 slots. Green text marks the slot you last loaded or saved.
@@ -97,9 +98,9 @@ On the Synth, Drum, Tape and Mixer screens, holding a note key plays the page tr
 
 4. Press Shift + white push twice to reach `SAVED`. Slots read `EMPTY`.
 5. Press white on slot 1, enter a name, and push orange to finish. `SAVED` shows and the name appears in green.
-6. Press Shift + green push twice. The message warns you first, then your work clears. Press Shift + white push once to see the empty grid.
+6. Press Shift + green push. `CLEAR ALL? GREEN YES ORANGE NO` appears and stays. Push orange: `CANCELLED`, and your work is untouched. Press Shift + green push again, then push green: `NEW`, and your work clears. Press Shift + white push once to see the empty grid.
 7. Enter different notes. Back in `SAVED`, turn blue to slot 2 and save it under another name.
-8. Turn blue to slot 1 and push green twice. Check the grid: slot 1's work is back. Do the same for slot 2.
+8. Turn blue to slot 1, push green, and read the question: `REPLACE WORK? GREEN YES ORANGE NO`. Push green. Check the grid: slot 1's work is back. Do the same for slot 2.
 9. Turn the OP-1 off and on. Both names are still there, and each loads correctly.
 10. Start a save, then press a mode key instead of finishing the name. Nothing changes.
 11. Load a slot while a pattern plays. It stops with no stuck notes.

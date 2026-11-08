@@ -208,28 +208,29 @@ static void pp_slot_move(int mode, int delta)
 static void pp_saved_press(int mode, int knob, int shift)
 {
     int slot = pp_slot_at[mode];
-    if (shift) {
+    if (pp_ask != PP_ASK_NONE) {                          /* a question is up: green push confirms, orange cancels */
+        int ask = pp_ask;
+        if (knob == PP_ORANGE) { pp_ask = PP_ASK_NONE; pp_say("CANCELLED"); }
         if (knob != PP_GREEN) return;
-        if (pp_ask == PP_ASK_NEW) {
-            pp_ask = PP_ASK_NONE;
+        pp_ask = PP_ASK_NONE;
+        pp_msg_ms = 0;
+        if (ask == PP_ASK_NEW) {
             pp_clear(mode);
             pp_let_go(mode);
             pp_loaded[mode] = -1;
             pp_say("NEW");
             pp_changed();
-        } else {
-            pp_ask = PP_ASK_NEW;
-            pp_say("PUSH AGAIN TO CLEAR ALL");
-        }
+        } else if (!pp_job) { pp_job_mode = (uint8_t)mode; pp_job_slot = (uint8_t)slot; pp_job = PP_JOB_LOAD; }
+        return;
+    }
+    if (shift) {
+        if (knob != PP_GREEN) return;
+        pp_ask = PP_ASK_NEW;
+        pp_say("CLEAR ALL? GREEN YES ORANGE NO");
     } else if (knob == PP_GREEN) {
-        if (!pp_slot_name[mode][slot][0]) { pp_ask = PP_ASK_NONE; pp_say("EMPTY"); return; }
-        if (pp_ask == PP_ASK_LOAD) {
-            pp_ask = PP_ASK_NONE;
-            if (!pp_job) { pp_job_mode = (uint8_t)mode; pp_job_slot = (uint8_t)slot; pp_job = PP_JOB_LOAD; }
-        } else {
-            pp_ask = PP_ASK_LOAD;
-            pp_say("PUSH AGAIN TO REPLACE WORK");
-        }
+        if (!pp_slot_name[mode][slot][0]) { pp_say("EMPTY"); return; }
+        pp_ask = PP_ASK_LOAD;
+        pp_say("REPLACE WORK? GREEN YES ORANGE NO");
     } else if (knob == PP_WHITE) {
         pp_ask = PP_ASK_NONE;
         pp_save_mode = (uint8_t)mode;
@@ -491,7 +492,8 @@ static void pp_draw_saved(void *r, int m, const pp_bank_t *b)
                 s == pp_loaded[m] ? pp_c_dot : at ? pp_c_white : name[0] ? pp_c_grey : pp_c_minor);
         if (at) pp_draw_arrow(r, OP1_Q10(8), OP1_Q10(19), y + OP1_Q10(5), OP1_Q10(4), pp_c_cursor);
     }
-    if (pp_msg_ms > 0 && pp_msg) sq_text(r, OP1_Q10(24), OP1_Q10(144), OP1_Q10(1.3), pp_msg, 0x400, pp_c_white);
+    if (pp_ask != PP_ASK_NONE && pp_msg) sq_text(r, OP1_Q10(24), OP1_Q10(144), OP1_Q10(1.1), pp_msg, 0x300, pp_c_white);
+    else if (pp_msg_ms > 0 && pp_msg) sq_text(r, OP1_Q10(24), OP1_Q10(144), OP1_Q10(1.3), pp_msg, 0x400, pp_c_white);
     else sq_text(r, OP1_Q10(24), OP1_Q10(144), OP1_Q10(1.1), "PUSH GREEN LOAD   PUSH WHITE SAVE", 0x300, pp_c_grey);
 }
 static void pp_scr_init(void *scr) { (void)scr; }
@@ -510,7 +512,7 @@ static void pp_scr_update(void *scr, int dt)
     pp_flash_down(&pp_section_flash, dt);
     pp_flash_down(&pp_dir_flash, dt);
     pp_flash_down(&pp_full_flash, dt);
-    if (pp_msg_ms > 0) { pp_msg_ms = (int16_t)(pp_msg_ms > dt ? pp_msg_ms - dt : 0); if (!pp_msg_ms) pp_ask = PP_ASK_NONE; }
+    if (pp_msg_ms > 0 && pp_ask == PP_ASK_NONE) pp_msg_ms = (int16_t)(pp_msg_ms > dt ? pp_msg_ms - dt : 0);  /* a question waits for its answer */
     if (b->view == PP_VIEW_SAVED) { pp_draw_saved(r, m, b); return; }
     if (b->view) { pp_draw_chain(r, b, running); return; }
 
