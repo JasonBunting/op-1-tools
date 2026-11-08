@@ -203,6 +203,18 @@ Releases cover the mirror only, for now. From Git Bash, on a clean commit:
    tools/release.sh --publish
    ```
 
+## An iPhone viewer?
+
+Nobody has made one, but the code is the easy part. The Android viewer is .NET MAUI, and MAUI builds for iOS too: the
+decoder, screen, controls and settings carry over, and `Platforms/iOS` is already scaffolded. What's missing is an
+iOS `IMidiLink` on CoreMIDI, which handles the OP-1 as a standard USB MIDI device with no permission dance; probably a
+day or two of work. Plug the OP-1 into a USB-C iPhone directly, or into an older one with Apple's Lightning to USB
+camera adapter.
+
+The hard part is Apple's process: building needs a Mac with Xcode, a free account's installs expire after 7 days, and
+sharing it means a paid developer account plus TestFlight or App Store review. With no iPhone or Mac here, it's open to
+anyone who has both: fork freely.
+
 ## License
 
 1. **The plugins** (`firmware/mirror/`, `firmware/patternplus/`, and so their `.knl` files): GPL-3.0-or-later with
