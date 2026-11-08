@@ -165,4 +165,4 @@ Directory.Build.local.props
 *.jks
 
 # Hundekraft source (download from its releases)
-hundekraft-3.1.4-source/
+hundekraft-*-source/

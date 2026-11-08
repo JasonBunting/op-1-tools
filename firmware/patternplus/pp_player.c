@@ -29,6 +29,22 @@ void pp_init(int mode)
     b->init = 1;
 }
 int pp_running(int mode) { return is_running(bank(mode)); }
+/* Would playing produce any note? The selected page's section, or with a chain, any entry's section. */
+static int section_has_notes(const pp_page_t *p)
+{
+    for (int i = 0; i < p->len; i++)
+        if (p->notes[(p->start + i) & (PP_COLS - 1)]) return 1;
+    return 0;
+}
+int pp_has_notes(int mode)
+{
+    pp_bank_t *b = bank(mode);
+    if (!b->init) return 0;
+    if (!b->chain_len) return section_has_notes(sel_page(b));
+    for (int i = 0; i < b->chain_len; i++)
+        if (section_has_notes(&b->pages[b->chain[i]])) return 1;
+    return 0;
+}
 
 static void silence(pp_bank_t *b)
 {
@@ -39,6 +55,13 @@ static void silence(pp_bank_t *b)
         b->ids[k] = 0;                      /* cleared first: a preempting thread cannot release it twice */
         if (id >= 0) pp_out_off(id);
     }
+}
+
+/* As stock: once playback ends, the transposition goes back to none. */
+static void ended(pp_bank_t *b)
+{
+    silence(b);
+    b->transpose = 0;
 }
 
 /* the first step of the page that plays next */
@@ -136,7 +159,7 @@ void pp_key_up(int mode, int key)
     pp_bank_t *b = bank(mode);
     if (key < 0 || key >= PP_KEYS || !(b->down >> key & 1)) return;
     b->down &= ~(1u << key);
-    if (!is_running(b)) silence(b);
+    if (!is_running(b)) ended(b);
 }
 void pp_set_hold(int mode, int on)
 {
@@ -144,7 +167,7 @@ void pp_set_hold(int mode, int on)
     pp_init(mode);
     if (on && !is_running(b)) begin(b);
     b->hold = (uint8_t)(on != 0);
-    if (!is_running(b)) silence(b);
+    if (!is_running(b)) ended(b);
 }
 void pp_rewind(int mode)
 {
@@ -155,7 +178,8 @@ void pp_silence_all(int mode)
 {
     pp_bank_t *b = bank(mode);
     b->down = 0;
-    silence(b);
+    b->hold = 0;
+    ended(b);
     b->elapsed = 0;
     b->started = 0;
     if (b->init) place_first(b);

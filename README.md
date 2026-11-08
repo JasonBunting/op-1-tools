@@ -7,26 +7,26 @@ It is a "dumb display": a small plugin on the OP-1 sends the screen's pixels ove
 them. Nothing about the OP-1's state is interpreted, so every screen, stock or custom, mirrors the same way.
 
 ```
-OP-1 (Hundekraft 3.1.4)                         Windows PC
+OP-1 (Hundekraft)                               Windows PC
   mirror.knl ── changed 8x8 tiles as SysEx ──►  Op1Mirror (WPF)
              ◄── settings + keep-alive as CCs ──
 ```
 
-Status: works on Windows and Android with a real OP-1 running Hundekraft 3.1.4: about 40 fps on the OP-1 side, no
-lost messages, no audible effect on audio.
+Status: works on Windows and Android with a real OP-1 running Hundekraft 3.1.4 or 3.2.3: about 40 fps on the OP-1
+side, no lost messages, no audible effect on audio.
 
 Shared as-is, in the hope it helps. It is a personal project and not actively supported: issues and pull requests
 may sit unanswered, so fork freely.
 
 ## Requirements
 
-1. An original OP-1 running [Hundekraft](https://hundekraft.github.io/op1-workshop/) 3.1.4 (the plugin uses its
-   feature-plugin runtime and addresses specific to that build).
+1. An original OP-1 running [Hundekraft](https://hundekraft.github.io/op1-workshop/) 3.1.4 or 3.2.3 (the plugin uses
+   its feature-plugin runtime and a firmware address both builds share).
 2. Windows 10/11 (64-bit) or an Android 8+ phone with USB-C.
 
 No need to build anything: the [Releases](../../releases) page has `mirror.knl`, `Op1Mirror.exe` (Windows, .NET
 included) and `op1-mirror.apk` (Android). To build from source you also need the .NET 8 SDK or later, and for the
-plugin, WSL (Ubuntu 24.04) with a `bfin-elf` toolchain and the Hundekraft 3.1.4 source (for its SDK headers and
+plugin, WSL (Ubuntu 24.04) with a `bfin-elf` toolchain and the Hundekraft 3.2.3 source (for its SDK headers and
 packer).
 
 ## Use it
@@ -43,6 +43,9 @@ packer).
    own. Nothing needs switching on the device. When the viewer closes, the plugin goes quiet within ~3 seconds.
 
 ### Viewer controls
+
+Both viewers remember their settings between launches; on Windows that includes the window's size and place, kept in
+`%LOCALAPPDATA%\Op1Mirror\settings.json`. Delete that file to go back to the defaults.
 
 | Control | What it does |
 | --- | --- |
@@ -97,10 +100,10 @@ In WSL, once:
 tr -d '\r' < tools/build-bfin-toolchain.sh > /tmp/build-bfin.sh && bash /tmp/build-bfin.sh
 ```
 
-Then, from the repository root (pass the `ext/kennel` folder of the Hundekraft 3.1.4 source):
+Then, from the repository root (pass the `ext/kennel` folder of the Hundekraft 3.2.3 source):
 
 ```bash
-bash tools/pack-plugin.sh <hundekraft-3.1.4-source>/ext/kennel firmware/mirror build/mirror.knl
+bash tools/pack-plugin.sh <hundekraft-3.2.3-source>/ext/kennel firmware/mirror build/mirror.knl
 ```
 
 From Git Bash on Windows, wrap it as
@@ -111,7 +114,7 @@ From Git Bash on Windows, wrap it as
 `host_test.c` needs a 256x400 24-bit BMP of a screen and the SDK headers:
 
 ```bash
-gcc -O2 -I<hundekraft-3.1.4-source>/ext/kennel/synth_sdk firmware/mirror/test/host_test.c -o /tmp/host_test
+gcc -O2 -I<hundekraft-3.2.3-source>/ext/kennel/synth_sdk firmware/mirror/test/host_test.c -o /tmp/host_test
 /tmp/host_test frame.bmp mirror.syx
 ```
 
@@ -156,9 +159,11 @@ From Git Bash, on a clean commit:
 
 ## Notes
 
-1. The plugin calls an unexported firmware routine at a fixed address, so it only works on Hundekraft 3.1.4 as
-   built from its release.
+1. The plugin calls an unexported firmware routine at a fixed address. It is built against Hundekraft 3.2.3 and also
+   runs on 3.1.4; a later core may need checking.
 2. No Teenage Engineering firmware or device data belongs in this repository.
+3. The viewer sends controller messages 118–122 on MIDI channel 16. On Hundekraft 3.2.3 and later, leave the COM
+   screen's PARAM CH off or on another channel: on channel 16, message 118 would keep setting the tape input level.
 
 ## License
 

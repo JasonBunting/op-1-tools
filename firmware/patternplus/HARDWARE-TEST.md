@@ -11,7 +11,7 @@ Saving hasn't been tried on the device yet, so run the **Saving test** below fir
 Run in WSL from the repository root:
 
 ```bash
-bash tools/pack-plugin.sh hundekraft-3.1.4-source/ext/kennel firmware/patternplus build/patternplus.knl
+bash tools/pack-plugin.sh ../OP-1-Related/hundekraft-3.2.3-source/ext/kennel firmware/patternplus build/patternplus.knl
 ```
 
 Host test of the logic:

@@ -78,6 +78,7 @@ sealed class MirrorWindow : Window
         Width = 376 * 3 + 40;
         Height = 188 * 3 + 140;
         RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.NearestNeighbor);
+        Restore(ViewerSettings.Load(ViewerSettings.DefaultPath));
 
         var sliders = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(8, 4, 8, 0) };
         AddSlider(sliders, "Budget", budget, BudgetCc);
@@ -112,7 +113,44 @@ sealed class MirrorWindow : Window
         KeyDown += OnKey;
         timer.Tick += (_, _) => Tick();
         timer.Start();
+        Closing += (_, _) => Remember().Save(ViewerSettings.DefaultPath);
         Closed += (_, _) => Disconnect();
+    }
+
+    void Restore(ViewerSettings s)
+    {
+        (budget.Value, scan.Value, refresh.Value) = (s.Budget, s.Scan, s.Refresh);     // the sliders keep them in range
+        (auto.IsChecked, wholeFrames.IsChecked, palette.IsChecked) = (s.Auto, s.WholeFrames, s.Palette);
+        (rle.IsChecked, wholeZoom.IsChecked) = (s.Rle, s.WholeZoom);
+        decoder.WholeFrames = s.WholeFrames;
+        Topmost = s.Topmost;
+        if (s is { Left: { } left, Top: { } top, Width: { } width, Height: { } height } && width >= 200 && height >= 150 &&
+            OnScreen(left, top, width))
+        {
+            (WindowStartupLocation, Left, Top, Width, Height) = (WindowStartupLocation.Manual, left, top, width, height);
+        }
+        if (s.Maximized) WindowState = WindowState.Maximized;
+    }
+
+    /// <summary>False when the title bar would be out of reach, say on a monitor that has since been unplugged.</summary>
+    static bool OnScreen(double left, double top, double width) =>
+        left + width > SystemParameters.VirtualScreenLeft + 100 &&
+        left < SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth - 100 &&
+        top >= SystemParameters.VirtualScreenTop - 10 &&
+        top < SystemParameters.VirtualScreenTop + SystemParameters.VirtualScreenHeight - 50;
+
+    ViewerSettings Remember()
+    {
+        var s = new ViewerSettings
+        {
+            Budget = (int)budget.Value, Scan = (int)scan.Value, Refresh = (int)refresh.Value,
+            Auto = auto.IsChecked == true, WholeFrames = wholeFrames.IsChecked == true, Palette = palette.IsChecked == true,
+            Rle = rle.IsChecked == true, WholeZoom = wholeZoom.IsChecked == true, Topmost = Topmost,
+            Maximized = WindowState == WindowState.Maximized && WindowStyle != WindowStyle.None    // fullscreen isn't kept
+        };
+        if (!RestoreBounds.IsEmpty)
+            (s.Left, s.Top, s.Width, s.Height) = (RestoreBounds.Left, RestoreBounds.Top, RestoreBounds.Width, RestoreBounds.Height);
+        return s;
     }
 
     static Slider NewSlider(int max, int value) => new()

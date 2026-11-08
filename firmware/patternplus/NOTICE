@@ -16,5 +16,5 @@ that are this program or based on it are conveyed under the terms of the GPL wit
 OP-1 firmware itself is not covered by this license.
 
 The complete corresponding source of patternplus.knl is this folder (patternplus.c, pp_player.c, pp_player.h,
-patternplus.svg, plugin.json), built and packed with tools/pack-plugin.sh against the Hundekraft 3.1.4 source; see
+patternplus.svg, plugin.json), built and packed with tools/pack-plugin.sh against the Hundekraft 3.2.3 source; see
 HARDWARE-TEST.md here for the command.

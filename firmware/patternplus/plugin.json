@@ -5,7 +5,7 @@
   "loadable": true,
   "sequencer": true,
   "author": "Jason Bunting",
-  "version": "0.3.0",
+  "version": "0.3.3",
   "claims": [],
   "sources": ["patternplus.c", "pp_player.c", "pp_store.c"],
   "screen": {

@@ -45,6 +45,7 @@ void pp_out_off(int id);
 
 void pp_init(int mode);
 int pp_running(int mode);
+int pp_has_notes(int mode);                 /* would playing produce any note */
 int pp_edit_col(int mode);                  /* where a note goes: the playhead while it runs on this page, else the cursor */
 
 /* editing (KeyHandler thread) */
@@ -79,5 +80,5 @@ void pp_key_up(int mode, int key);          /* safe for a key this mode does not
 void pp_set_hold(int mode, int on);
 void pp_tick(int mode);                     /* mode: the one receiving ticks */
 void pp_rewind(int mode);                   /* silence; a running part starts again from its first step */
-void pp_silence_all(int mode);              /* silence and release keys; HOLD stays */
+void pp_silence_all(int mode);              /* as stock's stop: silence, release keys, HOLD off, no transposition */
 #endif

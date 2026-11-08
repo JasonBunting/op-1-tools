@@ -16,4 +16,4 @@ that are this program or based on it are conveyed under the terms of the GPL wit
 OP-1 firmware itself is not covered by this license.
 
 The complete corresponding source of mirror.knl is this folder (mirror.c, plugin.json), built and packed with
-tools/pack-plugin.sh against the Hundekraft 3.1.4 source; see the README at the repository root.
+tools/pack-plugin.sh against the Hundekraft 3.2.3 source; see the README at the repository root.

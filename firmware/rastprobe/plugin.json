@@ -1,0 +1,9 @@
+{
+  "name": "rastprobe",
+  "kind": "feature",
+  "symbol": "FEATURE_rastprobe",
+  "loadable": true,
+  "author": "Jason Bunting",
+  "version": "0.2",
+  "sources": ["rastprobe.c"]
+}

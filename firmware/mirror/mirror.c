@@ -1,4 +1,4 @@
-/* mirror: streams the OP-1's screen over USB MIDI SysEx as changed 8x8 tiles. Hundekraft 3.1.4 SDK.
+/* mirror: streams the OP-1's screen over USB MIDI SysEx as changed 8x8 tiles. Hundekraft 3.2.3 SDK.
  * Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see LICENSE and NOTICE).
  *
  * The PC drives it with control changes on MIDI channel 16 (heard through midi_raw, which only looks):

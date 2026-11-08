@@ -1,4 +1,4 @@
-/* Pattern+: a stock-Pattern-style grid sequencer with multiple pages, as a Hundekraft 3.1.4 sequencer type.
+/* Pattern+: a stock-Pattern-style grid sequencer with multiple pages, as a Hundekraft 3.2.3 sequencer type.
  * This build has the grid, pages, chains and saving (docs/pattern-plus-poc-spec.md).
  * Screen layout and colors measured from a capture of stock Pattern on the device; the artwork is drawn here.
  * Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see LICENSE and NOTICE). */
@@ -16,7 +16,7 @@
 #define PP_SCREEN()   (*(volatile int *)0x018B65C8)
 #define PP_SLOT(m)    (*(volatile int *)((m) ? 0xFF8016D8 : 0xFF8016D4) & 7)
 #define PP_OCTAVE(m)  (((const int *)((m) ? 0x01DFE500 : 0x01DFE4E0))[PP_SLOT(m)])
-/* SeqIds::name entry, which 3.1.4 patches to jump to kn_seq.c's eu_seq_name: the mode's sequencer name for type 3 */
+/* SeqIds::name entry, which the core patches to jump to kn_seq.c's eu_seq_name: the mode's sequencer name for type 3 */
 #define PP_SEQ_NAME   ((const char *(*)(int))0x01A422EC)
 #define PP_KEY_LEFT   0x24
 #define PP_KEY_RIGHT  0x25
@@ -31,9 +31,9 @@ static volatile int16_t pp_swing_flash, pp_section_flash, pp_dir_flash, pp_full_
 int pp_out_on(int mode, int key, int transpose, int vel)
 {
     /* As stock R246 Pattern (0x01A08D24): a synth note is key + transpose; a drum's key picks the sound only and its
-     * pitch is just the transposition. op1_seq_note_on turns this note into the drum's pitch, so it leaves key out. */
-    int base = 0x35 + PP_OCTAVE(mode) * 12 + transpose;
-    return op1_seq_note_on(mode, mode ? base : base + key, key, vel);
+     * pitch is just the transposition. Since kennel 3.2.3 (2026-11-07) op1_seq_note_on takes a drum's pitch as
+     * note - (key + 0x35) - drum octave * 12, so both modes send the key's own note; older cores play drums flat. */
+    return op1_seq_note_on(mode, key + 0x35 + PP_OCTAVE(mode) * 12 + transpose, key, vel);
 }
 void pp_out_off(int id) { op1_seq_note_off(id); }
 
@@ -50,6 +50,7 @@ static int pp_pkey_down(void *self, int key)
         return 0;
     }
     if (PP_SHIFT()) return 0;                             /* elsewhere Shift + key stays stock */
+    if (!pp_has_notes(m)) return 0;                       /* as stock: with nothing to play, the key just sounds */
     pp_key_down(m, key);                                  /* synth, drum, tape, mixer: play, transposed */
     return 1;
 }
@@ -68,7 +69,7 @@ static int pp_store_ser(int pos, char *out, int n) { return pp_serialize(pos, ou
 static int pp_store_parse(int pos, const char *s, int len)
 {
     int r = pp_parse(pos, s, len);
-    if (r) op1_toast("PATTERN+ SAVE UNREADABLE");
+    if (r) op1_toast("pattern+ save unreadable");
     return r;
 }
 static char pp_sql[1024];

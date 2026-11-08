@@ -61,7 +61,7 @@ Recreate the familiar grid layout using available drawing facilities. Verify lab
 
 ## Existing technical foundation
 
-The repository contains the local `hundekraft-3.1.4-source/` tree. Relevant references:
+The Hundekraft source is kept outside the repository, at `../OP-1-Related/hundekraft-3.2.3-source/`. Relevant references:
 
 - `ext/kennel/synth_sdk/op1_feature_seq.h`: custom sequencer registration, player contract, input callbacks, screen registration, MIDI-start callback, and note-on/off services.
 - `ext/kennel/synth_sdk/seq/dots.c` and `seq/euclid.c`: existing sequencer implementations, multiple patterns, and persistence examples.
@@ -70,11 +70,11 @@ The repository contains the local `hundekraft-3.1.4-source/` tree. Relevant refe
 - `ext/kennel/synth_sdk/kennel/kn_exports.c`: exports available to loadable plugins.
 - Repository `firmware/mirror/` and `tools/pack-plugin.sh`: existing local plugin packaging conventions.
 
-These paths are relative to `hundekraft-3.1.4-source/` except the last item. The source tree is locally available but untracked; do not assume it exists in a fresh clone or commit it wholesale.
+These paths are relative to `hundekraft-3.2.3-source/` except the last item. The source tree is locally available but untracked; do not assume it exists in a fresh clone or commit it wholesale.
 
 The inspected SDK provides `op1_text_entry()` as a shared modal dialog with completion callback and a configurable limit up to 24 characters. The preset-naming feature uses a smaller limit. Pattern+ should consume the returned text and implement its own collection persistence; text entry does not save a collection for us.
 
-The API describes per-mode synth/drum sequencer selection and 96 ticks per beat. Verify behavior against the target 3.1.4 build. Keep synth/drum state separate unless a different behavior is explicitly agreed.
+The API describes per-mode synth/drum sequencer selection and 96 ticks per beat. Verify behavior against the target 3.2.3 build. Keep synth/drum state separate unless a different behavior is explicitly agreed.
 
 Useful documentation:
 
@@ -83,7 +83,7 @@ Useful documentation:
 
 ## First technical checkpoint
 
-Before implementing the full editor, prove that a standalone `.knl` can register a new sequencer on the installed 3.1.4 firmware, show a custom screen, receive the needed inputs, play/stop notes correctly, and restore a small saved value.
+Before implementing the full editor, prove that a standalone `.knl` can register a new sequencer on the installed 3.2.3 firmware, show a custom screen, receive the needed inputs, play/stop notes correctly, and restore a small saved value.
 
 Verify packaging and browser registration, required assets, available exports, memory limits, persistence context, and callback timing. Source declarations are evidence of an intended interface, not proof that an arbitrary external plugin works on the installed build. If core changes appear necessary, report the specific blocker before expanding scope.
 
