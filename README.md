@@ -29,6 +29,7 @@ Each project is a folder of its own, so you can take just the piece you want:
 | `research/` | Throwaway probes; see [Research tools](#research-tools). |
 | `tools/` | Shared scripts: the toolchain build, the plugin packer and `build.sh`. |
 | `op-1-tools.slnx` | Every C# project, for Visual Studio or `dotnet build`. |
+| `CLAUDE.md` | Layout and build rules for AI coding assistants (and a handy summary for people). |
 
 A plugin always lives in `<project>/plugin/`, with its `plugin.json`, LICENSE and NOTICE, and a `test/` folder for
 host tests. A new project gets a top-level folder with the same shape and its own README, and `tools/build.sh` finds
