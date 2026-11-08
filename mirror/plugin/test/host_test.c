@@ -1,6 +1,6 @@
 /* Host test for mirror.c (Linux/WSL): maps a fake framebuffer at 0x02000000, loads a 256x400 24-bit BMP frame from
  * the listener, runs the plugin's overlay and service passes and writes the SysEx it sends to a file.
- *   gcc -DOP1_HOST -I<synth_sdk> host_test.c -o host_test && ./host_test frame.bmp out.syx
+ *   gcc -O2 -I<hundekraft source>/ext/kennel/synth_sdk mirror/plugin/test/host_test.c -o /tmp/host_test && /tmp/host_test frame.bmp out.syx
  * After the first run it draws a 20 x 30 box into the frame and runs again, so the stream also exercises diffs.
  * Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see LICENSE and NOTICE).
  */

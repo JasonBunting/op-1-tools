@@ -16,6 +16,7 @@ don't trust it with a good idea yet. There is no release; build it from source.
 | [HARDWARE-TEST.md](HARDWARE-TEST.md) | Every control, which ones differ from stock, and the device tests. |
 | [docs/pattern-plus-poc-spec.md](docs/pattern-plus-poc-spec.md) | The design. |
 | `docs/Original_OP-1_Pattern_Sequencer_Technical_Research.md` | Research on the stock Pattern sequencer. |
+| [docs/hundekraft-request-background-drums.md](docs/hundekraft-request-background-drums.md) | Notes for a Hundekraft feature request: keeping a drum pattern playing on the Synth screen. |
 
 ## Build and install
 
