@@ -65,17 +65,38 @@ static void pp_pkey_up(void *self, int key)               /* both modes: the mod
 #define PP_SLOTS     8
 #define PP_NAME_MAX  24
 #define PP_DIR       "/yaffs2/user/patternplus"
-static int pp_store_ser(int pos, char *out, int n) { return pp_serialize(pos, out, n); }
+/* An auto-save that can't be read is never written over with an empty grid (Hundekraft's plugin guide): its text is
+ * kept and written back unchanged until the main loop has copied it to unreadable-s.txt / unreadable-d.txt. Then saving
+ * resumes. Loading a slot or clearing on purpose also lets it go. */
+static char pp_kept[2][PP_STORE_MAX];
+static volatile int16_t pp_kept_len[2];
+static volatile uint8_t pp_kept_tried[2];
+static int pp_store_ser(int pos, char *out, int n)        /* saver thread */
+{
+    int len = pp_kept_len[pos & 1], o = 0;
+    if (!len) return pp_serialize(pos, out, n);
+    for (int i = 0; i < len && o + 2 <= n; i++) {          /* a quote is doubled, as SQL wants inside '...' */
+        char c = pp_kept[pos & 1][i];
+        if (c == '\'') out[o++] = c;
+        out[o++] = c;
+    }
+    return o;
+}
 static int pp_store_parse(int pos, const char *s, int len)
 {
     int r = pp_parse(pos, s, len);
-    if (r) op1_toast("pattern+ save unreadable");
+    if (r) {
+        for (int i = 0; i < len && i < PP_STORE_MAX; i++) pp_kept[pos & 1][i] = s[i];
+        pp_kept_len[pos & 1] = (int16_t)(len < PP_STORE_MAX ? len : PP_STORE_MAX);
+        op1_toast("pattern+ save unreadable, copy kept");
+    }
     return r;
 }
 static char pp_sql[1024];
 static sq_store_t pp_store = { .name = "patternplus", .ser = pp_store_ser, .parse = pp_store_parse,
                                .sql = pp_sql, .cap = sizeof pp_sql, .maxlen = PP_STORE_MAX + 1 };
 static void pp_changed(void) { sq_store_dirty(&pp_store); }
+static void pp_let_go(int mode) { pp_kept_len[mode & 1] = 0; }   /* the user replaced the work on purpose */
 
 enum { PP_JOB_NONE, PP_JOB_SCAN, PP_JOB_LOAD };
 enum { PP_ASK_NONE, PP_ASK_LOAD, PP_ASK_NEW };
@@ -127,6 +148,7 @@ static void pp_do_load(int mode, int slot)
     if (fd >= 0) { n = op1_file_read(fd, pp_file_buf, sizeof pp_file_buf); op1_file_close(fd); }
     int len = n > 0 ? pp_name_len(pp_file_buf, n) : -1;
     if (len <= 0 || pp_parse(mode, pp_file_buf + len + 1, n - len - 1)) { pp_say("NOT LOADED  FILE UNREADABLE"); return; }
+    pp_let_go(mode);
     pp_loaded[mode] = (int8_t)slot;
     pp_say("LOADED");
     pp_changed();
@@ -150,10 +172,27 @@ static void pp_save_done(const char *text, int ok)        /* main loop */
     pp_say("SAVED");
 }
 static op1_text_entry_t pp_entry = { "COLLECTION NAME", 0, 0, PP_NAME_MAX, 0, pp_save_done, 0 };
+static void pp_keep_unreadable(void)                      /* main loop: once per mode and boot */
+{
+    for (int m = 0; m < 2; m++) {
+        int len = pp_kept_len[m];
+        if (!len || pp_kept_tried[m]) continue;
+        pp_kept_tried[m] = 1;
+        op1_file_mkdir(PP_DIR);
+        int fd = op1_file_open(m ? PP_DIR "/unreadable-d.txt" : PP_DIR "/unreadable-s.txt",
+                               OP1_FILE_WRITE | OP1_FILE_CREATE | OP1_FILE_TRUNC), wrote = -1;
+        if (fd >= 0) { wrote = op1_file_write(fd, pp_kept[m], len); op1_file_close(fd); }
+        if (wrote != len) continue;                       /* not copied: the database keeps it until a load or clear */
+        pp_let_go(m);
+        pp_changed();
+    }
+}
 static void pp_event(int id, int32_t arg)
 {
     (void)arg;
-    if (id != OP1_EV_SERVICE || !pp_job) return;
+    if (id != OP1_EV_SERVICE) return;
+    pp_keep_unreadable();
+    if (!pp_job) return;
     int job = pp_job;
     if (job == PP_JOB_SCAN) pp_do_scan(pp_job_mode);
     if (job == PP_JOB_LOAD) pp_do_load(pp_job_mode, pp_job_slot);
@@ -174,6 +213,7 @@ static void pp_saved_press(int mode, int knob, int shift)
         if (pp_ask == PP_ASK_NEW) {
             pp_ask = PP_ASK_NONE;
             pp_clear(mode);
+            pp_let_go(mode);
             pp_loaded[mode] = -1;
             pp_say("NEW");
             pp_changed();

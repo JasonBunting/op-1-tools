@@ -65,6 +65,8 @@ In the saved view:
 
 Saving onto a used slot replaces it after you finish the name. Synth and Drum each have their own 8 slots. Green text marks the slot you last loaded or saved.
 
+If the automatic save can't be read at power on, `pattern+ save unreadable, copy kept` appears, and Pattern+ starts with an empty page. The unreadable save is copied to `patternplus/unreadable-s.txt` (Synth) or `unreadable-d.txt` (Drum) before anything is saved over it. You can't easily cause this on purpose, so there's no test step for it.
+
 The grid's other controls, including Shift + note key, do nothing in the chain and saved views.
 
 On the Synth, Drum, Tape and Mixer screens, holding a note key plays the page transposed, or changes the transposition if HOLD is on.
