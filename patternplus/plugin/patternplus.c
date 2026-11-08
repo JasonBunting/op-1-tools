@@ -1,5 +1,5 @@
 /* Pattern+: a stock-Pattern-style grid sequencer with multiple pages, as a Hundekraft 3.2.3 sequencer type.
- * This build has the grid, pages, chains and saving (docs/pattern-plus-poc-spec.md).
+ * This build has the grid, pages, chains and saving (patternplus/docs/pattern-plus-poc-spec.md).
  * Screen layout and colors measured from a capture of stock Pattern on the device; the artwork is drawn here.
  * Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see LICENSE and NOTICE). */
 #pragma GCC optimize("no-tree-loop-distribute-patterns")      /* the firmware has no memcpy / memset */

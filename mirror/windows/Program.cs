@@ -1,6 +1,6 @@
-// Op1Mirror: shows the OP-1's screen live, from the mirror plugin's SysEx (firmware/mirror).
+// Op1Mirror: shows the OP-1's screen live, from the mirror plugin's SysEx (mirror/plugin).
 //   Op1Mirror                          window; connects to the first MIDI input named like "OP-1"
-//   Op1Mirror --replay in.syx out.bmp  decodes a recorded stream (firmware/mirror/test) into a landscape BMP
+//   Op1Mirror --replay in.syx out.bmp  decodes a recorded stream (mirror/plugin/test) into a landscape BMP
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -67,7 +67,7 @@ sealed class MirrorWindow : Window
     double bestPasses;
     string connection = "Looking for the OP-1…";
 
-    // Control changes on channel 16, heard by the plugin's midi_raw (firmware/mirror/mirror.c)
+    // Control changes on channel 16, heard by the plugin's midi_raw (mirror/plugin/mirror.c)
     const int ControlChannel = 15, KeepAliveCc = 118, BudgetCc = 119, ScanCc = 120, ModeCc = 121, RefreshCc = 122;
     const int ModeFrames = 1, ModePalette = 2, ModeRle = 4;
 

@@ -17,7 +17,7 @@
  * shows the picture only at FRAME markers, so it never shows parts of two frames. The buffer holds a 188 x 376 screen
  * (as measured) in rows of 192 pixels; without it, or on a larger screen, the plugin stays live.
  *
- * Raster (docs/audit-001-framebuffer.md): r[0] RGB565 LE buffer, 0x02000000 or 0x03000000 (double buffered), r[1]
+ * Raster (mirror/docs/audit-001-framebuffer.md): r[0] RGB565 LE buffer, 0x02000000 or 0x03000000 (double buffered), r[1]
  * width, r[2] stride 512 bytes, r[3] height; portrait, the visible area is the top-left r[1] x r[3].
  *
  * SysEx: F0 7D 'O' 'M' <type> <7-bit packed payload, devupd's hi-byte-first layout> F7.

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Build the downloadable files for a GitHub release into build/release/<tag>/, and optionally publish them.
+# Build the OP-1 Mirror's downloadable files for a GitHub release into build/release/<tag>/, and optionally publish.
 # Run from Git Bash on Windows (it uses WSL for the plugin and dotnet for the viewers).
-#   tools/release.sh [--publish] [--allow-dirty] [tag]      tag defaults to v<plugin.json version>
-# Needs:
+#   mirror/release.sh [--publish] [--allow-dirty] [tag]      tag defaults to mirror-v<plugin.json version>
+# Needs (in the environment, or in .env at the repository root, except the password):
 #   HUNDEKRAFT_KENNEL   WSL path of ext/kennel in the Hundekraft 3.2.3 source (the plugin's SDK and packer)
 #   OP1_KEYSTORE        Windows path of the Android signing keystore (alias op1mirror), made once:
 #                         keytool -genkeypair -keystore op1mirror.keystore -alias op1mirror -keyalg RSA -keysize 2048 -validity 36500
@@ -23,8 +23,9 @@ done
 
 repo="$(cd "$(dirname "$0")/.." && pwd -W)"                     # D:/src/op-1-tools
 cd "$repo"
-version="$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' firmware/mirror/plugin.json)"
-tag="${tag:-v$version}"
+if [ -f .env ]; then set -a; eval "$(tr -d '\r' < .env)"; set +a; fi
+version="$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' mirror/plugin/plugin.json)"
+tag="${tag:-mirror-v$version}"
 out="build/release/$tag"
 
 fail() { echo "release: $*" >&2; exit 1; }
@@ -39,18 +40,16 @@ rm -rf "$out"
 mkdir -p "$out"
 
 echo "== plugin"
-drive="$(echo "${repo:0:1}" | tr '[:upper:]' '[:lower:]')"
-MSYS_NO_PATHCONV=1 wsl.exe -d Ubuntu-24.04 --cd "/mnt/$drive${repo:2}" -- \
-    bash tools/pack-plugin.sh "$HUNDEKRAFT_KENNEL" firmware/mirror "$out/mirror.knl"
+bash tools/build.sh -o "$out" mirror
 
 echo "== Windows viewer"
-dotnet publish desktop/Op1Mirror/Op1Mirror.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true \
+dotnet publish mirror/windows/Op1Mirror.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true \
     -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true \
     -p:DebugType=none -o "build/release/obj/windows" -v quiet -nologo
 cp build/release/obj/windows/Op1Mirror.exe "$out/Op1Mirror.exe"
 
 echo "== Android viewer"
-dotnet publish mobile/Op1Mirror.Mobile/Op1Mirror.Mobile.csproj -f net10.0-android -c Release \
+dotnet publish mirror/mobile/Op1Mirror.Mobile.csproj -f net10.0-android -c Release \
     -p:AndroidPackageFormat=apk -p:RuntimeIdentifiers=android-arm64 \
     -p:AndroidKeyStore=true -p:AndroidSigningKeyStore="$OP1_KEYSTORE" -p:AndroidSigningKeyAlias=op1mirror \
     -p:AndroidSigningStorePass=env:OP1_KEYSTORE_PASS -p:AndroidSigningKeyPass=env:OP1_KEYSTORE_PASS \
@@ -74,7 +73,7 @@ Mirror the OP-1's screen on Windows or Android. Built from $commit. Shared as-is
 
 The OP-1 talks to one viewer at a time: unplug it from the PC (or close the Windows viewer) before using the phone.
 
-Licenses: the plugin is GPL-3.0-or-later with the OP-1 firmware permission (source: firmware/mirror at this tag);
+Licenses: the plugin is GPL-3.0-or-later with the OP-1 firmware permission (source: mirror/plugin at this tag);
 the viewers are MIT. See the README.
 EOF
 
@@ -84,9 +83,9 @@ ls -l "$out"
 files=("$out/mirror.knl" "$out/Op1Mirror.exe" "$out/op1-mirror.apk")
 if [ "$publish" = 1 ]; then
     git rev-parse -q --verify "refs/tags/$tag" >/dev/null || fail "tag $tag doesn't exist: create and push it first"
-    gh release create "$tag" "${files[@]}" --title "OP-1 Mirror $tag" --notes-file "$out/notes.md"
+    gh release create "$tag" "${files[@]}" --title "OP-1 Mirror v$version" --notes-file "$out/notes.md"
 else
     echo
     echo "To publish (after pushing the commit and tag $tag):"
-    echo "  gh release create $tag ${files[*]} --title \"OP-1 Mirror $tag\" --notes-file $out/notes.md"
+    echo "  gh release create $tag ${files[*]} --title \"OP-1 Mirror v$version\" --notes-file $out/notes.md"
 fi

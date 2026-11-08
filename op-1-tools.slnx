@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/mirror/">
+    <Project Path="mirror/windows/Op1Mirror.csproj" />
+    <Project Path="mirror/mobile/Op1Mirror.Mobile.csproj" />
+  </Folder>
+  <Folder Name="/research/">
+    <Project Path="research/rastprobe/listener/RastProbe.Listener.csproj" />
+  </Folder>
+</Solution>

@@ -68,7 +68,7 @@ The Hundekraft source is kept outside the repository, at `../OP-1-Related/hundek
 - `ext/kennel/synth_sdk/seq/seq_text.h`: storage helpers referenced by the sequencer API.
 - `ext/kennel/synth_sdk/op1_feature.h`: shared text-entry API, settings, and file services.
 - `ext/kennel/synth_sdk/kennel/kn_exports.c`: exports available to loadable plugins.
-- Repository `firmware/mirror/` and `tools/pack-plugin.sh`: existing local plugin packaging conventions.
+- Repository `mirror/plugin/` and `tools/pack-plugin.sh`: existing local plugin packaging conventions.
 
 These paths are relative to `hundekraft-3.2.3-source/` except the last item. The source tree is locally available but untracked; do not assume it exists in a fresh clone or commit it wholesale.
 
@@ -115,6 +115,6 @@ Use host-side checks for chain traversal, page boundaries, and serialization whe
 
 ## Implementation handoff expectations
 
-Read applicable repository instructions and preserve unrelated local changes. Keep Pattern+ source in a dedicated directory, tentatively `firmware/patternplus/`. Follow existing licensing requirements for SDK-derived code. Do not publish, flash the device, or change the installed firmware without explicit authorization.
+Read applicable repository instructions and preserve unrelated local changes. Keep Pattern+ source in a dedicated directory, tentatively `patternplus/plugin/`. Follow existing licensing requirements for SDK-derived code. Do not publish, flash the device, or change the installed firmware without explicit authorization.
 
 Deliver the plugin artifact, build instructions, exact control mapping, supported features, known limitations, and a short hardware test checklist. Keep progress reports concise. This document is a planning artifact; its creation does not authorize coding in the current planning chat.

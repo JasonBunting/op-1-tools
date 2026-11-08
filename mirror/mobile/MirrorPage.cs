@@ -7,7 +7,7 @@ namespace Op1Mirror.Mobile;
 
 /// <summary>
 /// The OP-1's screen, full screen in landscape. Tap to show or hide the controls, which work as in the Windows viewer
-/// (desktop/Op1Mirror): the plugin's settings go out as control changes on channel 16 (firmware/mirror/mirror.c).
+/// (mirror/windows): the plugin's settings go out as control changes on channel 16 (mirror/plugin/mirror.c).
 /// The controls' settings are remembered between launches. The MIDI ports are held only while the app is on screen.
 /// </summary>
 public sealed class MirrorPage : ContentPage

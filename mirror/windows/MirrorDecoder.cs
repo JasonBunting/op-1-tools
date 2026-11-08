@@ -1,7 +1,7 @@
 namespace Op1Mirror;
 
 /// <summary>
-/// Decodes the mirror plugin's SysEx (firmware/mirror/mirror.c) into the OP-1's portrait RGB565 framebuffer.
+/// Decodes the mirror plugin's SysEx (mirror/plugin/mirror.c) into the OP-1's portrait RGB565 framebuffer.
 /// Not thread-safe: feed it from one thread and copy the pixels out under a lock.
 /// </summary>
 public sealed class MirrorDecoder

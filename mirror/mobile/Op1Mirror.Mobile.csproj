@@ -29,7 +29,7 @@
 
 	<ItemGroup>
 		<!-- The same decoder as the Windows viewer -->
-		<Compile Include="..\..\desktop\Op1Mirror\MirrorDecoder.cs" Link="MirrorDecoder.cs" />
+		<Compile Include="..\windows\MirrorDecoder.cs" Link="MirrorDecoder.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

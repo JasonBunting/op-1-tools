@@ -23,7 +23,7 @@ Very likely **yes, as an ordinary feature plugin, without changing the Kennel co
 
 ## Measured on hardware (rastprobe 0.2, Hundekraft 3.1.4, 2026-11-02)
 
-1. **Proven end-to-end:** a plugin's main-loop service streamed the framebuffer over USB MIDI SysEx to a Windows listener, and the image reassembled correctly (Settings page, `firmware/rastprobe`, `desktop/RastProbe.Listener`).
+1. **Proven end-to-end:** a plugin's main-loop service streamed the framebuffer over USB MIDI SysEx to a Windows listener, and the image reassembled correctly (Settings page, `research/rastprobe/plugin`, `research/rastprobe/listener`).
 2. **Raster descriptor:** `r[0]` buffer, `r[1]` width, `r[2]` stride in bytes, `r[3]` height. The Settings page reads 188 × 376, stride 512. `r[4..7]` repeat the buffer and size, plus `r[5]=0x010A0804` (unknown). Size varies by screen; 198 × 400 is another panel.
 3. **Double buffered:** `r[0]` alternates between `0x02000000` and `0x03000000`.
 4. **Orientation:** stored portrait (the visible area is the top-left `r[1]` × `r[3]`). Rotate 90° clockwise for the OP-1's landscape view: landscape (x, y) = buffer (y, H−1−x).

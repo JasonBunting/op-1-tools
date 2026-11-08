@@ -8,16 +8,16 @@ Saving hasn't been tried on the device yet, so run the **Saving test** below fir
 
 ## Build
 
-Run in WSL from the repository root:
+From the repository root, in Git Bash or WSL:
 
 ```bash
-bash tools/pack-plugin.sh ../OP-1-Related/hundekraft-3.2.3-source/ext/kennel firmware/patternplus build/patternplus.knl
+bash tools/build.sh patternplus
 ```
 
 Host test of the logic:
 
 ```bash
-gcc -Wall -I firmware/patternplus firmware/patternplus/test/host_test.c firmware/patternplus/pp_player.c firmware/patternplus/pp_store.c -o /tmp/pp_test && /tmp/pp_test
+gcc -Wall -I patternplus/plugin patternplus/plugin/test/host_test.c patternplus/plugin/pp_player.c patternplus/plugin/pp_store.c -o /tmp/pp_test && /tmp/pp_test
 ```
 
 ## Install

@@ -1,5 +1,5 @@
 /* Host test of Pattern+'s pages, grid editing and playback.
- *   gcc -Wall -I firmware/patternplus firmware/patternplus/test/host_test.c firmware/patternplus/pp_player.c firmware/patternplus/pp_store.c -o /tmp/pp_test && /tmp/pp_test
+ *   gcc -Wall -I patternplus/plugin patternplus/plugin/test/host_test.c patternplus/plugin/pp_player.c patternplus/plugin/pp_store.c -o /tmp/pp_test && /tmp/pp_test
  * Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see LICENSE and NOTICE). */
 #include <stdio.h>
 #include <string.h>
