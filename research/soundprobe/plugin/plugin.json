@@ -1,0 +1,13 @@
+{
+  "name": "soundprobe",
+  "kind": "feature",
+  "symbol": "FEATURE_soundprobe",
+  "loadable": true,
+  "author": "Jason Bunting",
+  "version": "0.1",
+  "claims": [
+    "key:synth:scissors",
+    "key:synth:shift+scissors"
+  ],
+  "sources": ["soundprobe.c"]
+}

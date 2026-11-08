@@ -62,10 +62,44 @@ is decided unless it says **Agreed**. Checked against the Hundekraft 3.2.3 sourc
    mutable-slot problem: editing one would change every collection that uses it.
 5. **Proposed load choices:** pattern only (the default when there's no sound), pattern and sound, and sound only.
 
+## Question 1: can the SDK read and apply a whole sound?
+
+Short answer: not through SDK services alone. It can be done today the way the randomiser does it, by fixed
+address. Checked against `kn_exports.c`, the 3.2.3 headers and the live plugin guide (llms.txt, which names no
+sound functions and says to trust `kn_exports.c`).
+
+1. **Apply: half there.** `op1_sound_apply(int *patch)` is exported, but it needs a pointer to the slot's patch
+   object, and no service hands one out. The randomiser gets it from a fixed address (`0x01DDD7E8 + slot * 0x38`) and
+   also calls firmware functions by address: voices reset, `patch_set`, and the patch's save job.
+2. **Read: no service.**
+   1. Drum slots: `op1_feature_drum.h` publishes `OP1_DRUM_PATCH_JSON(s)`, the slot's patch JSON. It's a header macro
+      with an address, so the core vouches for it, but reading it still needs jsoncpp at firmware addresses (listed
+      in `docs/preset-identity.md`).
+   2. Synth slots: no published equivalent. The randomiser defines its own (`PATCH(s)` and the live word arrays).
+3. **Snapshots don't help.** There is no snapshot load, and `op1_snapshot_save` only finishes a hold-to-save that a
+   feature held back in `OP1_EV_SAVE_HOLD`. A plugin can't save a slot whenever it wants.
+4. **Samples are a separate problem.** A sampled drum kit or a synth sampler sound is patch JSON plus an audio file
+   that the stock background saver writes (`op1_feature_sampler.h`). The JSON alone won't bring back the sound. By
+   the OP-1's own limits, a kit holds up to 12 seconds of audio (about 1 MB) and a synth sample 6 seconds.
+
+Options:
+
+1. **Follow the randomiser:** copy its fixed-address approach. It works on 3.2.3 and it's Hundekraft's own code, but
+   it breaks if a core moves those addresses, and it goes against the guide's "use SDK services" rule.
+2. **Ask for a core service,** for example `op1_sound_get(kind, slot, buf, len)` returning the patch JSON as text and
+   `op1_sound_set(kind, slot, text)` applying and saving it, with the core handling voices, validation, missing
+   engines and the save job. Draft it like `hundekraft-request-background-drums.md`.
+3. **Both:** prototype with option 1 for synth sounds to try the feel on the device, and send the request.
+
+**Agreed:** option 3.
+
+1. Probe: `research/soundprobe` (Shift + scissors copies the slot's whole patch JSON into memory, scissors puts it
+   back). Built; device test steps in its README. Not yet tried on the device.
+2. Request: drafted in `hundekraft-request-sound-services.md`, held until the probe's results are in.
+
 ## Open questions
 
-1. Can a plugin read and apply a whole sound through SDK services, or does it need a new core service? If the latter,
-   draft a request like `hundekraft-request-background-drums.md`.
+1. ~~Can a plugin read and apply a whole sound through SDK services?~~ Not alone; see Question 1. Going with both a probe and a request.
 2. Drum kits and sampler sounds: embed the audio, or store a reference with a check that it hasn't changed? How big is
    a kit?
 3. Saving: ask every time, or a setting such as "always include sound"? The OP-1 has few buttons to spare.
