@@ -519,6 +519,97 @@ int main(void)
       pp_view_toggle(0); check("back to the grid", pp_bank[0].view, PP_VIEW_GRID);
     }
 
+    /* --- page copy, paste, delete and undo --- */
+    {
+        pp_bank_t *b = &pp_bank[1];
+        fresh();
+        check("paste with nothing copied", pp_page_paste(1), PP_OP_EMPTY);
+        check("undo with nothing done", pp_undo(1), PP_OP_EMPTY);
+        pp_page_next(1); pp_page_next(1); pp_page_next(1);       /* A B C D */
+        for (int i = 0; i < 4; i++) { page(1, i)->notes[0] = 1u << i; page(1, i)->swing = (uint8_t)(30 + i); }
+        page(1, 2)->len = 8; page(1, 2)->dir = PP_DIR_REVERSE;
+        /* copy C, paste over A: everything about the page comes along, and C keeps its own */
+        b->sel = 2;
+        check("copy", pp_page_copy(1), PP_OP_OK);
+        b->sel = 0;
+        check("paste", pp_page_paste(1), PP_OP_OK);
+        check("pasted notes", (int)page(1, 0)->notes[0], 1 << 2);
+        check("pasted swing", page(1, 0)->swing, 32);
+        check("pasted length", page(1, 0)->len, 8);
+        check("pasted direction", page(1, 0)->dir, PP_DIR_REVERSE);
+        check("C still there", (int)page(1, 2)->notes[0], 1 << 2);
+        check("drum clipboard only", pp_page_paste(0), PP_OP_EMPTY);
+        check("undo paste", pp_undo(1), PP_OP_OK);
+        check("A back", (int)page(1, 0)->notes[0], 1);
+        check("A's swing back", page(1, 0)->swing, 30);
+        /* paste as a new page */
+        check("paste new", pp_page_paste_new(1), PP_OP_OK);
+        check("paste new: count", b->count, 5);
+        check("paste new: selected", b->sel, 4);
+        check("paste new: notes", (int)page(1, 4)->notes[0], 1 << 2);
+        check("undo paste new", pp_undo(1), PP_OP_OK);
+        check("undo paste new: count", b->count, 4);
+        /* delete A and B: C becomes A, and the chain follows. A > B > C > D > C > D -> A > B > A > B */
+        { static const uint8_t c[] = { 0, 1, 2, 3, 2, 3 }; for (int i = 0; i < 6; i++) b->chain[i] = c[i]; b->chain_len = 6; }
+        b->sel = 0;
+        check("delete A", pp_page_delete(1), PP_OP_OK);
+        check("delete B (now A)", pp_page_delete(1), PP_OP_OK);
+        check("two pages left", b->count, 2);
+        check("C is A", (int)page(1, 0)->notes[0], 1 << 2);
+        check("D is B", (int)page(1, 1)->notes[0], 1 << 3);
+        check("old slots blanked", (int)page(1, 2)->notes[0] | page(1, 3)->notes[0], 0);
+        check("chain length", b->chain_len, 4);
+        check("chain", b->chain[0] << 12 | b->chain[1] << 8 | b->chain[2] << 4 | b->chain[3], 0x0101);
+        /* undo, twice, brings back all four pages and the chain */
+        check("undo delete", pp_undo(1), PP_OP_OK);
+        check("undo delete again", pp_undo(1), PP_OP_OK);
+        check("four pages again", b->count, 4);
+        check("A's notes again", (int)page(1, 0)->notes[0], 1);
+        check("chain again", b->chain_len, 6);
+        check("chain entry again", b->chain[4], 2);
+        /* every step so far has been undone */
+        check("undo older steps", pp_undo(1), PP_OP_EMPTY);
+        /* deleting the last page selects the one before it */
+        b->sel = 3;
+        pp_page_delete(1);
+        check("delete last: selected", b->sel, 2);
+        check("delete last: D's entries go", b->chain_len, 4);
+        /* three levels: the fourth step forgets the first */
+        for (int i = 0; i < 4; i++) pp_page_paste(1);
+        check("3 undos", pp_undo(1) | pp_undo(1) | pp_undo(1), PP_OP_OK);
+        check("no 4th", pp_undo(1), PP_OP_EMPTY);
+        /* the only page: blanked, its chain entries gone */
+        fresh();
+        page(1, 0)->notes[3] = 5; page(1, 0)->len = 4;
+        b->chain[0] = 0; b->chain[1] = 0; b->chain_len = 2;
+        pp_page_delete(1);
+        check("only page: one page", b->count, 1);
+        check("only page: blank", (int)page(1, 0)->notes[3], 0);
+        check("only page: settings", page(1, 0)->len, PP_COLS);
+        check("only page: chain empty", b->chain_len, 0);
+        check("only page: undo", pp_undo(1), PP_OP_OK);
+        check("only page: notes back", (int)page(1, 0)->notes[3], 5);
+        /* nothing while playing */
+        page(1, 0)->notes[0] = 1;
+        pp_page_copy(1);
+        pp_set_hold(1, 1);
+        check("no copy while playing", pp_page_copy(1), PP_OP_RUNNING);
+        check("no paste while playing", pp_page_paste(1), PP_OP_RUNNING);
+        check("no paste new while playing", pp_page_paste_new(1), PP_OP_RUNNING);
+        check("no delete while playing", pp_page_delete(1), PP_OP_RUNNING);
+        check("no undo while playing", pp_undo(1), PP_OP_RUNNING);
+        pp_set_hold(1, 0);
+        /* full: no new page */
+        while (b->count < PP_PAGES) pp_page_next(1);
+        check("paste new when full", pp_page_paste_new(1), PP_OP_FULL);
+        /* a clear or a load forgets the clipboard and undo; a save does not */
+        { char t[PP_STORE_MAX + 1]; check("save", pp_serialize(1, t, sizeof t) > 0, 1); }
+        check("save keeps the clipboard", pp_page_paste(1), PP_OP_OK);
+        pp_clear(1);
+        check("clear forgets the clipboard", pp_page_paste(1), PP_OP_EMPTY);
+        check("clear forgets undo", pp_undo(1), PP_OP_EMPTY);
+    }
+
     /* --- ticks before the player is set up --- */
     memset(pp_bank, 0, sizeof pp_bank);
     pp_tick(0);

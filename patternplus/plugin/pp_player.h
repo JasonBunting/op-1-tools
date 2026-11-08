@@ -25,6 +25,13 @@ typedef struct {
     volatile uint8_t start, len, swing, dir;
 } pp_page_t;
 
+#define PP_UNDO 3                           /* page copy / paste / delete steps that can be taken back, per mode */
+typedef struct {                            /* what a page operation can change */
+    pp_page_t pages[PP_PAGES];
+    uint8_t chain[PP_CHAIN_MAX];
+    uint8_t count, sel, chain_len;
+} pp_snap_t;
+
 typedef struct {
     pp_page_t pages[PP_PAGES];
     volatile uint8_t init, count, sel, cursor, pitch_key, hold;
@@ -35,6 +42,9 @@ typedef struct {
     volatile uint8_t chain[PP_CHAIN_MAX];   /* page indexes; repeats share one page. Empty: the selected page loops */
     volatile uint8_t chain_len, chain_cursor, chain_pick, view, follow;
     volatile int8_t chain_pos;              /* the occurrence playing; -1 just after removing the first while it played */
+    pp_page_t clip;                         /* the copied page; not saved, so it lasts until a load, a clear or power off */
+    uint8_t has_clip, undo_n;
+    pp_snap_t undo[PP_UNDO];                /* oldest first */
 } pp_bank_t;
 
 extern pp_bank_t pp_bank[2];                /* 0 synth, 1 drum; .bss is zero until pp_init */
@@ -61,6 +71,15 @@ void pp_add_dir(int mode, int delta);
 void pp_page_prev(int mode);
 int pp_page_next(int mode);                 /* 0 moved, 1 created a blank page, -1 at the limit (nothing changed) */
 
+/* page operations: stopped only. Paste, paste-new and delete can be undone; a new one past PP_UNDO forgets the oldest */
+enum { PP_OP_OK = 0, PP_OP_RUNNING = -1, PP_OP_EMPTY = -2, PP_OP_FULL = -3 };
+int pp_page_copy(int mode);                 /* the selected page, all its settings too, to this mode's clipboard */
+int pp_page_paste(int mode);                /* the clipboard over the selected page. EMPTY: nothing copied */
+int pp_page_paste_new(int mode);            /* the clipboard as a new last page, which is then selected */
+int pp_page_delete(int mode);               /* later pages move down a letter and the chain follows them; entries of
+                                               the deleted page go. The only page is blanked instead */
+int pp_undo(int mode);                      /* EMPTY: nothing to undo */
+
 /* chain */
 void pp_view_toggle(int mode);              /* grid, chain, saved, grid: playback is not touched */
 void pp_chain_move(int mode, int delta);    /* over the entries and the free slot after them */
@@ -70,7 +89,8 @@ void pp_chain_remove(int mode);             /* the entry at the cursor */
 void pp_resume_follow(int mode);            /* the grid goes back to showing the playing page */
 
 /* saving (pp_store.c): text that can be stored anywhere; nothing here touches the database or files */
-void pp_clear(int mode);                    /* stop this mode and start over with one empty page */
+void pp_clear(int mode);                    /* stop this mode and start over with one empty page; forgets the clipboard
+                                               and undo too (loading clears first) */
 int pp_serialize(int mode, char *out, int cap);     /* -> length, 0 if it doesn't fit; no terminator */
 int pp_parse(int mode, const char *s, int len);     /* 0 replaced this mode's work (stopped); -1 refused, nothing changed */
 

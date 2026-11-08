@@ -1,6 +1,6 @@
 # Pattern+ couch sheet and tests
 
-The grid, pages and basic chain playback have passed on the device. This build adds saving. Your work is saved automatically and comes back after a power off. Saved collections are a separate list you can name, load and start over from.
+The grid, pages and basic chain playback have passed on the device. This build adds copying, pasting and deleting pages, with undo. Saving is automatic and comes back after a power off; saved collections are a separate list you can name, load and start over from.
 
 ## Before you trust it with a good idea
 
@@ -41,7 +41,12 @@ Open the Hundekraft workshop, go to **Your plugins**, add `build/patternplus.knl
 | Shift + blue push | Previous page | New |
 | Shift + green push | Next page, or a new blank page after the last one | New |
 | Shift + white push | Next view: grid, chain, saved, then grid again. Playback isn't disturbed | New |
-| Shift + orange push | Makes the grid follow the playing page again | New |
+| Shift + orange push | Playing: makes the grid follow the playing page again. Stopped: undoes the last paste or delete, up to 3 | New |
+| Lift | Stopped: copies this page, with its length, swing and direction | New |
+| Drop | Stopped: asks, then pastes the copy over this page | New |
+| Shift + drop | Stopped: adds the copy as a new last page | New |
+| Scissors | Stopped: asks, then deletes this page. Later pages move down a letter and the chain follows them | New |
+| Green push / orange push, while asked | Green confirms, orange cancels | New |
 
 In the chain view:
 
@@ -74,7 +79,7 @@ On the Synth, Drum, Tape and Mixer screens, holding a note key plays the page tr
 
 ## Differences from stock in this build
 
-1. **Lift, drop and scissors** do nothing on this screen.
+1. **Lift, drop and scissors** copy, paste and delete pages instead of stock's own uses.
 2. **Left / right and blue while playing** do nothing. Stock shows the cursor fighting the playhead; I left that out.
 3. **Shift + blue while playing** does nothing.
 4. **Font:** the swing, HOLD and page labels use Hundekraft's stroke font, so they won't match stock exactly.
@@ -104,6 +109,24 @@ On the Synth, Drum, Tape and Mixer screens, holding a note key plays the page tr
 9. Turn the OP-1 off and on. Both names are still there, and each loads correctly.
 10. Start a save, then press a mode key instead of finishing the name. Nothing changes.
 11. Load a slot while a pattern plays. It stops with no stuck notes.
+
+## Copy, paste and delete test
+
+In Drum mode, select `patternplus`, with nothing playing. The message line is under the grid.
+
+1. Make pages A, B, C and D with Shift + green push. Give each a different beat, and give C a shorter section and a different swing.
+2. Build the chain `A > B > C > D > C > D` in the chain view, then come back to the grid.
+3. On C, press lift. `COPIED C` shows.
+4. Go to A with Shift + blue push and press drop. `PASTE OVER A? GREEN YES ORANGE NO` shows and stays. Push orange: `CANCELLED`, and A is unchanged.
+5. Press drop again and push green: `PASTED OVER A`. A now has C's beat, section and swing. C is unchanged.
+6. Press Shift + orange push: `UNDONE`, and A's own beat is back.
+7. Press Shift + drop. `PASTED AS E` shows and you're on a new page E with C's beat. Press Shift + orange push: E is gone, and the page counter reads `/D` again.
+8. Go to A and press scissors, then push green: `DELETED A`. Do it again. You're on A, which holds C's beat, and the counter reads `/B`. The chain view shows `A > B > A > B`.
+9. Press Shift + orange push twice. All four pages and the original chain are back.
+10. Press Shift + orange push again: `NOTHING TO UNDO`.
+11. Switch to Synth mode and press drop: `NOTHING COPIED`. Synth and Drum each have their own copy and undo.
+12. Back in Drum mode, start the pattern and press lift: `STOP FIRST`.
+13. With one page left, delete it. You get one blank page, and the chain is empty.
 
 ## Chain test
 

@@ -99,15 +99,27 @@ static void pp_changed(void) { sq_store_dirty(&pp_store); }
 static void pp_let_go(int mode) { pp_kept_len[mode & 1] = 0; }   /* the user replaced the work on purpose */
 
 enum { PP_JOB_NONE, PP_JOB_SCAN, PP_JOB_LOAD };
-enum { PP_ASK_NONE, PP_ASK_LOAD, PP_ASK_NEW };
+enum { PP_ASK_NONE, PP_ASK_LOAD, PP_ASK_NEW, PP_ASK_PASTE, PP_ASK_DELETE };
 static char pp_slot_name[2][PP_SLOTS][PP_NAME_MAX + 1];   /* upper case; empty: nothing in the slot */
 static char pp_file_buf[PP_NAME_MAX + 1 + PP_STORE_MAX];
 static int8_t pp_loaded[2] = { -1, -1 };
-static volatile uint8_t pp_slot_at[2], pp_job, pp_job_mode, pp_job_slot, pp_ask, pp_save_mode, pp_save_slot;
+static volatile uint8_t pp_slot_at[2], pp_job, pp_job_mode, pp_job_slot, pp_ask, pp_ask_mode, pp_save_mode, pp_save_slot;
 static const char *volatile pp_msg;
 static volatile int16_t pp_msg_ms;
 #define PP_MSG_MS 3000
 static void pp_say(const char *m) { pp_msg = m; pp_msg_ms = PP_MSG_MS; }
+/* A question waits for green (yes) or orange (no) and belongs to the mode that asked it. */
+static void pp_ask_for(int mode, int ask, const char *m) { pp_ask = (uint8_t)ask; pp_ask_mode = (uint8_t)(mode & 1); pp_say(m); }
+/* "<before><page letter><after>": one buffer, as only one message shows at a time */
+static char pp_msg_buf[40];
+static const char *pp_page_msg(const char *before, int page, const char *after)
+{
+    char *e = sq_cat(pp_msg_buf, before);
+    *e++ = (char)('A' + page);
+    *e = 0;
+    sq_cat(e, after);
+    return pp_msg_buf;
+}
 
 static void pp_slot_path(char *p, int mode, int slot)
 {
@@ -225,12 +237,10 @@ static void pp_saved_press(int mode, int knob, int shift)
     }
     if (shift) {
         if (knob != PP_GREEN) return;
-        pp_ask = PP_ASK_NEW;
-        pp_say("CLEAR ALL? GREEN YES ORANGE NO");
+        pp_ask_for(mode, PP_ASK_NEW, "CLEAR ALL? GREEN YES ORANGE NO");
     } else if (knob == PP_GREEN) {
         if (!pp_slot_name[mode][slot][0]) { pp_say("EMPTY"); return; }
-        pp_ask = PP_ASK_LOAD;
-        pp_say("REPLACE WORK? GREEN YES ORANGE NO");
+        pp_ask_for(mode, PP_ASK_LOAD, "REPLACE WORK? GREEN YES ORANGE NO");
     } else if (knob == PP_WHITE) {
         pp_ask = PP_ASK_NONE;
         pp_save_mode = (uint8_t)mode;
@@ -281,14 +291,52 @@ static int pp_input(const op1_input *in)
     }
     return 1;
 }
+/* Lift copies the page, drop pastes over it (Shift + drop: as a new last page), scissors deletes it. Grid view and
+ * stopped only. Pasting over and deleting ask first; all but copy can be undone with Shift + orange push. */
+#define PP_KEY_LIFT     0x0A
+#define PP_KEY_DROP     0x0B
+#define PP_KEY_SCISSORS 0x0C
 static int pp_key_ev(int mode, int code, int pressed, int shift)
 {
-    (void)mode; (void)pressed; (void)shift;
-    return code >= 0x0A && code <= 0x0C;                  /* lift / drop / scissors: nothing yet */
+    if (code < PP_KEY_LIFT || code > PP_KEY_SCISSORS) return 0;
+    mode &= 1;
+    const pp_bank_t *b = &pp_bank[mode];
+    if (!pressed || b->view != PP_VIEW_GRID) return 1;
+    pp_ask = PP_ASK_NONE;                                 /* a new operation replaces any question */
+    if (pp_running(mode)) { pp_say("STOP FIRST"); return 1; }
+    if (code == PP_KEY_LIFT) {
+        pp_page_copy(mode);
+        pp_say(pp_page_msg("COPIED ", b->sel, ""));
+    } else if (code == PP_KEY_SCISSORS) {
+        pp_ask_for(mode, PP_ASK_DELETE, pp_page_msg("DELETE ", b->sel, "? GREEN YES ORANGE NO"));
+    } else if (!b->has_clip) {
+        pp_say("NOTHING COPIED");
+    } else if (!shift) {
+        pp_ask_for(mode, PP_ASK_PASTE, pp_page_msg("PASTE OVER ", b->sel, "? GREEN YES ORANGE NO"));
+    } else if (pp_page_paste_new(mode) == PP_OP_FULL) {
+        pp_full_flash = PP_FLASH_MS;
+    } else {
+        pp_say(pp_page_msg("PASTED AS ", b->sel, ""));
+        pp_changed();
+    }
+    return 1;
+}
+static void pp_page_answer(int mode, int knob)            /* a paste or delete question is up */
+{
+    int ask = pp_ask, page = pp_bank[mode].sel;
+    if (knob == PP_ORANGE) { pp_ask = PP_ASK_NONE; pp_say("CANCELLED"); }
+    if (knob != PP_GREEN) return;
+    pp_ask = PP_ASK_NONE;
+    int r = ask == PP_ASK_PASTE ? pp_page_paste(mode) : pp_page_delete(mode);
+    if (r == PP_OP_RUNNING) { pp_say("STOP FIRST"); return; }
+    if (r) { pp_msg_ms = 0; return; }
+    pp_say(ask == PP_ASK_PASTE ? pp_page_msg("PASTED OVER ", page, "") : pp_page_msg("DELETED ", page, ""));
+    pp_changed();
 }
 static void pp_press_ev(int mode, int knob, int shift)
 {
     int chain_view = pp_bank[mode & 1].view;
+    if (pp_ask && pp_ask_mode != (mode & 1)) { pp_ask = PP_ASK_NONE; pp_msg_ms = 0; }   /* asked in the other mode */
     if (shift && knob == PP_WHITE) {
         pp_view_toggle(mode);
         pp_ask = PP_ASK_NONE;
@@ -297,8 +345,12 @@ static void pp_press_ev(int mode, int knob, int shift)
         return;
     }
     if (chain_view == PP_VIEW_SAVED) { pp_saved_press(mode & 1, knob, shift); return; }
+    if (pp_ask == PP_ASK_PASTE || pp_ask == PP_ASK_DELETE) { pp_page_answer(mode & 1, knob); return; }
     if (shift) {
-        if (knob == PP_ORANGE) pp_resume_follow(mode);
+        if (knob == PP_ORANGE) {                          /* playing: follow the chain again; stopped: undo */
+            if (pp_running(mode)) pp_resume_follow(mode);
+            else if (!chain_view) pp_say(pp_undo(mode) == PP_OP_OK ? "UNDONE" : "NOTHING TO UNDO");
+        }
         if (chain_view) { pp_changed(); return; }
         if (knob == PP_BLUE) pp_page_prev(mode);
         if (knob == PP_GREEN && pp_page_next(mode) < 0) pp_full_flash = PP_FLASH_MS;
@@ -475,6 +527,16 @@ static void pp_draw_chain(void *r, const pp_bank_t *b, int running)
     if (pp_full_flash) sq_text(r, OP1_Q10(24), OP1_Q10(142), OP1_Q10(1.3), "FULL", 0x400, pp_c_red);
     else if (!len) sq_text(r, OP1_Q10(24), OP1_Q10(142), OP1_Q10(1.3), "NO CHAIN  PAGE LOOPS", 0x400, pp_c_grey);
 }
+/* The message line under the grid or the slots: a question stays until answered; anything else fades. 1 if drawn */
+static int pp_draw_msg(void *r)
+{
+    const char *m = pp_msg;
+    if (!m) return 0;
+    if (pp_ask != PP_ASK_NONE) sq_text(r, OP1_Q10(24), OP1_Q10(144), OP1_Q10(1.1), m, 0x300, pp_c_white);
+    else if (pp_msg_ms > 0) sq_text(r, OP1_Q10(24), OP1_Q10(144), OP1_Q10(1.3), m, 0x400, pp_c_white);
+    else return 0;
+    return 1;
+}
 static void pp_draw_saved(void *r, int m, const pp_bank_t *b)
 {
     char t[PP_NAME_MAX + 3];
@@ -492,9 +554,7 @@ static void pp_draw_saved(void *r, int m, const pp_bank_t *b)
                 s == pp_loaded[m] ? pp_c_dot : at ? pp_c_white : name[0] ? pp_c_grey : pp_c_minor);
         if (at) pp_draw_arrow(r, OP1_Q10(8), OP1_Q10(19), y + OP1_Q10(5), OP1_Q10(4), pp_c_cursor);
     }
-    if (pp_ask != PP_ASK_NONE && pp_msg) sq_text(r, OP1_Q10(24), OP1_Q10(144), OP1_Q10(1.1), pp_msg, 0x300, pp_c_white);
-    else if (pp_msg_ms > 0 && pp_msg) sq_text(r, OP1_Q10(24), OP1_Q10(144), OP1_Q10(1.3), pp_msg, 0x400, pp_c_white);
-    else sq_text(r, OP1_Q10(24), OP1_Q10(144), OP1_Q10(1.1), "PUSH GREEN LOAD   PUSH WHITE SAVE", 0x300, pp_c_grey);
+    if (!pp_draw_msg(r)) sq_text(r, OP1_Q10(24), OP1_Q10(144), OP1_Q10(1.1), "PUSH GREEN LOAD   PUSH WHITE SAVE", 0x300, pp_c_grey);
 }
 static void pp_scr_init(void *scr) { (void)scr; }
 static void pp_scr_update(void *scr, int dt)
@@ -526,6 +586,7 @@ static void pp_scr_update(void *scr, int dt)
     pp_draw_notes(r, p);
     pp_draw_arrow(r, OP1_Q10(30), OP1_Q10(45), pp_key_y(b->pitch_key), OP1_Q10(5), pp_c_white);
     pp_draw_side(r, b, p, running);
+    pp_draw_msg(r);
 }
 const op1_screen_t SCREEN_patternplus = { pp_scr_init, pp_scr_update };
 
