@@ -13,6 +13,7 @@ don't trust it with a good idea yet. There is no release; build it from source.
 | --- | --- |
 | `plugin/` | The plugin (C): screen and input in `patternplus.c`, playback in `pp_player.c`, saving in `pp_store.c`. |
 | `plugin/test/host_test.c` | Host test of pages, grid editing and playback. |
+| [manual/manual.html](manual/manual.html) | The manual: how Pattern+ differs from stock Pattern. |
 | [HARDWARE-TEST.md](HARDWARE-TEST.md) | Every control, which ones differ from stock, and the device tests. |
 | [docs/pattern-plus-poc-spec.md](docs/pattern-plus-poc-spec.md) | The design. |
 | `docs/Original_OP-1_Pattern_Sequencer_Technical_Research.md` | Research on the stock Pattern sequencer. |

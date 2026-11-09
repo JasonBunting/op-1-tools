@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pattern+ Manual</title>
+<meta name="description" content="How Pattern+ differs from the OP-1's stock Pattern sequencer: pages, chains, cut, copy and paste, and saving.">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+<header><a href="manual.html" class="wordmark">Pattern+ <span>a sequencer for hundekraft</span></a><span class="edition">ORIGINAL OP–1 · HUNDEKRAFT 3.2.3 · PATTERN+ 0.5.0</span></header>
+<main>
+<section class="intro"><div class="eyebrow">PATTERN+ / MANUAL</div><h1>Pattern, with pages.</h1><p>Pattern+ plays like the OP-1's own Pattern sequencer and adds pages, chains, cut, copy and paste, and saving. This manual covers only what is different.</p><div class="manual-actions"><a href="#pages">Pages ↓</a><a href="#chains">Chains ↓</a><a href="#differences">Where it differs ↓</a></div></section>
+<div class="manual-grid">
+<details class="toc" open><summary>Contents</summary><ol>
+<li><a href="#about">About this manual</a><ol><li><a href="#notation">How to read the controls</a></li></ol></li>
+<li><a href="#start">Get started</a></li>
+<li><a href="#pages">Pages</a></li>
+<li><a href="#chains">Chains</a><ol><li><a href="#chain-view">Build a chain</a></li><li><a href="#chain-play">Play a chain</a></li><li><a href="#one-page">Stay on one page</a></li></ol></li>
+<li><a href="#clipboard">Cut, copy and paste</a><ol><li><a href="#undo">Undo</a></li></ol></li>
+<li><a href="#saving">Saving</a><ol><li><a href="#autosave">Automatic</a></li><li><a href="#saved-view">Saved collections</a></li></ol></li>
+<li><a href="#differences">Where it differs from stock</a></li>
+<li><a href="#limits">Limits</a></li>
+<li><a href="#controls">All new controls</a></li>
+</ol></details>
+<article class="manual-body">
+
+<section class="chapter" id="about"><h2>About this manual</h2>
+<p>With a single page, Pattern+ works like stock Pattern: the same grid, the same 16 steps, the same encoders for swing, rotation, section and direction, and the same way of entering notes and starting HOLD. So for everyday playing, Teenage Engineering's guide is the manual: <a href="https://teenage.engineering/guides/op-1/original/sequencers" target="_blank" rel="noopener noreferrer">teenage.engineering/guides/op-1/original/sequencers</a>.</p>
+<p>This manual covers what Pattern+ adds on top, and the few places where it doesn't yet match stock (see <a href="#differences">Where it differs from stock</a>).</p>
+<div class="sub">
+<h3 id="notation">How to read the controls</h3>
+<p>The OP-1 has four encoders. This manual calls them by colour, left to right: <span class="enc enc-b">blue</span>, <span class="enc enc-g">green</span>, <span class="enc enc-w">white</span> and <span class="enc enc-o">orange</span>.</p>
+<ol>
+<li><strong>Turn</strong> an encoder to change a value. <strong>Push</strong> an encoder to press it like a button.</li>
+<li><strong>Press</strong> a key, or <strong>hold</strong> it while you do something else. "<span class="okey okey-text">Shift</span> + <span class="enc enc-g">green</span> push" means hold <span class="okey okey-text">Shift</span> and push <span class="enc enc-g">green</span>.</li>
+<li><img class="okey" src="keys/lift.png" alt="lift" title="lift">, <img class="okey" src="keys/drop.png" alt="drop" title="drop"> and <img class="okey" src="keys/scissors.png" alt="scissors" title="scissors"> are the three tape-edit keys. <img class="okey" src="keys/help.png" alt="help" title="help"> is the help key.</li>
+<li>Text in a black box, such as <span class="lcd">CUT D</span>, is what the screen shows.</li>
+</ol>
+<p>Screens have numbered dots. The list beside the picture says what each number shows. Dot colour matches the encoder that changes that part.</p>
+</div>
+</section>
+
+<section class="chapter" id="start"><h2>Get started</h2>
+<ol>
+<li>Install <code>patternplus.knl</code> from the Hundekraft workshop's <strong>Your plugins</strong> page. Building it is described in the <a href="../README.md">Pattern+ README</a>.</li>
+<li>Press <img class="okey" src="keys/synth.png" alt="synth" title="synth"> or <img class="okey" src="keys/drum.png" alt="drum" title="drum">.</li>
+<li>Hold <span class="okey okey-text">Shift</span> and press <img class="okey" src="keys/seq.png" alt="seq" title="seq"> to pick the sequencer type, and choose <code>PATTERNPLUS</code>.</li>
+<li>Press <img class="okey" src="keys/seq.png" alt="seq" title="seq">. You are on page A, and everything works as in stock Pattern.</li>
+</ol>
+<p>Synth and drum each have their own pages, chain, clipboard, undo and saves.</p>
+</section>
+
+<section class="chapter" id="pages"><h2>Pages</h2>
+<p>A page is one grid: its notes, section, swing and direction. Pages are named A to P. You start with A.</p>
+<figure class="screen side"><div class="shot" role="img" aria-label="Screenshot to come: the grid on page B"><b>img/grid.png</b><span>Grid view, stopped, on page B of three. A chain exists. Swing set to something other than 50%.</span></div><figcaption><b>Fig. 1</b> The grid on page B.</figcaption><ol class="legend"><li><i class="dot dot-n">1</i><span>The page letter</span></li><li><i class="dot dot-n">2</i><span>The grid and cursor, as in stock</span></li><li><i class="dot dot-g">3</i><span>Swing on <span class="enc enc-g">green</span>. Bright whenever it isn't 50%</span></li><li><i class="dot dot-w">4</i><span>The section, on <span class="enc enc-w">white</span></span></li><li><i class="dot dot-n">5</i><span>The message line</span></li></ol></figure>
+<div class="table"><table><thead><tr><th scope="col">Control</th><th scope="col">Does</th></tr></thead><tbody>
+<tr><td data-label="Control"><span class="okey okey-text">Shift</span> + <span class="enc enc-g">green</span> push</td><td data-label="Does">Next page. On the last page, adds a blank page after it</td></tr>
+<tr><td data-label="Control"><span class="okey okey-text">Shift</span> + <span class="enc enc-b">blue</span> push</td><td data-label="Does">Previous page</td></tr>
+</tbody></table></div>
+<p>HOLD with no chain loops the page on screen, as stock loops its one pattern. A page with no notes plays a bar of silence at its own length.</p>
+</section>
+
+<section class="chapter" id="chains"><h2>Chains</h2>
+<p>A chain plays pages in the order you set, such as <code>A &gt; B &gt; C &gt; C &gt; D</code>. A page can appear more than once; every appearance plays the same grid, so editing B changes every B.</p>
+<p>A chain lists positions, not patterns. <a href="#clipboard">Cutting and pasting</a> changes what is on a page, never the chain.</p>
+<div class="sub">
+<h3 id="chain-view">Build a chain</h3>
+<p><span class="okey okey-text">Shift</span> + <span class="enc enc-w">white</span> push steps through the views: grid, chain, saved, then grid again. Playback carries on while you switch.</p>
+<figure class="screen side"><div class="shot" role="img" aria-label="Screenshot to come: the chain view"><b>img/chain.png</b><span>Chain view with A &gt; B &gt; C &gt; D &gt; C &gt; B &gt; A, the underline on the second C, and a picked page showing.</span></div><figcaption><b>Fig. 2</b> The chain view.</figcaption><ol class="legend"><li><i class="dot dot-b">1</i><span>The underline, moved with <span class="enc enc-b">blue</span></span></li><li><i class="dot dot-g">2</i><span>The picked page, chosen with <span class="enc enc-g">green</span></span></li><li><i class="dot dot-n">3</i><span>The entry playing</span></li></ol></figure>
+<div class="table"><table><thead><tr><th scope="col">Control</th><th scope="col">Does</th></tr></thead><tbody>
+<tr><td data-label="Control"><span class="enc enc-b">blue</span> turn, or <img class="okey" src="keys/left.png" alt="left" title="left"> <img class="okey" src="keys/right.png" alt="right" title="right"></td><td data-label="Does">Moves the underline along the chain</td></tr>
+<tr><td data-label="Control"><span class="enc enc-g">green</span> turn</td><td data-label="Does">Picks a page. On an existing entry, changes that entry</td></tr>
+<tr><td data-label="Control"><span class="enc enc-g">green</span> push</td><td data-label="Does">Adds the picked page at the underline</td></tr>
+<tr><td data-label="Control"><span class="enc enc-w">white</span> push</td><td data-label="Does">Removes the entry at the underline</td></tr>
+<tr><td data-label="Control"><span class="enc enc-o">orange</span> turn</td><td data-label="Does">HOLD, as in the grid</td></tr>
+</tbody></table></div>
+<p>Pages with no notes on them show in red.</p>
+<figure class="screen small"><div class="shot" role="img" aria-label="Screenshot to come: the chain with blank pages in red"><b>img/chain-blank.png</b><span>The same chain after cutting D: every D in red.</span></div><figcaption><b>Fig. 3</b> D has been cut, so every D shows red. It plays a bar of silence.</figcaption></figure>
+</div>
+<div class="sub">
+<h3 id="chain-play">Play a chain</h3>
+<ol>
+<li>Turning <span class="enc enc-o">orange</span> right starts the chain from its first entry. An empty chain loops the page on screen.</li>
+<li>The next page starts when the current one finishes its cycle, including its own section and direction.</li>
+<li>The grid follows the playing page. Change page by hand and it stops following: <span class="lcd">FREE</span> shows under the page letter, and you can edit any page that isn't playing. <span class="okey okey-text">Shift</span> + <span class="enc enc-o">orange</span> push, or starting again, follows the chain once more.</li>
+<li>While stopped, moving the cursor past the end of a page's section carries on to the next page in the chain, and past its start back to the previous one, wrapping round. A page that isn't in the chain keeps the cursor to itself.</li>
+</ol>
+<figure class="screen small"><div class="shot" role="img" aria-label="Screenshot to come: FREE under the page letter"><b>img/grid-free.png</b><span>A chain playing while the grid shows another page: FREE under the page letter.</span></div><figcaption><b>Fig. 4</b> Editing page D while the chain plays B.</figcaption></figure>
+</div>
+<div class="sub">
+<h3 id="one-page">Stay on one page</h3>
+<p>Hold <img class="okey" src="keys/help.png" alt="help" title="help"> to keep the cursor, and HOLD, on the page on screen. With a chain, <span class="lcd">PAGE</span> shows under the page letter.</p>
+<ol>
+<li>While stopped, the cursor wraps within the page instead of moving along the chain.</li>
+<li>While a chain plays, the playing page repeats for as long as you hold. Let go and the chain carries on from there.</li>
+<li>Hold it as you start HOLD to begin from the page on screen instead of the chain's first entry.</li>
+</ol>
+</div>
+</section>
+
+<section class="chapter" id="clipboard"><h2>Cut, copy and paste</h2>
+<p>The tape-edit keys move a page's pattern (its notes, section, swing and direction) between pages. The page itself never moves, so the chain is never touched. They work in the grid view while stopped; otherwise <span class="lcd">STOP FIRST</span> shows.</p>
+<div class="table"><table><thead><tr><th scope="col">Key</th><th scope="col">Does</th></tr></thead><tbody>
+<tr><td data-label="Key"><img class="okey" src="keys/lift.png" alt="lift" title="lift"></td><td data-label="Does">Copies this page's pattern. <span class="lcd">COPIED B</span></td></tr>
+<tr><td data-label="Key"><img class="okey" src="keys/scissors.png" alt="scissors" title="scissors"></td><td data-label="Does">Copies it, then leaves the page blank. <span class="lcd">CUT B</span></td></tr>
+<tr><td data-label="Key"><img class="okey" src="keys/drop.png" alt="drop" title="drop"></td><td data-label="Does">Pastes onto this page. A blank page takes it straight away; a page with notes asks first</td></tr>
+<tr><td data-label="Key"><span class="okey okey-text">Shift</span> + <img class="okey" src="keys/drop.png" alt="drop" title="drop"></td><td data-label="Does">Pastes onto a new last page and goes there. <span class="lcd red">FULL</span> when all 16 pages are in use</td></tr>
+</tbody></table></div>
+<figure class="screen small"><div class="shot" role="img" aria-label="Screenshot to come: the paste question"><b>img/ask-paste.png</b><span>PASTE OVER B? GREEN YES ORANGE NO on the message line.</span></div><figcaption><b>Fig. 5</b> Push <span class="enc enc-g">green</span> to paste, <span class="enc enc-o">orange</span> to cancel. The question stays until you answer.</figcaption></figure>
+<p>The clipboard lasts until you load a save, start over, or turn the OP-1 off.</p>
+<div class="sub">
+<h3 id="undo">Undo</h3>
+<p>While stopped in the grid, <span class="okey okey-text">Shift</span> + <span class="enc enc-o">orange</span> push takes back the last cut or paste, up to three. <span class="lcd">UNDONE</span>, or <span class="lcd">NOTHING TO UNDO</span>. Undo never changes the chain.</p>
+<aside class="note note-note"><span>Note</span><p>Undoing a paste onto a new page leaves that page in place, blank, if the chain has used it since.</p></aside>
+</div>
+</section>
+
+<section class="chapter" id="saving"><h2>Saving</h2>
+<div class="sub">
+<h3 id="autosave">Automatic</h3>
+<p>Your pages, chain and selected page save themselves and come back after a power off, stopped. Give it a few seconds after a change before you switch off.</p>
+<aside class="note note-warning"><span>Warning</span><p>Saving is new and has had little testing on the device. Don't trust it with a good idea yet.</p></aside>
+</div>
+<div class="sub">
+<h3 id="saved-view">Saved collections</h3>
+<p>The saved view holds 8 named slots per mode. Each saves every page and the chain. <span class="okey okey-text">Shift</span> + <span class="enc enc-w">white</span> push twice from the grid to get there.</p>
+<figure class="screen side"><div class="shot" role="img" aria-label="Screenshot to come: the saved view"><b>img/saved.png</b><span>Saved view with two named slots, the last-loaded one in green, the arrow on slot 2, the rest EMPTY.</span></div><figcaption><b>Fig. 6</b> The saved view.</figcaption><ol class="legend"><li><i class="dot dot-b">1</i><span>The arrow, moved with <span class="enc enc-b">blue</span></span></li><li><i class="dot dot-n">2</i><span>Green: the slot you last loaded or saved</span></li></ol></figure>
+<div class="table"><table><thead><tr><th scope="col">Control</th><th scope="col">Does</th></tr></thead><tbody>
+<tr><td data-label="Control"><span class="enc enc-b">blue</span> turn, or <img class="okey" src="keys/left.png" alt="left" title="left"> <img class="okey" src="keys/right.png" alt="right" title="right"></td><td data-label="Does">Moves the arrow along slots 1 to 8</td></tr>
+<tr><td data-label="Control"><span class="enc enc-w">white</span> push</td><td data-label="Does">Saves to this slot, then asks for a name</td></tr>
+<tr><td data-label="Control"><span class="enc enc-g">green</span> push</td><td data-label="Does">Loads this slot after asking <span class="lcd">REPLACE WORK?</span>. Stops playback</td></tr>
+<tr><td data-label="Control"><span class="okey okey-text">Shift</span> + <span class="enc enc-g">green</span> push</td><td data-label="Does">Starts over after asking <span class="lcd">CLEAR ALL?</span>: one empty page, no chain. Slots are untouched</td></tr>
+<tr><td data-label="Control"><span class="enc enc-o">orange</span> turn</td><td data-label="Does">HOLD, as in the grid</td></tr>
+</tbody></table></div>
+<p>Every question is answered the same way: <span class="enc enc-g">green</span> push for yes, <span class="enc enc-o">orange</span> push for no.</p>
+<h4 id="naming">Name a save</h4>
+<figure class="screen small"><div class="shot" role="img" aria-label="Screenshot to come: naming a save"><b>img/saved-name.png</b><span>Entering a name: a few letters typed, the next letter being picked.</span></div><figcaption><b>Fig. 7</b> Naming a save.</figcaption></figure>
+<ol>
+<li>Turn <span class="enc enc-b">blue</span> and <span class="enc enc-g">green</span> to pick a letter.</li>
+<li>Push <span class="enc enc-w">white</span> to add it. <img class="okey" src="keys/left.png" alt="left" title="left"> deletes the last one.</li>
+<li>Push <span class="enc enc-o">orange</span> to finish. Saving onto a used slot replaces it only now.</li>
+<li>Press a mode key instead to cancel. Nothing is saved.</li>
+</ol>
+</div>
+</section>
+
+<section class="chapter" id="differences"><h2>Where it differs from stock</h2>
+<p>With one page, Pattern+ should behave exactly like stock Pattern. These are the known exceptions:</p>
+<ol>
+<li><img class="okey" src="keys/lift.png" alt="lift" title="lift">, <img class="okey" src="keys/drop.png" alt="drop" title="drop"> and <img class="okey" src="keys/scissors.png" alt="scissors" title="scissors"> <a href="#clipboard">cut, copy and paste patterns</a>.</li>
+<li><img class="okey" src="keys/help.png" alt="help" title="help"> is the <a href="#one-page">stay-on-one-page</a> key, so stock's help text doesn't show on the Pattern+ screen. <span class="okey okey-text">Shift</span> + <img class="okey" src="keys/help.png" alt="help" title="help"> still works.</li>
+<li><span class="okey okey-text">Shift</span> + a note key on a step that already has that note erases it.</li>
+<li>While playing, <img class="okey" src="keys/left.png" alt="left" title="left"> <img class="okey" src="keys/right.png" alt="right" title="right">, <span class="enc enc-b">blue</span> and <span class="okey okey-text">Shift</span> + <span class="enc enc-b">blue</span> do nothing. Stock moves a cursor that fights the playhead.</li>
+<li>Stock's <span class="okey okey-text">Shift</span> + arrow live-edit mode isn't there yet.</li>
+<li>The swing, HOLD and page labels use Hundekraft's font, so they look slightly different.</li>
+</ol>
+<p>Anything else that doesn't match stock with a single page is a bug.</p>
+</section>
+
+<section class="chapter" id="limits"><h2>Limits</h2>
+<ol>
+<li>16 pages per mode, A to P.</li>
+<li>32 chain entries, one chain per mode.</li>
+<li>8 saved slots per mode.</li>
+<li>3 undo steps per mode.</li>
+</ol>
+</section>
+
+<section class="chapter" id="controls"><h2>All new controls</h2>
+<p>In the grid view. Everything not listed works as in stock.</p>
+<div class="table"><table><thead><tr><th scope="col">Control</th><th scope="col">Does</th></tr></thead><tbody>
+<tr><td data-label="Control"><span class="okey okey-text">Shift</span> + <span class="enc enc-b">blue</span> push</td><td data-label="Does">Previous page</td></tr>
+<tr><td data-label="Control"><span class="okey okey-text">Shift</span> + <span class="enc enc-g">green</span> push</td><td data-label="Does">Next page, or a new blank one after the last</td></tr>
+<tr><td data-label="Control"><span class="okey okey-text">Shift</span> + <span class="enc enc-w">white</span> push</td><td data-label="Does">Next view: grid, chain, saved</td></tr>
+<tr><td data-label="Control"><span class="okey okey-text">Shift</span> + <span class="enc enc-o">orange</span> push</td><td data-label="Does">Playing: follow the chain again. Stopped: undo</td></tr>
+<tr><td data-label="Control"><img class="okey" src="keys/help.png" alt="help" title="help"> held</td><td data-label="Does">Stay on this page</td></tr>
+<tr><td data-label="Control"><img class="okey" src="keys/lift.png" alt="lift" title="lift"></td><td data-label="Does">Copy</td></tr>
+<tr><td data-label="Control"><img class="okey" src="keys/scissors.png" alt="scissors" title="scissors"></td><td data-label="Does">Cut</td></tr>
+<tr><td data-label="Control"><img class="okey" src="keys/drop.png" alt="drop" title="drop"></td><td data-label="Does">Paste here</td></tr>
+<tr><td data-label="Control"><span class="okey okey-text">Shift</span> + <img class="okey" src="keys/drop.png" alt="drop" title="drop"></td><td data-label="Does">Paste onto a new page</td></tr>
+<tr><td data-label="Control"><span class="enc enc-g">green</span> / <span class="enc enc-o">orange</span> push, when asked</td><td data-label="Does">Yes / no</td></tr>
+</tbody></table></div>
+</section>
+
+</article>
+</div>
+</main>
+<footer><span>Pattern+ by Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission.</span><span>Styled after the hundekraft manual; key images from it. Not affiliated with Teenage Engineering.</span></footer>
+</body>
+</html>
