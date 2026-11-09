@@ -8,9 +8,9 @@
 
 #define PP_COLS       16
 #define PP_KEYS       24
-#define PP_PAGES      8
+#define PP_PAGES      16
 #define PP_CHAIN_MAX  32
-#define PP_STORE_MAX  911                   /* the longest save text: 8 pages and a full chain */
+#define PP_STORE_MAX  1743                  /* the longest save text: 16 pages and a full chain */
 enum { PP_VIEW_GRID, PP_VIEW_CHAIN, PP_VIEW_SAVED, PP_VIEWS };
 #define PP_PAIR_TICKS 48                    /* two 1/16 steps at 96 ticks per beat: swing divides this */
 #define PP_VELOCITY   127                   /* stock R246 Pattern plays every note at 0x7F */
@@ -25,11 +25,10 @@ typedef struct {
     volatile uint8_t start, len, swing, dir;
 } pp_page_t;
 
-#define PP_UNDO 3                           /* page copy / paste / delete steps that can be taken back, per mode */
-typedef struct {                            /* what a page operation can change */
+#define PP_UNDO 3                           /* cut / paste steps that can be taken back, per mode */
+typedef struct {                            /* what a page operation can change: never the chain */
     pp_page_t pages[PP_PAGES];
-    uint8_t chain[PP_CHAIN_MAX];
-    uint8_t count, sel, chain_len;
+    uint8_t count, sel;
 } pp_snap_t;
 
 typedef struct {
@@ -71,14 +70,16 @@ void pp_add_dir(int mode, int delta);
 void pp_page_prev(int mode);
 int pp_page_next(int mode);                 /* 0 moved, 1 created a blank page, -1 at the limit (nothing changed) */
 
-/* page operations: stopped only. Paste, paste-new and delete can be undone; a new one past PP_UNDO forgets the oldest */
+/* Page operations. A page is a named grid; its pattern (notes, section, swing, direction) is what is copied, cut and
+ * pasted. Pages never move or go, so the chain, which is about positions, is never touched. Stopped only. Cut, paste
+ * and paste-new can be undone; a new one past PP_UNDO forgets the oldest. */
 enum { PP_OP_OK = 0, PP_OP_RUNNING = -1, PP_OP_EMPTY = -2, PP_OP_FULL = -3 };
-int pp_page_copy(int mode);                 /* the selected page, all its settings too, to this mode's clipboard */
+int pp_page_copy(int mode);                 /* the selected page's pattern to this mode's clipboard */
+int pp_page_cut(int mode);                  /* copy, then the page is left blank */
 int pp_page_paste(int mode);                /* the clipboard over the selected page. EMPTY: nothing copied */
-int pp_page_paste_new(int mode);            /* the clipboard as a new last page, which is then selected */
-int pp_page_delete(int mode);               /* later pages move down a letter and the chain follows them; entries of
-                                               the deleted page go. The only page is blanked instead */
+int pp_page_paste_new(int mode);            /* the clipboard onto a new last page, which is then selected */
 int pp_undo(int mode);                      /* EMPTY: nothing to undo */
+int pp_page_blank(int mode, int page);      /* no notes anywhere on it */
 
 /* chain */
 void pp_view_toggle(int mode);              /* grid, chain, saved, grid: playback is not touched */

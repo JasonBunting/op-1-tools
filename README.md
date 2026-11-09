@@ -5,7 +5,7 @@ Plugins and companion apps for the original OP-1 running [Hundekraft](https://hu
 | Project | What it is | Status | Get it |
 | --- | --- | --- | --- |
 | [OP-1 Mirror](mirror/README.md) | Shows the OP-1's screen live on Windows or an Android phone: a plugin plus two viewer apps | Works, v0.7 | [Releases](https://github.com/JasonBunting/op-1-tools/releases) |
-| [Pattern+](patternplus/README.md) | A sequencer plugin like stock Pattern, plus pages, chains and saving | In progress, 0.4.0 | [Build from source](patternplus/README.md) |
+| [Pattern+](patternplus/README.md) | A sequencer plugin like stock Pattern, plus pages, chains and saving | In progress, 0.4.1 | [Build from source](patternplus/README.md) |
 
 Shared as-is, in the hope it helps. It is a personal project and not actively supported: issues and pull requests
 may sit unanswered, so fork freely.

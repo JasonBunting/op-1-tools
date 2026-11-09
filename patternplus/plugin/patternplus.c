@@ -92,14 +92,14 @@ static int pp_store_parse(int pos, const char *s, int len)
     }
     return r;
 }
-static char pp_sql[1024];
+static char pp_sql[2048];                                 /* the INSERT around the longest save text */
 static sq_store_t pp_store = { .name = "patternplus", .ser = pp_store_ser, .parse = pp_store_parse,
                                .sql = pp_sql, .cap = sizeof pp_sql, .maxlen = PP_STORE_MAX + 1 };
 static void pp_changed(void) { sq_store_dirty(&pp_store); }
 static void pp_let_go(int mode) { pp_kept_len[mode & 1] = 0; }   /* the user replaced the work on purpose */
 
 enum { PP_JOB_NONE, PP_JOB_SCAN, PP_JOB_LOAD };
-enum { PP_ASK_NONE, PP_ASK_LOAD, PP_ASK_NEW, PP_ASK_PASTE, PP_ASK_DELETE };
+enum { PP_ASK_NONE, PP_ASK_LOAD, PP_ASK_NEW, PP_ASK_PASTE };
 static char pp_slot_name[2][PP_SLOTS][PP_NAME_MAX + 1];   /* upper case; empty: nothing in the slot */
 static char pp_file_buf[PP_NAME_MAX + 1 + PP_STORE_MAX];
 static int8_t pp_loaded[2] = { -1, -1 };
@@ -291,11 +291,18 @@ static int pp_input(const op1_input *in)
     }
     return 1;
 }
-/* Lift copies the page, drop pastes over it (Shift + drop: as a new last page), scissors deletes it. Grid view and
- * stopped only. Pasting over and deleting ask first; all but copy can be undone with Shift + orange push. */
+/* A page is a named grid; its pattern is what lift copies, scissors cuts (leaving the page blank) and drop pastes
+ * (Shift + drop: onto a new last page). The chain is never touched. Grid view and stopped only. Only pasting over a
+ * page that holds notes asks first; Shift + orange push undoes cut and paste. */
 #define PP_KEY_LIFT     0x0A
 #define PP_KEY_DROP     0x0B
 #define PP_KEY_SCISSORS 0x0C
+static void pp_pasted(int mode)
+{
+    if (pp_page_paste(mode) != PP_OP_OK) return;
+    pp_say(pp_page_msg("PASTED ON ", pp_bank[mode].sel, ""));
+    pp_changed();
+}
 static int pp_key_ev(int mode, int code, int pressed, int shift)
 {
     if (code < PP_KEY_LIFT || code > PP_KEY_SCISSORS) return 0;
@@ -308,30 +315,30 @@ static int pp_key_ev(int mode, int code, int pressed, int shift)
         pp_page_copy(mode);
         pp_say(pp_page_msg("COPIED ", b->sel, ""));
     } else if (code == PP_KEY_SCISSORS) {
-        pp_ask_for(mode, PP_ASK_DELETE, pp_page_msg("DELETE ", b->sel, "? GREEN YES ORANGE NO"));
+        pp_page_cut(mode);
+        pp_say(pp_page_msg("CUT ", b->sel, ""));
+        pp_changed();
     } else if (!b->has_clip) {
         pp_say("NOTHING COPIED");
-    } else if (!shift) {
-        pp_ask_for(mode, PP_ASK_PASTE, pp_page_msg("PASTE OVER ", b->sel, "? GREEN YES ORANGE NO"));
-    } else if (pp_page_paste_new(mode) == PP_OP_FULL) {
-        pp_full_flash = PP_FLASH_MS;
-    } else {
-        pp_say(pp_page_msg("PASTED AS ", b->sel, ""));
+    } else if (shift) {
+        if (pp_page_paste_new(mode) == PP_OP_FULL) { pp_full_flash = PP_FLASH_MS; return 1; }
+        pp_say(pp_page_msg("PASTED ON NEW ", b->sel, ""));
         pp_changed();
+    } else if (pp_page_blank(mode, b->sel)) {
+        pp_pasted(mode);
+    } else {
+        pp_ask_for(mode, PP_ASK_PASTE, pp_page_msg("PASTE OVER ", b->sel, "? GREEN YES ORANGE NO"));
     }
     return 1;
 }
-static void pp_page_answer(int mode, int knob)            /* a paste or delete question is up */
+static void pp_page_answer(int mode, int knob)            /* the paste question is up */
 {
-    int ask = pp_ask, page = pp_bank[mode].sel;
     if (knob == PP_ORANGE) { pp_ask = PP_ASK_NONE; pp_say("CANCELLED"); }
     if (knob != PP_GREEN) return;
     pp_ask = PP_ASK_NONE;
-    int r = ask == PP_ASK_PASTE ? pp_page_paste(mode) : pp_page_delete(mode);
-    if (r == PP_OP_RUNNING) { pp_say("STOP FIRST"); return; }
-    if (r) { pp_msg_ms = 0; return; }
-    pp_say(ask == PP_ASK_PASTE ? pp_page_msg("PASTED OVER ", page, "") : pp_page_msg("DELETED ", page, ""));
-    pp_changed();
+    pp_msg_ms = 0;
+    if (pp_running(mode)) { pp_say("STOP FIRST"); return; }
+    pp_pasted(mode);
 }
 static void pp_press_ev(int mode, int knob, int shift)
 {
@@ -345,7 +352,7 @@ static void pp_press_ev(int mode, int knob, int shift)
         return;
     }
     if (chain_view == PP_VIEW_SAVED) { pp_saved_press(mode & 1, knob, shift); return; }
-    if (pp_ask == PP_ASK_PASTE || pp_ask == PP_ASK_DELETE) { pp_page_answer(mode & 1, knob); return; }
+    if (pp_ask == PP_ASK_PASTE) { pp_page_answer(mode & 1, knob); return; }
     if (shift) {
         if (knob == PP_ORANGE) {                          /* playing: follow the chain again; stopped: undo */
             if (pp_running(mode)) pp_resume_follow(mode);
@@ -460,7 +467,8 @@ static void pp_draw_side(void *r, const pp_bank_t *b, const pp_page_t *p, int ru
     char t[8], *e;
     e = sq_num(t, p->swing, 1);
     sq_cat(e, "%");
-    sq_text(r, OP1_Q10(252), OP1_Q10(16), OP1_Q10(2.7), t, 0x500, pp_swing_flash ? pp_c_swing : pp_c_swing_dim);
+    sq_text(r, OP1_Q10(252), OP1_Q10(16), OP1_Q10(2.7), t, 0x500,
+            pp_swing_flash || p->swing != PP_SWING_NONE ? pp_c_swing : pp_c_swing_dim);   /* bright: changing, or any swing at all */
 
     const uint8_t *hold = b->hold ? pp_c_red : pp_c_red_dim;
     int32_t hx0 = OP1_Q10(257), hx1 = OP1_Q10(295), hy0 = OP1_Q10(49), hy1 = OP1_Q10(67);
@@ -505,7 +513,9 @@ static void pp_draw_chain(void *r, const pp_bank_t *b, int running)
     for (int i = 0; i < len; i++) {
         int32_t x = PP_CELL_X(i), y = PP_CELL_Y(i);
         t[0] = (char)('A' + b->chain[i]);
-        sq_text(r, x, y, OP1_Q10(2.2), t, 0x500, i == playing ? pp_c_dot : i == cur ? pp_c_white : pp_c_grey);
+        const uint8_t *col = i == playing ? pp_c_dot : pp_page_blank((int)(b - pp_bank), b->chain[i]) ? pp_c_red
+                           : i == cur ? pp_c_white : pp_c_grey;    /* red: the page has no pattern on it */
+        sq_text(r, x, y, OP1_Q10(2.2), t, 0x500, col);
         if (i == playing) {
             int32_t x0 = x - OP1_Q10(4), x1 = x + OP1_Q10(16), y0 = y - OP1_Q10(4), y1 = y + OP1_Q10(19);
             sq_line(r, x0, y0, x1, y0, PP_LINE, pp_c_dot);

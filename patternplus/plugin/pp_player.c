@@ -282,7 +282,7 @@ int pp_page_next(int mode)
     if (is_running(b) && b->chain_len) b->follow = 0;
     if (b->sel + 1 < b->count) { b->sel++; return 0; }
     if (b->count >= PP_PAGES) return -1;
-    page_defaults(&b->pages[b->count]);     /* its notes are still zero: a deleted page's slot is blanked */
+    page_defaults(&b->pages[b->count]);     /* its notes are still zero: an undone paste-new leaves its slot blank */
     b->count++;
     b->sel++;
     return 1;
@@ -334,10 +334,8 @@ static void blank_page(pp_page_t *p)
 static void snap_copy(pp_snap_t *d, const pp_snap_t *s)
 {
     for (int i = 0; i < PP_PAGES; i++) copy_page(&d->pages[i], &s->pages[i]);
-    for (int i = 0; i < PP_CHAIN_MAX; i++) d->chain[i] = s->chain[i];
     d->count = s->count;
     d->sel = s->sel;
-    d->chain_len = s->chain_len;
 }
 static void remember(pp_bank_t *b)          /* before a change that undo can take back */
 {
@@ -347,20 +345,23 @@ static void remember(pp_bank_t *b)          /* before a change that undo can tak
     }
     pp_snap_t *s = &b->undo[b->undo_n++];
     for (int i = 0; i < PP_PAGES; i++) copy_page(&s->pages[i], &b->pages[i]);
-    for (int i = 0; i < PP_CHAIN_MAX; i++) s->chain[i] = b->chain[i];
     s->count = b->count;
     s->sel = b->sel;
-    s->chain_len = b->chain_len;
 }
-/* after pages or the chain changed under the cursors */
+/* after the page count or the selection changed */
 static void settle(pp_bank_t *b)
 {
-    if (b->sel >= b->count) b->sel = (uint8_t)(b->count - 1);
-    if (b->chain_cursor > b->chain_len) b->chain_cursor = b->chain_len;
     if (b->chain_pick >= b->count) b->chain_pick = (uint8_t)(b->count - 1);
-    b->chain_pos = 0;
     b->play_page = b->sel;
     place_first(b);
+}
+int pp_page_blank(int mode, int page)
+{
+    if (page < 0 || page >= PP_PAGES) return 1;
+    const pp_page_t *p = &bank(mode)->pages[page];
+    for (int c = 0; c < PP_COLS; c++)
+        if (p->notes[c]) return 0;
+    return 1;
 }
 int pp_page_copy(int mode)
 {
@@ -369,6 +370,17 @@ int pp_page_copy(int mode)
     if (is_running(b)) return PP_OP_RUNNING;
     copy_page(&b->clip, sel_page(b));
     b->has_clip = 1;
+    return PP_OP_OK;
+}
+int pp_page_cut(int mode)
+{
+    pp_bank_t *b = bank(mode);
+    pp_init(mode);
+    if (is_running(b)) return PP_OP_RUNNING;
+    remember(b);
+    copy_page(&b->clip, sel_page(b));
+    b->has_clip = 1;
+    blank_page(sel_page(b));
     return PP_OP_OK;
 }
 int pp_page_paste(int mode)
@@ -394,25 +406,6 @@ int pp_page_paste_new(int mode)
     settle(b);
     return PP_OP_OK;
 }
-int pp_page_delete(int mode)
-{
-    pp_bank_t *b = bank(mode);
-    pp_init(mode);
-    if (is_running(b)) return PP_OP_RUNNING;
-    remember(b);
-    int gone = b->sel, n = 0;
-    for (int i = gone; i + 1 < b->count; i++) copy_page(&b->pages[i], &b->pages[i + 1]);
-    blank_page(&b->pages[b->count - 1]);
-    if (b->count > 1) b->count--;
-    for (int i = 0; i < b->chain_len; i++) {
-        int e = b->chain[i];
-        if (e == gone) continue;
-        b->chain[n++] = (uint8_t)(e > gone ? e - 1 : e);
-    }
-    b->chain_len = (uint8_t)n;
-    settle(b);
-    return PP_OP_OK;
-}
 int pp_undo(int mode)
 {
     pp_bank_t *b = bank(mode);
@@ -421,17 +414,19 @@ int pp_undo(int mode)
     if (!b->undo_n) return PP_OP_EMPTY;
     const pp_snap_t *s = &b->undo[--b->undo_n];
     for (int i = 0; i < PP_PAGES; i++) copy_page(&b->pages[i], &s->pages[i]);
-    for (int i = 0; i < PP_CHAIN_MAX; i++) b->chain[i] = s->chain[i];
-    b->count = s->count;
+    /* Undoing a paste-new takes its pattern back, but a page the chain has used since stays, blank: the chain is
+     * never changed by page operations. */
+    int count = s->count;
+    for (int i = 0; i < b->chain_len; i++)
+        if (b->chain[i] >= count) count = b->chain[i] + 1;
+    b->count = (uint8_t)count;
     b->sel = s->sel;
-    b->chain_len = s->chain_len;
     settle(b);
     return PP_OP_OK;
 }
 
 /* ---- chain: keys run on another thread than ticks, so the tick may see an edit half done. Every entry is always a
- * page that exists and pages only move or go while stopped, so the worst it can do is pick a neighbouring occurrence
- * once. ---- */
+ * page that exists and pages are never removed, so the worst it can do is pick a neighbouring occurrence once. ---- */
 void pp_view_toggle(int mode)
 {
     pp_bank_t *b = bank(mode);

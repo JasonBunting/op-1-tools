@@ -1,6 +1,6 @@
 # Pattern+ couch sheet and tests
 
-The grid, pages and basic chain playback have passed on the device. This build adds copying, pasting and deleting pages, with undo. Saving is automatic and comes back after a power off; saved collections are a separate list you can name, load and start over from.
+The grid, pages and basic chain playback have passed on the device. This build adds cutting, copying and pasting patterns between pages, with undo. Saving is automatic and comes back after a power off; saved collections are a separate list you can name, load and start over from.
 
 ## Before you trust it with a good idea
 
@@ -32,7 +32,7 @@ Open the Hundekraft workshop, go to **Your plugins**, add `build/patternplus.knl
 | Shift + note key | Adds a note. Stopped: at the cursor, then the cursor moves on. Playing: at the playhead. If that note is already there, erases it and the cursor stays | Stock, except erasing |
 | Left / right, or blue turn | Moves the cursor while stopped | Stock |
 | Shift + blue turn | Moves the cursor while stopped, clearing each column it leaves | Stock |
-| Green turn | Swing | Stock |
+| Green turn | Swing. The number stays bright while it is anything but 50% | Stock |
 | Shift + green turn | Rotates the notes inside the section | Stock |
 | White turn | Section length | Stock |
 | Shift + white turn | Moves the section | Stock |
@@ -41,12 +41,14 @@ Open the Hundekraft workshop, go to **Your plugins**, add `build/patternplus.knl
 | Shift + blue push | Previous page | New |
 | Shift + green push | Next page, or a new blank page after the last one | New |
 | Shift + white push | Next view: grid, chain, saved, then grid again. Playback isn't disturbed | New |
-| Shift + orange push | Playing: makes the grid follow the playing page again. Stopped: undoes the last paste or delete, up to 3 | New |
-| Lift | Stopped: copies this page, with its length, swing and direction | New |
-| Drop | Stopped: asks, then pastes the copy over this page | New |
-| Shift + drop | Stopped: adds the copy as a new last page | New |
-| Scissors | Stopped: asks, then deletes this page. Later pages move down a letter and the chain follows them | New |
+| Shift + orange push | Playing: makes the grid follow the playing page again. Stopped: undoes the last cut or paste, up to 3 | New |
+| Lift | Stopped: copies this page's pattern: its notes, section, swing and direction | New |
+| Drop | Stopped: pastes the pattern onto this page. Asks first if the page already has notes | New |
+| Shift + drop | Stopped: pastes the pattern onto a new last page | New |
+| Scissors | Stopped: cuts this page's pattern, leaving the page blank. Pages never move, and the chain never changes | New |
 | Green push / orange push, while asked | Green confirms, orange cancels | New |
+
+In the chain view, a page with no notes on it shows in red. It plays a bar of silence at its own length.
 
 In the chain view:
 
@@ -79,7 +81,7 @@ On the Synth, Drum, Tape and Mixer screens, holding a note key plays the page tr
 
 ## Differences from stock in this build
 
-1. **Lift, drop and scissors** copy, paste and delete pages instead of stock's own uses.
+1. **Lift, drop and scissors** copy, paste and cut patterns between pages instead of stock's own uses.
 2. **Left / right and blue while playing** do nothing. Stock shows the cursor fighting the playhead; I left that out.
 3. **Shift + blue while playing** does nothing.
 4. **Font:** the swing, HOLD and page labels use Hundekraft's stroke font, so they won't match stock exactly.
@@ -89,7 +91,7 @@ On the Synth, Drum, Tape and Mixer screens, holding a note key plays the page tr
 1. A chain with entries in it always plays from its first entry when you start. An empty chain loops the selected page, as before.
 2. Pages change when a page finishes its cycle, including its direction and section. Repeats of a page share its notes, so editing B changes every B.
 3. The grid follows the playing page. Changing page by hand during chain playback stops that and shows `FREE`, and the cursor works on any page that isn't playing. Shift + orange push, or starting playback again, resumes following.
-4. Limits: 8 pages, 32 chain entries, one chain per mode.
+4. Limits: 16 pages (A to P), 32 chain entries, one chain per mode.
 
 ## Saving test
 
@@ -110,23 +112,22 @@ On the Synth, Drum, Tape and Mixer screens, holding a note key plays the page tr
 10. Start a save, then press a mode key instead of finishing the name. Nothing changes.
 11. Load a slot while a pattern plays. It stops with no stuck notes.
 
-## Copy, paste and delete test
+## Cut, copy and paste test
 
 In Drum mode, select `patternplus`, with nothing playing. The message line is under the grid.
 
-1. Make pages A, B, C and D with Shift + green push. Give each a different beat, and give C a shorter section and a different swing.
-2. Build the chain `A > B > C > D > C > D` in the chain view, then come back to the grid.
-3. On C, press lift. `COPIED C` shows.
-4. Go to A with Shift + blue push and press drop. `PASTE OVER A? GREEN YES ORANGE NO` shows and stays. Push orange: `CANCELLED`, and A is unchanged.
-5. Press drop again and push green: `PASTED OVER A`. A now has C's beat, section and swing. C is unchanged.
-6. Press Shift + orange push: `UNDONE`, and A's own beat is back.
-7. Press Shift + drop. `PASTED AS E` shows and you're on a new page E with C's beat. Press Shift + orange push: E is gone, and the page counter reads `/D` again.
-8. Go to A and press scissors, then push green: `DELETED A`. Do it again. You're on A, which holds C's beat, and the counter reads `/B`. The chain view shows `A > B > A > B`.
-9. Press Shift + orange push twice. All four pages and the original chain are back.
-10. Press Shift + orange push again: `NOTHING TO UNDO`.
-11. Switch to Synth mode and press drop: `NOTHING COPIED`. Synth and Drum each have their own copy and undo.
-12. Back in Drum mode, start the pattern and press lift: `STOP FIRST`.
-13. With one page left, delete it. You get one blank page, and the chain is empty.
+1. Make pages A, B, C and D with Shift + green push. Give each a different beat, and give D a shorter section and a different swing.
+2. Build the chain `A > B > C > D > C > B > A` in the chain view, then come back to the grid.
+3. On D, press scissors. `CUT D` shows and D's grid is empty. Open the chain view: every D is red, and the chain is otherwise unchanged. Come back to the grid.
+4. Go to B with Shift + blue push and press drop. `PASTE OVER B? GREEN YES ORANGE NO` shows and stays. Push orange: `CANCELLED`, and B is unchanged.
+5. Press drop again and push green: `PASTED ON B`. B now has D's old beat, section and swing. C is unchanged.
+6. Go to D and press drop. It pastes straight away, with no question, because D was blank. The chain view's Ds are no longer red.
+7. Press Shift + orange push three times: `UNDONE` each time. D is blank again, then B's own beat is back, then D's beat is back.
+8. Press Shift + orange push again: `NOTHING TO UNDO`.
+9. On C, press lift: `COPIED C`. Press Shift + drop: `PASTED ON NEW E`, and you're on E with C's beat. Press Shift + orange push: E is gone, and the page counter reads `/D` again.
+10. Start the pattern and press lift: `STOP FIRST`. Stop it.
+11. Switch to Synth mode and press drop: `NOTHING COPIED`. Synth and Drum each have their own clipboard and undo.
+12. Back in Drum mode, cut a page that's in the chain and play the chain. That page plays a bar of silence.
 
 ## Chain test
 
