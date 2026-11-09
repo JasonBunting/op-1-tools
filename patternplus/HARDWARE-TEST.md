@@ -1,6 +1,6 @@
 # Pattern+ couch sheet and tests
 
-The grid, pages and basic chain playback have passed on the device. This build adds cutting, copying and pasting patterns between pages, with undo. Saving is automatic and comes back after a power off; saved collections are a separate list you can name, load and start over from.
+The grid, pages and basic chain playback have passed on the device. This build (0.5.0) makes the cursor walk along the chain, and adds Help as a key you hold to keep the cursor and HOLD on one page. Cutting, copying and pasting patterns between pages, with undo, came in 0.4. Saving is automatic and comes back after a power off; saved collections are a separate list you can name, load and start over from.
 
 ## Before you trust it with a good idea
 
@@ -30,7 +30,8 @@ Open the Hundekraft workshop, go to **Your plugins**, add `build/patternplus.knl
 | --- | --- | --- |
 | Note key | Sounds the note and moves the left arrow | Stock |
 | Shift + note key | Adds a note. Stopped: at the cursor, then the cursor moves on. Playing: at the playhead. If that note is already there, erases it and the cursor stays | Stock, except erasing |
-| Left / right, or blue turn | Moves the cursor while stopped | Stock |
+| Left / right, or blue turn | Moves the cursor while stopped. With a chain, going past the end of a page's section moves on to the next page in the chain, and past its start back to the previous one, wrapping around | Stock, except the chain |
+| Help, held | Keeps the cursor on this page and makes HOLD loop just one page. Shows `PAGE`. Letting go returns to the chain | New |
 | Shift + blue turn | Moves the cursor while stopped, clearing each column it leaves | Stock |
 | Green turn | Swing. The number stays bright while it is anything but 50% | Stock |
 | Shift + green turn | Rotates the notes inside the section | Stock |
@@ -84,7 +85,8 @@ On the Synth, Drum, Tape and Mixer screens, holding a note key plays the page tr
 1. **Lift, drop and scissors** copy, paste and cut patterns between pages instead of stock's own uses.
 2. **Left / right and blue while playing** do nothing. Stock shows the cursor fighting the playhead; I left that out.
 3. **Shift + blue while playing** does nothing.
-4. **Font:** the swing, HOLD and page labels use Hundekraft's stroke font, so they won't match stock exactly.
+4. **Help** on the Pattern+ screen is the hold-for-one-page key, so stock's help text doesn't show there. Shift + help still works.
+5. **Font:** the swing, HOLD and page labels use Hundekraft's stroke font, so they won't match stock exactly.
 
 ## Chain behavior, provisional
 
@@ -92,6 +94,19 @@ On the Synth, Drum, Tape and Mixer screens, holding a note key plays the page tr
 2. Pages change when a page finishes its cycle, including its direction and section. Repeats of a page share its notes, so editing B changes every B.
 3. The grid follows the playing page. Changing page by hand during chain playback stops that and shows `FREE`, and the cursor works on any page that isn't playing. Shift + orange push, or starting playback again, resumes following.
 4. Limits: 16 pages (A to P), 32 chain entries, one chain per mode.
+5. Holding Help when you start HOLD plays the page on screen instead of the first entry. After you let go, the chain carries on from that page.
+
+## Chain cursor and Help test (0.5.0)
+
+In Synth mode, select `patternplus`, with nothing playing.
+
+1. Make pages A, B, C and D. Put a different note on the first step of each. Give B a section of 4 steps with the white encoder.
+2. Build the chain `A > B > A > C` in the chain view, then come back to the grid on A.
+3. Turn blue right slowly. After A's last step the grid shows B with the cursor on its first step. After B's 4th step it shows A again, then C, then A once more. Turning left goes back through the same pages in reverse.
+4. Go to D with Shift + green push. Turn blue right past its last step. The cursor goes back to D's first step, because D isn't in the chain.
+5. Go back to A. Hold Help: `PAGE` shows under the page letter. Turn blue right past A's last step. The cursor goes back to A's first step. Let go of Help and `PAGE` goes away.
+6. Turn orange right. The chain plays A, B, A, C. While A is playing, hold Help. A repeats for as long as you hold it. Let go partway through A: A finishes, then B plays. No notes should keep ringing.
+7. Turn orange left to stop. Go to C, hold Help, and turn orange right. C repeats. Let go: C finishes, then A plays, then the chain carries on as usual.
 
 ## Saving test
 

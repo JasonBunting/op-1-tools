@@ -397,6 +397,75 @@ int main(void)
     ticks(0, 1);
     check("chain: every note released", offs, ons);
 
+    /* --- #8: the cursor walks the chain A > B > A > C by section ends; D, not in it, wraps on itself --- */
+    fresh();
+    for (int i = 0; i < 3; i++) pp_page_next(0);
+    page(0, 0)->start = 2; page(0, 0)->len = 3;             /* A: steps 2..4 */
+    page(0, 1)->len = 2;                                    /* B: 0..1 */
+    page(0, 2)->start = 4; page(0, 2)->len = 4;             /* C: 4..7 */
+    { static const uint8_t c[] = { 0, 1, 0, 2 };
+      for (int i = 0; i < 4; i++) pp_bank[0].chain[i] = c[i];
+      pp_bank[0].chain_len = 4; }
+    pp_bank[0].sel = 0; pp_bank[0].cursor = 2;
+    pp_move_cursor(0, 2);
+    check("within A", pp_bank[0].cursor, 4); check("still A", pp_bank[0].sel, 0);
+    pp_move_cursor(0, 1);
+    check("on to B", pp_bank[0].sel, 1); check("B's first step", pp_bank[0].cursor, 0); check("occurrence 1", pp_bank[0].edit_occ, 1);
+    pp_move_cursor(0, 2);
+    check("on to the second A", pp_bank[0].sel, 0); check("A's first step", pp_bank[0].cursor, 2); check("occurrence 2", pp_bank[0].edit_occ, 2);
+    pp_move_cursor(0, 3);
+    check("then C, not B again", pp_bank[0].sel, 2); check("C's first step", pp_bank[0].cursor, 4);
+    pp_move_cursor(0, 4);
+    check("wraps to A", pp_bank[0].sel, 0); check("first occurrence", pp_bank[0].edit_occ, 0); check("at A's start", pp_bank[0].cursor, 2);
+    pp_move_cursor(0, -1);
+    check("back wraps to C", pp_bank[0].sel, 2); check("C's last step", pp_bank[0].cursor, 7);
+    pp_move_cursor(0, -4);
+    check("back to the second A", pp_bank[0].sel, 0); check("its last step", pp_bank[0].cursor, 4); check("occurrence 2 again", pp_bank[0].edit_occ, 2);
+    /* the single-page key: wraps on the page */
+    pp_set_solo(0, 1);
+    pp_move_cursor(0, 1);
+    check("solo stays on A", pp_bank[0].sel, 0); check("solo moves in the grid", pp_bank[0].cursor, 5);
+    pp_set_solo(0, 0);
+    pp_move_cursor(0, -1);
+    pp_move_cursor(0, 1);
+    check("released: chain again", pp_bank[0].sel, 2);
+    pp_bank[0].sel = 3; pp_bank[0].cursor = 15;
+    pp_move_cursor(0, 1);
+    check("D wraps on itself", pp_bank[0].sel, 3); check("D's column 0", pp_bank[0].cursor, 0);
+
+    /* --- #8: the single-page key loops one page under HOLD; releasing it mid-loop goes on along the chain --- */
+    fresh();
+    pp_page_next(0); pp_page_next(0);
+    for (int i = 0; i < 3; i++) { page(0, i)->len = 2; page(0, i)->notes[0] = 1u << i; }
+    for (int i = 0; i < 3; i++) pp_bank[0].chain[i] = (uint8_t)i;
+    pp_bank[0].chain_len = 3;
+    pp_set_hold(0, 1);
+    ticks(0, 1);
+    check("chain starts at A", pp_bank[0].play_page, 0);
+    pp_set_solo(0, 1);
+    for (int lap = 0; lap < 3; lap++) { ticks(0, 48); check("solo loops A", pp_bank[0].play_page, 0); check("A's note", last_key, 0); }
+    ticks(0, 24);                                           /* mid-loop */
+    pp_set_solo(0, 0);
+    check("finishes A first", pp_bank[0].play_page, 0);
+    ticks(0, 24);
+    check("then B", pp_bank[0].play_page, 1); check("B's note", last_key, 1);
+    check("grid follows", pp_bank[0].sel, 1);
+    pp_set_hold(0, 0); ticks(0, 1);
+    /* starting with the key held loops the page shown, then the chain goes on after it */
+    pp_bank[0].sel = 1;
+    pp_set_solo(0, 1);
+    pp_set_hold(0, 1);
+    ticks(0, 1);
+    check("starts on the page shown", pp_bank[0].play_page, 1);
+    ticks(0, 96);
+    check("still B", pp_bank[0].play_page, 1);
+    pp_set_solo(0, 0);
+    ticks(0, 48);
+    check("then C", pp_bank[0].play_page, 2);
+    pp_set_hold(0, 0);
+    ticks(0, 1);
+    check("#8: every note released", offs, ons);
+
     /* --- Shift + a note already there erases just that note --- */
     fresh();
     pp_note_entry(0, 3);

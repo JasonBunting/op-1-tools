@@ -20,6 +20,7 @@
 #define PP_SEQ_NAME   ((const char *(*)(int))0x01A422EC)
 #define PP_KEY_LEFT   0x24
 #define PP_KEY_RIGHT  0x25
+#define PP_KEY_HELP   0x00
 enum { PP_BLUE, PP_GREEN, PP_WHITE, PP_ORANGE };
 #define PP_FLASH_MS   1000
 
@@ -273,10 +274,28 @@ static int pp_is_shown(void)
     while (*a && *a == *b) { a++; b++; }
     return *a == *b;
 }
+/* Help, held on the Pattern+ screen, is the single-page key (#8): the cursor and HOLD stay on one page. Shift + help is
+ * left to the core. The release is ours wherever the press went on to, and lets go in both modes. */
+static volatile uint8_t pp_help_taken;
+static int pp_help(int pressed)
+{
+    if (pressed) {
+        if (!pp_is_shown() || PP_SHIFT()) return 0;
+        pp_help_taken = 1;
+        pp_set_solo(PP_MODE(), 1);
+        return 1;
+    }
+    if (!pp_help_taken) return 0;
+    pp_help_taken = 0;
+    pp_set_solo(0, 0);
+    pp_set_solo(1, 0);
+    return 1;
+}
 /* The core keeps left / right for the keyboard octave on sequencer screens; this filter runs before it, and stock
  * Pattern moves its cursor with them. */
 static int pp_input(const op1_input *in)
 {
+    if (in->type == OP1_IN_KEY && in->code == PP_KEY_HELP) return pp_help(in->pressed);
     if (in->type != OP1_IN_KEY || (in->code != PP_KEY_LEFT && in->code != PP_KEY_RIGHT)) return 0;
     int i = in->code == PP_KEY_RIGHT;
     if (in->pressed) {
@@ -498,7 +517,8 @@ static void pp_draw_side(void *r, const pp_bank_t *b, const pp_page_t *p, int ru
     t[1] = (char)('A' + b->count - 1);
     t[2] = 0;
     sq_text(r, OP1_Q10(276), OP1_Q10(113), OP1_Q10(1.5), t, 0x400, pp_c_grey);
-    if (b->chain_len && !b->follow) sq_text(r, OP1_Q10(258), OP1_Q10(128), OP1_Q10(1.3), "FREE", 0x400, pp_c_grey);
+    if (b->chain_len && b->solo) sq_text(r, OP1_Q10(258), OP1_Q10(128), OP1_Q10(1.3), "PAGE", 0x400, pp_c_white);
+    else if (b->chain_len && !b->follow) sq_text(r, OP1_Q10(258), OP1_Q10(128), OP1_Q10(1.3), "FREE", 0x400, pp_c_grey);
 }
 /* The chain as A > B > B > C: eight to a row. The occurrence playing is boxed, so repeats of a page stay apart. */
 #define PP_CELL_X(i) OP1_Q10(24 + ((i) % 8) * 36)

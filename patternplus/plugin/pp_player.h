@@ -41,6 +41,8 @@ typedef struct {
     volatile uint8_t chain[PP_CHAIN_MAX];   /* page indexes; repeats share one page. Empty: the selected page loops */
     volatile uint8_t chain_len, chain_cursor, chain_pick, view, follow;
     volatile int8_t chain_pos;              /* the occurrence playing; -1 just after removing the first while it played */
+    volatile int8_t edit_occ;               /* the occurrence the cursor is on, when the selected page is in the chain */
+    volatile uint8_t solo;                  /* the single-page key is held: the cursor and HOLD stay on one page */
     pp_page_t clip;                         /* the copied page; not saved, so it lasts until a load, a clear or power off */
     uint8_t has_clip, undo_n;
     pp_snap_t undo[PP_UNDO];                /* oldest first */
@@ -60,7 +62,9 @@ int pp_edit_col(int mode);                  /* where a note goes: the playhead w
 /* editing (KeyHandler thread) */
 void pp_note_entry(int mode, int key);      /* at the playhead, or at the cursor, which then moves on. A note already there is erased instead */
 void pp_set_pitch(int mode, int key);       /* the keyboard-position arrow */
-void pp_move_cursor(int mode, int delta);   /* stopped only */
+void pp_move_cursor(int mode, int delta);   /* not on the playhead. In the chain, past a section's end goes on to the
+                                               next occurrence's page, wrapping; the single-page key keeps it on one page */
+void pp_set_solo(int mode, int on);         /* the single-page key: held, the cursor and HOLD stay on one page */
 void pp_erase_move(int mode, int delta);    /* stopped only: clears each column the cursor leaves */
 void pp_add_swing(int mode, int delta);
 void pp_rotate(int mode, int delta);        /* within the section, wrapping */

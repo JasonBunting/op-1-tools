@@ -40,7 +40,7 @@ int pp_has_notes(int mode)
 {
     pp_bank_t *b = bank(mode);
     if (!b->init) return 0;
-    if (!b->chain_len) return section_has_notes(sel_page(b));
+    if (!b->chain_len || b->solo) return section_has_notes(sel_page(b));
     for (int i = 0; i < b->chain_len; i++)
         if (section_has_notes(&b->pages[b->chain[i]])) return 1;
     return 0;
@@ -71,12 +71,28 @@ static void place_first(pp_bank_t *b)
     b->pos = p->dir == PP_DIR_REVERSE ? (uint8_t)(p->start + p->len - 1) : p->start;
     b->back = 0;
 }
+static int find_occ(const pp_bank_t *b, int page)
+{
+    for (int i = 0; i < b->chain_len; i++)
+        if (b->chain[i] == page) return i;
+    return -1;
+}
+/* The occurrence the cursor is on: the one it walked to, else the one playing, else the page's first. -1: not in it */
+static int cursor_occ(const pp_bank_t *b)
+{
+    int len = b->chain_len, at = b->edit_occ, pos = b->chain_pos;
+    if (at >= 0 && at < len && b->chain[at] == b->sel) return at;
+    if (pos >= 0 && pos < len && b->chain[pos] == b->sel) return pos;
+    return find_occ(b, b->sel);
+}
 static void begin(pp_bank_t *b)
 {
     silence(b);
     b->follow = 1;
     b->chain_pos = 0;
-    if (b->chain_len) b->sel = b->chain[0];
+    if (b->chain_len && b->solo) b->chain_pos = (int8_t)cursor_occ(b);   /* the single-page key: the page shown loops,
+                                                                              and the chain goes on after it (-1: from the start) */
+    else if (b->chain_len) b->sel = b->chain[0];
     b->play_page = b->sel;
     b->elapsed = 0;
     b->started = 0;
@@ -86,7 +102,9 @@ static void begin(pp_bank_t *b)
 static void loop_point(pp_bank_t *b)
 {
     int len = b->chain_len;
-    if (len) {
+    if (len && b->solo) {                   /* the single-page key: the page playing loops; the chain resumes on release */
+        if (b->follow) b->sel = b->play_page;
+    } else if (len) {
         int next = b->chain_pos + 1;
         if (next >= len) next = 0;
         b->chain_pos = (int8_t)next;
@@ -209,12 +227,39 @@ void pp_note_entry(int mode, int key)
     *col |= 1u << key;
     if (!on_playhead(b)) b->cursor = (uint8_t)((b->cursor + 1) % PP_COLS);
 }
+/* one step along the chain: past the section's end, the next occurrence's first step; before its start, the previous
+ * occurrence's last. Steps outside the section still move within the grid. */
+static void chain_step(pp_bank_t *b, int at, int step)
+{
+    const pp_page_t *p = sel_page(b);
+    int c = b->cursor, s = p->start, e = s + p->len - 1, len = b->chain_len;
+    if (step > 0 ? c != e : c != s) { b->cursor = (uint8_t)((c + step + PP_COLS) % PP_COLS); b->edit_occ = (int8_t)at; return; }
+    at = (at + step + len) % len;
+    b->edit_occ = (int8_t)at;
+    b->sel = b->chain[at];
+    p = sel_page(b);
+    b->cursor = (uint8_t)(step > 0 ? p->start : p->start + p->len - 1);
+}
 void pp_move_cursor(int mode, int delta)
 {
     pp_bank_t *b = bank(mode);
     pp_init(mode);
     if (on_playhead(b)) return;
-    b->cursor = (uint8_t)((b->cursor + delta % PP_COLS + PP_COLS) % PP_COLS);
+    int step = delta < 0 ? -1 : 1;
+    for (int i = delta < 0 ? -delta : delta; i > 0; i--) {
+        int at = b->solo ? -1 : cursor_occ(b);
+        if (at < 0) { b->cursor = (uint8_t)((b->cursor + step + PP_COLS) % PP_COLS); continue; }
+        int was = b->sel;
+        chain_step(b, at, step);
+        if (b->sel != was && is_running(b)) b->follow = 0;    /* as changing page by hand */
+        if (on_playhead(b)) return;         /* arrived on the page playing: editing is at the playhead now */
+    }
+}
+void pp_set_solo(int mode, int on)
+{
+    pp_bank_t *b = bank(mode);
+    pp_init(mode);
+    b->solo = (uint8_t)(on != 0);
 }
 void pp_erase_move(int mode, int delta)
 {
