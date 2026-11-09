@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="manual.css">
 </head>
 <body>
-<header><a href="manual.html" class="wordmark">Pattern+ <span>a sequencer for hundekraft</span></a><span class="edition">ORIGINAL OP–1 · HUNDEKRAFT 3.2.3 · PATTERN+ 0.5.0</span></header>
+<header><a href="manual.html" class="wordmark">Pattern+ <span>a sequencer for hundekraft</span></a><span class="edition">ORIGINAL OP–1 · HUNDEKRAFT 3.2.3 · PATTERN+ 0.5.1</span></header>
 <main>
 <section class="intro"><div class="eyebrow">PATTERN+ / MANUAL</div><h1>Pattern, with pages.</h1><p>Pattern+ plays like the OP-1's own Pattern sequencer and adds pages, chains, cut, copy and paste, and saving. This manual covers only what is different.</p><div class="manual-actions"><a href="#pages">Pages ↓</a><a href="#chains">Chains ↓</a><a href="#differences">Where it differs ↓</a></div></section>
 <div class="manual-grid">
@@ -82,8 +82,8 @@
 <ol>
 <li>Turning <span class="enc enc-o">orange</span> right starts the chain from its first entry. An empty chain loops the page on screen.</li>
 <li>The next page starts when the current one finishes its cycle, including its own section and direction.</li>
-<li>The grid follows the playing page. Change page by hand and it stops following: <span class="lcd">FREE</span> shows under the page letter, and you can edit any page that isn't playing. <span class="okey okey-text">Shift</span> + <span class="enc enc-o">orange</span> push, or starting again, follows the chain once more.</li>
-<li>While stopped, moving the cursor past the end of a page's section carries on to the next page in the chain, and past its start back to the previous one, wrapping round. A page that isn't in the chain keeps the cursor to itself.</li>
+<li>The grid follows the playing page. Change page by hand and it stops following: <span class="lcd">FREE</span> shows under the page letter, and the cursor is free on any page that isn't playing. To edit the page that is playing, start live edit with <span class="okey okey-text">Shift</span> + <img class="okey" src="keys/left.png" alt="left" title="left"> or <img class="okey" src="keys/right.png" alt="right" title="right">. <span class="okey okey-text">Shift</span> + <span class="enc enc-o">orange</span> push, or starting again, follows the chain once more.</li>
+<li>Whenever the cursor is free (stopped, or playing with the cursor off the playhead), moving it past the end of a page's section carries on to the next page in the chain, and past its start back to the previous one, wrapping round. A page that isn't in the chain keeps the cursor to itself.</li>
 </ol>
 <figure class="screen small"><div class="shot" role="img" aria-label="Screenshot to come: FREE under the page letter"><b>img/grid-free.png</b><span>A chain playing while the grid shows another page: FREE under the page letter.</span></div><figcaption><b>Fig. 4</b> Editing page D while the chain plays B.</figcaption></figure>
 </div>
@@ -99,7 +99,7 @@
 </section>
 
 <section class="chapter" id="clipboard"><h2>Cut, copy and paste</h2>
-<p>The tape-edit keys move a page's pattern (its notes, section, swing and direction) between pages. The page itself never moves, so the chain is never touched. They work in the grid view while stopped; otherwise <span class="lcd">STOP FIRST</span> shows.</p>
+<p>The tape-edit keys move a page's pattern (its notes, section, swing and direction) between pages. The page itself never moves, so the chain is never touched. They work in the grid view while stopped. While playing, <span class="lcd">STOP FIRST</span> shows. In the chain and saved views they do nothing.</p>
 <div class="table"><table><thead><tr><th scope="col">Key</th><th scope="col">Does</th></tr></thead><tbody>
 <tr><td data-label="Key"><img class="okey" src="keys/lift.png" alt="lift" title="lift"></td><td data-label="Does">Copies this page's pattern. <span class="lcd">COPIED B</span></td></tr>
 <tr><td data-label="Key"><img class="okey" src="keys/scissors.png" alt="scissors" title="scissors"></td><td data-label="Does">Copies it, then leaves the page blank. <span class="lcd">CUT B</span></td></tr>
@@ -127,7 +127,7 @@
 <figure class="screen side"><div class="shot" role="img" aria-label="Screenshot to come: the saved view"><b>img/saved.png</b><span>Saved view with two named slots, the last-loaded one in green, the arrow on slot 2, the rest EMPTY.</span></div><figcaption><b>Fig. 6</b> The saved view.</figcaption><ol class="legend"><li><i class="dot dot-b">1</i><span>The arrow, moved with <span class="enc enc-b">blue</span></span></li><li><i class="dot dot-n">2</i><span>Green: the slot you last loaded or saved</span></li></ol></figure>
 <div class="table"><table><thead><tr><th scope="col">Control</th><th scope="col">Does</th></tr></thead><tbody>
 <tr><td data-label="Control"><span class="enc enc-b">blue</span> turn, or <img class="okey" src="keys/left.png" alt="left" title="left"> <img class="okey" src="keys/right.png" alt="right" title="right"></td><td data-label="Does">Moves the arrow along slots 1 to 8</td></tr>
-<tr><td data-label="Control"><span class="enc enc-w">white</span> push</td><td data-label="Does">Saves to this slot, then asks for a name</td></tr>
+<tr><td data-label="Control"><span class="enc enc-w">white</span> push</td><td data-label="Does">Asks for a name, then saves to this slot</td></tr>
 <tr><td data-label="Control"><span class="enc enc-g">green</span> push</td><td data-label="Does">Loads this slot after asking <span class="lcd">REPLACE WORK?</span>. Stops playback</td></tr>
 <tr><td data-label="Control"><span class="okey okey-text">Shift</span> + <span class="enc enc-g">green</span> push</td><td data-label="Does">Starts over after asking <span class="lcd">CLEAR ALL?</span>: one empty page, no chain. Slots are untouched</td></tr>
 <tr><td data-label="Control"><span class="enc enc-o">orange</span> turn</td><td data-label="Does">HOLD, as in the grid</td></tr>
@@ -151,7 +151,7 @@
 <li><img class="okey" src="keys/help.png" alt="help" title="help"> is the <a href="#one-page">stay-on-one-page</a> key, so stock's help text doesn't show on the Pattern+ screen. <span class="okey okey-text">Shift</span> + <img class="okey" src="keys/help.png" alt="help" title="help"> still works.</li>
 <li><span class="okey okey-text">Shift</span> + a note key on a step that already has that note erases it.</li>
 <li>While playing, <img class="okey" src="keys/left.png" alt="left" title="left"> <img class="okey" src="keys/right.png" alt="right" title="right">, <span class="enc enc-b">blue</span> and <span class="okey okey-text">Shift</span> + <span class="enc enc-b">blue</span> do nothing until you start live edit. Stock moves a cursor that fights the playhead.</li>
-<li>Live edit (<span class="okey okey-text">Shift</span> + <img class="okey" src="keys/left.png" alt="left" title="left"> or <img class="okey" src="keys/right.png" alt="right" title="right"> while playing) is as stock: the cursor leaves the playhead, so you can move it, add notes and erase while the pattern plays. <span class="okey okey-text">Shift</span> + <span class="enc enc-o">orange</span> push, or starting again, puts the cursor back on the playhead. With a chain, the grid also stays on its page and <span class="lcd">FREE</span> shows.</li>
+<li>Live edit starts as on stock: <span class="okey okey-text">Shift</span> + <img class="okey" src="keys/left.png" alt="left" title="left"> or <img class="okey" src="keys/right.png" alt="right" title="right"> while playing takes the cursor off the playhead, so you can move it, add notes and erase while the pattern plays. The way back is Pattern+'s own: <span class="okey okey-text">Shift</span> + <span class="enc enc-o">orange</span> push, or starting again, puts the cursor back on the playhead. With a chain, the grid also stays on its page and <span class="lcd">FREE</span> shows.</li>
 <li>The swing, HOLD and page labels use Hundekraft's font, so they look slightly different.</li>
 </ol>
 <p>Anything else that doesn't match stock with a single page is a bug.</p>

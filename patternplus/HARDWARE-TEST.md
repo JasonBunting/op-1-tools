@@ -1,6 +1,6 @@
 # Pattern+ couch sheet and tests
 
-The grid, pages and basic chain playback have passed on the device. This build (0.5.0) makes the cursor walk along the chain, and adds Help as a key you hold to keep the cursor and HOLD on one page. Cutting, copying and pasting patterns between pages, with undo, came in 0.4. Saving is automatic and comes back after a power off; saved collections are a separate list you can name, load and start over from.
+The grid, pages and basic chain playback have passed on the device. This build (0.5.1) adds stock's live edit: Shift + left / right while playing frees the cursor from the playhead. 0.5.0 made the cursor walk along the chain, and added Help as a key you hold to keep the cursor and HOLD on one page. Cutting, copying and pasting patterns between pages, with undo, came in 0.4. Saving is automatic and comes back after a power off; saved collections are a separate list you can name, load and start over from.
 
 ## Before you trust it with a good idea
 
