@@ -31,6 +31,7 @@ Open the Hundekraft workshop, go to **Your plugins**, add `build/patternplus.knl
 | Note key | Sounds the note and moves the left arrow | Stock |
 | Shift + note key | Adds a note. Stopped: at the cursor, then the cursor moves on. Playing: at the playhead. If that note is already there, erases it and the cursor stays | Stock, except erasing |
 | Left / right, or blue turn | Moves the cursor while stopped. With a chain, going past the end of a page's section moves on to the next page in the chain, and past its start back to the previous one, wrapping around | Stock, except the chain |
+| Shift + left / right, while playing | Live edit: the cursor leaves the playhead and moves one step. After that, left / right, blue, Shift + note key and Shift + blue work at the cursor while the pattern plays. With a chain, the grid stays on this page and `FREE` shows | Stock |
 | Help, held | Keeps the cursor on this page and makes HOLD loop just one page. Shows `PAGE`. Letting go returns to the chain | New |
 | Shift + blue turn | Moves the cursor while stopped, clearing each column it leaves | Stock |
 | Green turn | Swing. The number stays bright while it is anything but 50% | Stock |
@@ -42,7 +43,7 @@ Open the Hundekraft workshop, go to **Your plugins**, add `build/patternplus.knl
 | Shift + blue push | Previous page | New |
 | Shift + green push | Next page, or a new blank page after the last one | New |
 | Shift + white push | Next view: grid, chain, saved, then grid again. Playback isn't disturbed | New |
-| Shift + orange push | Playing: makes the grid follow the playing page again. Stopped: undoes the last cut or paste, up to 3 | New |
+| Shift + orange push | Playing: makes the grid follow the playing page again and ends live edit. Stopped: undoes the last cut or paste, up to 3 | New |
 | Lift | Stopped: copies this page's pattern: its notes, section, swing and direction | New |
 | Drop | Stopped: pastes the pattern onto this page. Asks first if the page already has notes | New |
 | Shift + drop | Stopped: pastes the pattern onto a new last page | New |
@@ -83,8 +84,8 @@ On the Synth, Drum, Tape and Mixer screens, holding a note key plays the page tr
 ## Differences from stock in this build
 
 1. **Lift, drop and scissors** copy, paste and cut patterns between pages instead of stock's own uses.
-2. **Left / right and blue while playing** do nothing. Stock shows the cursor fighting the playhead; I left that out.
-3. **Shift + blue while playing** does nothing.
+2. **Left / right and blue while playing** do nothing until you start live edit with Shift + left / right. Stock shows the cursor fighting the playhead; I left that out.
+3. **Shift + blue while playing** does nothing until you start live edit.
 4. **Help** on the Pattern+ screen is the hold-for-one-page key, so stock's help text doesn't show there. Shift + help still works.
 5. **Font:** the swing, HOLD and page labels use Hundekraft's stroke font, so they won't match stock exactly.
 
@@ -107,6 +108,21 @@ In Synth mode, select `patternplus`, with nothing playing.
 5. Go back to A. Hold Help: `PAGE` shows under the page letter. Turn blue right past A's last step. The cursor goes back to A's first step. Let go of Help and `PAGE` goes away.
 6. Turn orange right. The chain plays A, B, A, C. While A is playing, hold Help. A repeats for as long as you hold it. Let go partway through A: A finishes, then B plays. No notes should keep ringing.
 7. Turn orange left to stop. Go to C, hold Help, and turn orange right. C repeats. Let go: C finishes, then A plays, then the chain carries on as usual.
+
+## Live edit test
+
+Not yet tried on the device. In Synth mode, select `patternplus`, with one page, no chain and a few notes on it.
+
+1. Turn orange right. The white playhead moves across the grid.
+2. Press left, then turn blue. Nothing happens.
+3. Hold Shift and press right once. A second, pale blue line appears one step right of where the playhead was, and stays there while the playhead keeps moving. Does the pattern keep playing in time?
+4. Let go of Shift. Press left and right, and turn blue. The pale blue line moves; the playhead isn't affected.
+5. Hold Shift and press a note key. A dot appears at the pale blue line, not at the playhead, and the line moves on one step. You hear it next time the playhead passes.
+6. Hold Shift and turn blue left two steps. The line passes back over the dot and erases it.
+7. Press Shift + orange push. The pale blue line goes away. Hold Shift and press a note key: the dot lands at the playhead again.
+8. Do step 3 again, then turn orange left and right. The pale blue line is gone and the cursor is back on the playhead.
+9. On stock Pattern, do steps 1 to 6. Tell me anything that differs, and how stock leaves live edit.
+10. Build the chain `A > B` and play it. While A plays, hold Shift and press right. `FREE` shows, the grid stays on A while B plays, and the pale blue line is still free when A comes round. Shift + orange push follows the chain again.
 
 ## Saving test
 

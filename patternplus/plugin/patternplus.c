@@ -303,6 +303,7 @@ static int pp_input(const op1_input *in)
         pp_arrow_taken[i] = 1;
         if (pp_bank[PP_MODE()].view == PP_VIEW_SAVED) pp_slot_move(PP_MODE(), i ? 1 : -1);
         else if (pp_bank[PP_MODE()].view) pp_chain_move(PP_MODE(), i ? 1 : -1);
+        else if (PP_SHIFT()) pp_live_move(PP_MODE(), i ? 1 : -1);   /* as stock: frees the cursor from the playhead */
         else pp_move_cursor(PP_MODE(), i ? 1 : -1);
     } else {
         if (!pp_arrow_taken[i]) return 0;
@@ -611,8 +612,9 @@ static void pp_scr_update(void *scr, int dt)
         sq_line(r, pp_col_x(p->start), top, pp_col_x(p->start), bottom, PP_LINE, pp_c_grey);
         sq_line(r, pp_col_x(p->start + p->len), top, pp_col_x(p->start + p->len), bottom, PP_LINE, pp_c_white);
     }
-    if (running && b->play_page == b->sel) sq_line(r, pp_col_x(b->pos), top, pp_col_x(b->pos), bottom, PP_LINE, pp_c_white);
-    else sq_line(r, pp_col_x(b->cursor), top, pp_col_x(b->cursor), bottom, PP_LINE, pp_c_cursor);
+    int playhead = running && b->play_page == b->sel;
+    if (!playhead || b->live) sq_line(r, pp_col_x(b->cursor), top, pp_col_x(b->cursor), bottom, PP_LINE, pp_c_cursor);
+    if (playhead) sq_line(r, pp_col_x(b->pos), top, pp_col_x(b->pos), bottom, PP_LINE, pp_c_white);   /* live edit: both */
     pp_draw_notes(r, p);
     pp_draw_arrow(r, OP1_Q10(30), OP1_Q10(45), pp_key_y(b->pitch_key), OP1_Q10(5), pp_c_white);
     pp_draw_side(r, b, p, running);

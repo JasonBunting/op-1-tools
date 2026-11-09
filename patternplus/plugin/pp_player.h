@@ -43,6 +43,7 @@ typedef struct {
     volatile int8_t chain_pos;              /* the occurrence playing; -1 just after removing the first while it played */
     volatile int8_t edit_occ;               /* the occurrence the cursor is on, when the selected page is in the chain */
     volatile uint8_t solo;                  /* the single-page key is held: the cursor and HOLD stay on one page */
+    volatile uint8_t live;                  /* live edit: the cursor is free of the playhead until playback restarts */
     pp_page_t clip;                         /* the copied page; not saved, so it lasts until a load, a clear or power off */
     uint8_t has_clip, undo_n;
     pp_snap_t undo[PP_UNDO];                /* oldest first */
@@ -57,15 +58,18 @@ void pp_out_off(int id);
 void pp_init(int mode);
 int pp_running(int mode);
 int pp_has_notes(int mode);                 /* would playing produce any note */
-int pp_edit_col(int mode);                  /* where a note goes: the playhead while it runs on this page, else the cursor */
+int pp_edit_col(int mode);                  /* where a note goes: the playhead while it runs on this page (unless in
+                                               live edit), else the cursor */
 
 /* editing (KeyHandler thread) */
 void pp_note_entry(int mode, int key);      /* at the playhead, or at the cursor, which then moves on. A note already there is erased instead */
 void pp_set_pitch(int mode, int key);       /* the keyboard-position arrow */
 void pp_move_cursor(int mode, int delta);   /* not on the playhead. In the chain, past a section's end goes on to the
                                                next occurrence's page, wrapping; the single-page key keeps it on one page */
+void pp_live_move(int mode, int delta);     /* stock's Shift + arrow: on the playhead, frees the cursor from it (and the
+                                               grid from the chain) first; then as pp_move_cursor */
 void pp_set_solo(int mode, int on);         /* the single-page key: held, the cursor and HOLD stay on one page */
-void pp_erase_move(int mode, int delta);    /* stopped only: clears each column the cursor leaves */
+void pp_erase_move(int mode, int delta);    /* not on the playhead: clears each column the cursor leaves */
 void pp_add_swing(int mode, int delta);
 void pp_rotate(int mode, int delta);        /* within the section, wrapping */
 void pp_add_length(int mode, int delta);
@@ -91,7 +95,7 @@ void pp_chain_move(int mode, int delta);    /* over the entries and the free slo
 void pp_chain_pick(int mode, int delta);    /* the page to add; on an entry, also changes that entry */
 int pp_chain_insert(int mode);              /* the picked page, before the cursor. 0, or -1 when full */
 void pp_chain_remove(int mode);             /* the entry at the cursor */
-void pp_resume_follow(int mode);            /* the grid goes back to showing the playing page */
+void pp_resume_follow(int mode);            /* the grid goes back to showing the playing page; ends live edit */
 
 /* saving (pp_store.c): text that can be stored anywhere; nothing here touches the database or files */
 void pp_clear(int mode);                    /* stop this mode and start over with one empty page; forgets the clipboard

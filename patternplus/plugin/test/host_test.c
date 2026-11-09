@@ -246,6 +246,56 @@ int main(void)
     check("live entry at the playhead", page(0, 0)->notes[3], 1 << 11);
     check("live entry leaves the cursor", pp_bank[0].cursor, 0);
 
+    /* --- live edit: Shift + arrow frees the cursor from the playhead; playback carries on --- */
+    pp_live_move(0, 1);
+    check("live edit on", pp_bank[0].live, 1);
+    check("cursor starts from the playhead", pp_bank[0].cursor, 4);
+    check("playhead unmoved", pp_bank[0].pos, 3);
+    pp_move_cursor(0, 2);
+    check("plain arrows move it now", pp_bank[0].cursor, 6);
+    check("notes go to the cursor", pp_edit_col(0), 6);
+    pp_note_entry(0, 5);
+    check("entered at the cursor", page(0, 0)->notes[6], 1 << 5);
+    check("cursor moves on", pp_bank[0].cursor, 7);
+    pp_erase_move(0, -1);
+    pp_erase_move(0, -1);
+    check("erase works at the cursor", page(0, 0)->notes[6], 0);
+    ticks(0, 24);
+    check("still playing", pp_bank[0].pos, 4);
+    check("cursor stays put", pp_bank[0].cursor, 5);
+    pp_live_move(0, -1);
+    check("Shift + arrow again just moves", pp_bank[0].cursor, 4);
+    pp_resume_follow(0);
+    check("resume ends live edit", pp_bank[0].live, 0);
+    check("back on the playhead", pp_edit_col(0), 4);
+    pp_live_move(0, 1);
+    pp_set_hold(0, 0);
+    pp_set_hold(0, 1);
+    check("restarting ends live edit", pp_bank[0].live, 0);
+    pp_set_hold(0, 0);
+    pp_live_move(0, 1);
+    check("stopped: no live edit", pp_bank[0].live, 0);
+    /* with a chain, the grid stays on the page while the chain goes on, and the cursor is still free when it returns */
+    fresh();
+    pp_page_next(0); pp_page_prev(0);
+    page(0, 0)->len = 2; page(0, 1)->len = 2;
+    pp_bank[0].chain[0] = 0; pp_bank[0].chain[1] = 1; pp_bank[0].chain_len = 2;
+    pp_set_hold(0, 1);
+    ticks(0, 1);
+    pp_live_move(0, 1);
+    check("chain: cursor on A's second step", pp_bank[0].cursor, 1);
+    check("chain: stops following", pp_bank[0].follow, 0);
+    ticks(0, 48);
+    check("chain: B plays", pp_bank[0].play_page, 1);
+    check("chain: grid stays on A", pp_bank[0].sel, 0);
+    ticks(0, 48);
+    check("chain: A plays again", pp_bank[0].play_page, 0);
+    check("chain: cursor still free", pp_edit_col(0), 1);
+    pp_resume_follow(0);
+    check("chain: following again", pp_bank[0].follow, 1);
+    pp_set_hold(0, 0);
+    ticks(0, 1);
+
     /* --- page change while playing waits for the end of the page --- */
     fresh();
     page(0, 0)->len = 2;

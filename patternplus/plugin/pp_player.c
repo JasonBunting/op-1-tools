@@ -89,6 +89,7 @@ static void begin(pp_bank_t *b)
 {
     silence(b);
     b->follow = 1;
+    b->live = 0;
     b->chain_pos = 0;
     if (b->chain_len && b->solo) b->chain_pos = (int8_t)cursor_occ(b);   /* the single-page key: the page shown loops,
                                                                               and the chain goes on after it (-1: from the start) */
@@ -204,8 +205,9 @@ void pp_silence_all(int mode)
 }
 
 /* ---- editing ---- */
-/* While the playhead is on the page shown, editing happens at the playhead; otherwise the cursor is free. */
-static int on_playhead(const pp_bank_t *b) { return is_running(b) && b->play_page == b->sel; }
+/* While the playhead is on the page shown, editing happens at the playhead; otherwise, or in live edit, the cursor is
+ * free. */
+static int on_playhead(const pp_bank_t *b) { return is_running(b) && b->play_page == b->sel && !b->live; }
 int pp_edit_col(int mode)
 {
     pp_bank_t *b = bank(mode);
@@ -254,6 +256,18 @@ void pp_move_cursor(int mode, int delta)
         if (b->sel != was && is_running(b)) b->follow = 0;    /* as changing page by hand */
         if (on_playhead(b)) return;         /* arrived on the page playing: editing is at the playhead now */
     }
+}
+void pp_live_move(int mode, int delta)
+{
+    pp_bank_t *b = bank(mode);
+    pp_init(mode);
+    if (on_playhead(b)) {                   /* the cursor starts from where the playhead is */
+        b->cursor = b->pos & (PP_COLS - 1);
+        b->edit_occ = b->chain_pos;
+        if (b->chain_len) b->follow = 0;    /* the grid stays on this page while the chain goes on */
+        b->live = 1;
+    }
+    pp_move_cursor(mode, delta);
 }
 void pp_set_solo(int mode, int on)
 {
@@ -523,5 +537,6 @@ void pp_resume_follow(int mode)
     pp_bank_t *b = bank(mode);
     pp_init(mode);
     b->follow = 1;
+    b->live = 0;
     if (is_running(b) && b->chain_len) b->sel = b->play_page;
 }
