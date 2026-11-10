@@ -396,11 +396,11 @@ static void pp_turn_ev(int mode, int knob, int delta, int shift)
     if (!st) return;
     *acc -= st * 1024;
     if (pp_bank[mode & 1].view) {                         /* the grid's own settings don't change out of sight */
-        if (knob == PP_ORANGE && !shift) pp_set_hold(mode, st > 0);
-        if (pp_bank[mode & 1].view == PP_VIEW_SAVED) {
+        if (pp_bank[mode & 1].view == PP_VIEW_SAVED) {    /* orange does nothing here: playback carries on as it was */
             if (knob == PP_BLUE && !shift) pp_slot_move(mode & 1, st);
             return;
         }
+        if (knob == PP_ORANGE && !shift) pp_set_hold(mode, st > 0);
         if (knob == PP_BLUE && !shift) pp_chain_move(mode, st);
         if (knob == PP_GREEN && !shift) pp_chain_pick(mode, st);
         pp_changed();
@@ -523,7 +523,9 @@ static void pp_draw_side(void *r, const pp_bank_t *b, const pp_page_t *p, int ru
 }
 /* The chain as A > B > B > C: eight to a row. The occurrence playing is boxed, so repeats of a page stay apart. */
 #define PP_CELL_X(i) OP1_Q10(24 + ((i) % 8) * 36)
-#define PP_CELL_Y(i) OP1_Q10(34 + ((i) / 8) * 26)
+/* the bottom line of the chain and saved views, clear of the bezel on the device */
+#define PP_LOW_Y 132
+#define PP_CELL_Y(i) OP1_Q10(30 + ((i) / 8) * 24)
 static void pp_draw_chain(void *r, const pp_bank_t *b, int running)
 {
     char t[2] = { 0, 0 };
@@ -555,26 +557,25 @@ static void pp_draw_chain(void *r, const pp_bank_t *b, int running)
         sq_text(r, PP_CELL_X(cur), PP_CELL_Y(cur), OP1_Q10(2.2), t, 0x500, pp_c_quarter);
     }
     sq_line(r, PP_CELL_X(cur) - OP1_Q10(2), PP_CELL_Y(cur) + OP1_Q10(22), PP_CELL_X(cur) + OP1_Q10(14), PP_CELL_Y(cur) + OP1_Q10(22), 0x600, pp_c_cursor);
-    if (pp_full_flash) sq_text(r, OP1_Q10(24), OP1_Q10(142), OP1_Q10(1.3), "FULL", 0x400, pp_c_red);
-    else if (!len) sq_text(r, OP1_Q10(24), OP1_Q10(142), OP1_Q10(1.3), "NO CHAIN  PAGE LOOPS", 0x400, pp_c_grey);
+    if (pp_full_flash) sq_text(r, OP1_Q10(24), OP1_Q10(PP_LOW_Y), OP1_Q10(1.3), "FULL", 0x400, pp_c_red);
+    else if (!len) sq_text(r, OP1_Q10(24), OP1_Q10(PP_LOW_Y), OP1_Q10(1.3), "NO CHAIN  PAGE LOOPS", 0x400, pp_c_grey);
 }
 /* The message line under the grid or the slots: a question stays until answered; anything else fades. 1 if drawn */
-static int pp_draw_msg(void *r)
+static int pp_draw_msg(void *r, int y)
 {
     const char *m = pp_msg;
     if (!m) return 0;
-    if (pp_ask != PP_ASK_NONE) sq_text(r, OP1_Q10(24), OP1_Q10(144), OP1_Q10(1.1), m, 0x300, pp_c_white);
-    else if (pp_msg_ms > 0) sq_text(r, OP1_Q10(24), OP1_Q10(144), OP1_Q10(1.3), m, 0x400, pp_c_white);
+    if (pp_ask != PP_ASK_NONE) sq_text(r, OP1_Q10(24), OP1_Q10(y), OP1_Q10(1.1), m, 0x300, pp_c_white);
+    else if (pp_msg_ms > 0) sq_text(r, OP1_Q10(24), OP1_Q10(y), OP1_Q10(1.3), m, 0x400, pp_c_white);
     else return 0;
     return 1;
 }
-static void pp_draw_saved(void *r, int m, const pp_bank_t *b)
+static void pp_draw_saved(void *r, int m)
 {
     char t[PP_NAME_MAX + 3];
     sq_text(r, OP1_Q10(24), OP1_Q10(10), OP1_Q10(1.5), "SAVED", 0x400, pp_c_grey);
-    sq_text(r, OP1_Q10(263), OP1_Q10(10), OP1_Q10(1.3), "HOLD", 0x400, b->hold ? pp_c_red : pp_c_red_dim);
     for (int s = 0; s < PP_SLOTS; s++) {
-        int32_t y = OP1_Q10(28 + s * 14);
+        int32_t y = OP1_Q10(28 + s * 12);
         const char *name = pp_slot_name[m][s];
         char *e = t;
         *e++ = (char)('1' + s);
@@ -585,7 +586,7 @@ static void pp_draw_saved(void *r, int m, const pp_bank_t *b)
                 s == pp_loaded[m] ? pp_c_dot : at ? pp_c_white : name[0] ? pp_c_grey : pp_c_minor);
         if (at) pp_draw_arrow(r, OP1_Q10(8), OP1_Q10(19), y + OP1_Q10(5), OP1_Q10(4), pp_c_cursor);
     }
-    if (!pp_draw_msg(r)) sq_text(r, OP1_Q10(24), OP1_Q10(144), OP1_Q10(1.1), "PUSH GREEN LOAD   PUSH WHITE SAVE", 0x300, pp_c_grey);
+    if (!pp_draw_msg(r, PP_LOW_Y)) sq_text(r, OP1_Q10(24), OP1_Q10(PP_LOW_Y), OP1_Q10(1.1), "PUSH GREEN LOAD   PUSH WHITE SAVE", 0x300, pp_c_grey);
 }
 static void pp_scr_init(void *scr) { (void)scr; }
 static void pp_scr_update(void *scr, int dt)
@@ -604,7 +605,7 @@ static void pp_scr_update(void *scr, int dt)
     pp_flash_down(&pp_dir_flash, dt);
     pp_flash_down(&pp_full_flash, dt);
     if (pp_msg_ms > 0 && pp_ask == PP_ASK_NONE) pp_msg_ms = (int16_t)(pp_msg_ms > dt ? pp_msg_ms - dt : 0);  /* a question waits for its answer */
-    if (b->view == PP_VIEW_SAVED) { pp_draw_saved(r, m, b); return; }
+    if (b->view == PP_VIEW_SAVED) { pp_draw_saved(r, m); return; }
     if (b->view) { pp_draw_chain(r, b, running); return; }
 
     pp_draw_grid(r, p);
@@ -618,7 +619,7 @@ static void pp_scr_update(void *scr, int dt)
     pp_draw_notes(r, p);
     pp_draw_arrow(r, OP1_Q10(30), OP1_Q10(45), pp_key_y(b->pitch_key), OP1_Q10(5), pp_c_white);
     pp_draw_side(r, b, p, running);
-    pp_draw_msg(r);
+    pp_draw_msg(r, 144);
 }
 const op1_screen_t SCREEN_patternplus = { pp_scr_init, pp_scr_update };
 

@@ -71,7 +71,7 @@ In the saved view:
 | Green push | Asks before loading this slot, which replaces your current work and stops playback |
 | Shift + green push | Asks before clearing your work: one empty page, no chain. Saved slots are untouched |
 | Green push / orange push, while asked | Green confirms, orange cancels. The question stays until you answer, move the arrow or leave the view |
-| Orange turn | HOLD, as in the grid |
+| Orange turn | Does nothing. Anything playing keeps playing |
 
 Saving onto a used slot replaces it after you finish the name. Synth and Drum each have their own 8 slots. Green text marks the slot you last loaded or saved.
 
