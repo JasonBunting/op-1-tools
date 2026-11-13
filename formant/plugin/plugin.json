@@ -1,0 +1,14 @@
+{
+  "name": "formant",
+  "kind": "synth",
+  "order": 0,
+  "symbol": "ENGINE_formant",
+  "author": "Jason Bunting",
+  "version": "0.4",
+  "sources": ["formant.c"],
+  "defaults": [20480, 10000, 3000, 12000],
+  "page2_defaults": [18022, 19363, 16384],
+  "screen": { "svg": "formant.svg", "symbol": "SCREEN_formant" },
+  "loadable": true,
+  "claims": []
+}

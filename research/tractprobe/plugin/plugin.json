@@ -1,0 +1,12 @@
+{
+  "name": "tractprobe",
+  "kind": "synth",
+  "order": 0,
+  "symbol": "ENGINE_tractprobe",
+  "author": "Jason Bunting",
+  "version": "0.2",
+  "sources": ["tractprobe.c"],
+  "defaults": [16384, 4000, 9000, 3000],
+  "loadable": true,
+  "claims": []
+}
