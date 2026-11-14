@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OP-1 Mirror Manual</title>
+<meta name="description" content="OP-1 Mirror shows the original OP-1's screen live on a Windows PC or an Android phone.">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+<header><a href="manual.html" class="wordmark">OP-1 Mirror <span>the screen, bigger</span></a><span class="edition">ORIGINAL OP–1 · HUNDEKRAFT 3.2.3 · MIRROR 0.7</span></header>
+<main>
+<section class="intro"><div class="eyebrow">MIRROR / MANUAL</div><h1>Your OP-1's screen, big.</h1><p>OP-1 Mirror shows the OP-1's screen live on a Windows PC or an Android phone, so you can read detailed screens from across the room while your hands stay on the machine. Every screen mirrors, stock or plugin.</p><div class="manual-actions"><a href="#start">Get started ↓</a><a href="#viewer">The viewer ↓</a><a href="#trouble">If it doesn't connect ↓</a></div></section>
+<div class="manual-grid">
+<details class="toc" open><summary>Contents</summary><ol>
+<li><a href="#about">How it works</a></li>
+<li><a href="#need">What you need</a></li>
+<li><a href="#start">Get started</a><ol><li><a href="#windows">On Windows</a></li><li><a href="#android">On an Android phone</a></li></ol></li>
+<li><a href="#viewer">The viewer</a><ol><li><a href="#settings">Settings</a></li><li><a href="#keys">Keys</a></li></ol></li>
+<li><a href="#trouble">If it doesn't connect</a></li>
+<li><a href="#limits">Limits</a></li>
+</ol></details>
+<article class="manual-body">
+
+<section class="chapter" id="about"><h2>How it works</h2>
+<p>A small plugin on the OP-1 sends the parts of the screen that changed over the USB cable, as MIDI. The viewer on the PC or phone draws them. The OP-1 only sends while a viewer is listening, and stops within about three seconds of the viewer closing.</p>
+<p>It doesn't know or care what's on the screen, so every mode, every plugin and every menu mirrors the same way. It runs at about 40 frames a second with no effect on the sound.</p>
+</section>
+
+<section class="chapter" id="need"><h2>What you need</h2>
+<ol>
+<li>An original OP-1 running Hundekraft (3.2.3, or 3.1.4).</li>
+<li>Windows 10 or 11 (64-bit), or an Android 8 or later phone with USB-C.</li>
+<li>From the <a href="https://github.com/JasonBunting/op-1-tools/releases" target="_blank" rel="noopener noreferrer">Releases</a> page: <code>mirror.knl</code> (the plugin) and the viewer for your device, <code>Op1Mirror.exe</code> or <code>op1-mirror.apk</code>. Nothing needs building; the <a href="../README.md">Mirror README</a> covers building from source.</li>
+</ol>
+</section>
+
+<section class="chapter" id="start"><h2>Get started</h2>
+<p>First, put the plugin on the OP-1: in the Hundekraft workshop, open <strong>Your plugins</strong>, add <code>mirror.knl</code>, choose <strong>Review changes</strong>, then <strong>Send to OP-1</strong>, and press <span class="okey okey-text">T1</span> on the OP-1 to confirm. You only do this once.</p>
+<div class="sub">
+<h3 id="windows">On Windows</h3>
+<ol>
+<li><strong>Close the browser completely</strong>, every window. Windows lets only one program at a time use the OP-1's MIDI connection, and the workshop page holds on to it.</li>
+<li>Plug in the OP-1 and run <code>Op1Mirror.exe</code>.</li>
+<li>The OP-1's screen appears. There is nothing to switch on on the OP-1: it starts sending when the viewer asks.</li>
+</ol>
+<figure class="screen"><div class="shot" role="img" aria-label="Screenshot to come: the Windows viewer"><b>img/windows.png</b><span>The Windows viewer showing a synth screen, with its controls along the bottom.</span></div><figcaption><b>Fig. 1</b> The Windows viewer.</figcaption></figure>
+<p>Pull the cable and plug it back in, and the viewer reconnects by itself.</p>
+</div>
+<div class="sub">
+<h3 id="android">On an Android phone</h3>
+<ol>
+<li>Install <code>op1-mirror.apk</code>. Android asks you to allow installs from unknown sources the first time.</li>
+<li>Plug the OP-1 into the phone with a USB-C OTG cable or adapter. Android asks whether OP-1 Mirror may use the device: allow it.</li>
+<li>The OP-1's screen appears. Tap the screen to show or hide the controls; they are the same as on Windows.</li>
+</ol>
+<figure class="screen small"><div class="shot" role="img" aria-label="Screenshot to come: the Android viewer"><b>img/android.png</b><span>The phone in landscape showing the OP-1's screen.</span></div><figcaption><b>Fig. 2</b> The Android viewer.</figcaption></figure>
+</div>
+</section>
+
+<section class="chapter" id="viewer"><h2>The viewer</h2>
+<p>Both viewers remember their settings between launches. On Windows that includes the window's size and place, kept in <code>%LOCALAPPDATA%\Op1Mirror\settings.json</code>; delete that file to go back to the defaults.</p>
+<div class="sub">
+<h3 id="settings">Settings</h3>
+<p>The defaults suit most screens. Change them if the picture lags or breaks up.</p>
+<div class="table"><table><thead><tr><th scope="col">Setting</th><th scope="col">Does</th></tr></thead><tbody>
+<tr><td data-label="Setting">Budget (Auto)</td><td data-label="Does">How much the OP-1 may send at a time. Auto raises it slowly and backs off if anything is lost or the OP-1 slows down. Leave it on Auto</td></tr>
+<tr><td data-label="Setting">Scan</td><td data-label="Does">How much of the screen the OP-1 checks for changes each time round. Higher shows changes sooner</td></tr>
+<tr><td data-label="Setting">Refresh</td><td data-label="Does">How much of the screen is resent each time round even if unchanged, so anything lost mends itself</td></tr>
+<tr><td data-label="Setting">Whole frames</td><td data-label="Does">Shows only complete pictures. On very busy screens (such as Strings) this stops parts of two pictures showing at once, at fewer pictures per second</td></tr>
+<tr><td data-label="Setting">Palette / RLE tiles</td><td data-label="Does">Ways of packing the picture. The plugin picks the smallest each time. Leave both on</td></tr>
+<tr><td data-label="Setting">Whole-number zoom</td><td data-label="Does">Scales by exact multiples, so every OP-1 pixel is an even square</td></tr>
+</tbody></table></div>
+</div>
+<div class="sub">
+<h3 id="keys">Keys (Windows)</h3>
+<div class="table"><table><thead><tr><th scope="col">Key</th><th scope="col">Does</th></tr></thead><tbody>
+<tr><td data-label="Key"><span class="okey okey-text">F11</span></td><td data-label="Does">Fullscreen, with the controls hidden</td></tr>
+<tr><td data-label="Key"><span class="okey okey-text">Esc</span></td><td data-label="Does">Leaves fullscreen</td></tr>
+<tr><td data-label="Key"><span class="okey okey-text">T</span></td><td data-label="Does">Keeps the window on top of others</td></tr>
+</tbody></table></div>
+</div>
+</section>
+
+<section class="chapter" id="trouble"><h2>If it doesn't connect</h2>
+<ol>
+<li><strong>"The OP-1 is busy":</strong> another program has its MIDI connection. Close every browser window (the workshop is the usual one), and any music software, then start the viewer again.</li>
+<li><strong>The viewer connects but stays blank:</strong> check that <code>mirror</code> is listed as installed in the workshop, and that the OP-1 was restarted after installing it.</li>
+<li><strong>Tape input level keeps changing:</strong> the viewer uses MIDI channel 16. On the OP-1's COM screen, leave PARAM CH off, or on a channel other than 16.</li>
+<li><strong>The picture tears on busy screens:</strong> turn on Whole frames.</li>
+</ol>
+<aside class="note note-note"><span>Note</span><p>The plugin uses a fixed place in the OP-1's firmware. It's built and checked for Hundekraft 3.2.3 (and runs on 3.1.4); a newer Hundekraft may need a new build.</p></aside>
+</section>
+
+<section class="chapter" id="limits"><h2>Limits</h2>
+<ol>
+<li>One viewer at a time.</li>
+<li>Windows and Android only. An iPhone viewer is possible but nobody has made one; the <a href="../README.md">README</a> says what it would take.</li>
+<li>The mirror shows the screen only: no sound, and no control of the OP-1 from the viewer.</li>
+</ol>
+</section>
+
+</article>
+</div>
+</main>
+<footer><span>OP-1 Mirror by Jason Bunting. The plugin is GPL-3.0-or-later with the OP-1 firmware permission; the viewers are MIT.</span><span>Styled after the hundekraft manual. Not affiliated with Teenage Engineering.</span></footer>
+</body>
+</html>

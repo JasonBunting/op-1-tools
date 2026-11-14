@@ -6,6 +6,7 @@ Plugins and companion apps for the original OP-1 running [Hundekraft](https://hu
 | --- | --- | --- | --- |
 | [OP-1 Mirror](mirror/README.md) | Shows the OP-1's screen live on Windows or an Android phone: a plugin plus two viewer apps | Works, v0.7 | [Releases](https://github.com/JasonBunting/op-1-tools/releases) |
 | [Pattern+](patternplus/README.md) | A sequencer plugin like stock Pattern, plus pages, chains and saving | In progress, 0.4.1 | [Build from source](patternplus/README.md) |
+| [Mouth](mouth/README.md) | A singing, babbling voice synth: vowels, bodies from giant to tiny, and made-up words | In progress, 0.5 | [Build from source](mouth/README.md) |
 
 Shared as-is, in the hope it helps. It is a personal project and not actively supported: issues and pull requests
 may sit unanswered, so fork freely.
@@ -24,8 +25,9 @@ Each project is a folder of its own, so you can take just the piece you want:
 
 | Path | What |
 | --- | --- |
-| `mirror/` | OP-1 Mirror: `plugin/` (the OP-1 side), `windows/` and `mobile/` viewers, `docs/`, `release.sh`. |
-| `patternplus/` | Pattern+: `plugin/`, `docs/`, and `HARDWARE-TEST.md`, the controls and device tests. |
+| `mirror/` | OP-1 Mirror: `plugin/` (the OP-1 side), `windows/` and `mobile/` viewers, `manual/`, `docs/`, `release.sh`. |
+| `patternplus/` | Pattern+: `plugin/`, `manual/`, `docs/`, and `HARDWARE-TEST.md`, the controls and device tests. |
+| `mouth/` | Mouth: `plugin/` (engine, formant table, preset generator, host test), `presets/`, `manual/`, `HARDWARE-TEST.md`. |
 | `research/` | Throwaway probes; see [Research tools](#research-tools). |
 | `tools/` | Shared scripts: the toolchain build, the plugin packer and `build.sh`. |
 | `op-1-tools.slnx` | Every C# project, for Visual Studio or `dotnet build`. |
@@ -76,3 +78,6 @@ your OP-1.
 
 `research/rastprobe/` is a throwaway probe (a plugin and a Windows listener), built against the Hundekraft 3.1.4
 SDK, that was used to find the OP-1's framebuffer for the mirror. It isn't meant for everyday use.
+
+`research/tractprobe/` is a throwaway synth engine that measures how big a physically modelled vocal tract the OP-1
+can run, as groundwork for a vocal synth. See [its README](research/tractprobe/README.md).

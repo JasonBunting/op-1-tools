@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mouth Manual</title>
+<meta name="description" content="Mouth, a synth engine for the OP-1 under Hundekraft: a voice that sings vowels and babbles made-up words.">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+<header><a href="manual.html" class="wordmark">Mouth <span>a voice for hundekraft</span></a><span class="edition">ORIGINAL OP–1 · HUNDEKRAFT 3.2.3 · MOUTH 0.5</span></header>
+<main>
+<section class="intro"><div class="eyebrow">MOUTH / MANUAL</div><h1>Words, without words.</h1><p>Mouth is a synth engine that sings vowels and babbles made-up syllables in time with the OP-1. Turn a knob and the vowel changes; switch on talk and every key says its own word. Chords sound like a small choir.</p><div class="manual-actions"><a href="#start">Get started ↓</a><a href="#talk">Talk ↓</a><a href="#lfo">Talking with LFOs ↓</a></div></section>
+<div class="manual-grid">
+<details class="toc" open><summary>Contents</summary><ol>
+<li><a href="#about">About this manual</a><ol><li><a href="#notation">How to read the controls</a></li></ol></li>
+<li><a href="#start">Get started</a></li>
+<li><a href="#screen">The screen</a></li>
+<li><a href="#sing">Sing</a><ol><li><a href="#choir">Chords: a small choir</a></li></ol></li>
+<li><a href="#talk">Talk</a><ol><li><a href="#words">Words</a></li><li><a href="#wild">Wild</a></li><li><a href="#tempo">Tempo and the sequencer</a></li></ol></li>
+<li><a href="#lfo">Talking with LFOs</a></li>
+<li><a href="#presets">Presets</a></li>
+<li><a href="#limits">Limits</a></li>
+<li><a href="#controls">All controls</a></li>
+<li><a href="#credits">Where it comes from</a></li>
+</ol></details>
+<article class="manual-body">
+
+<section class="chapter" id="about"><h2>About this manual</h2>
+<p>Mouth is a synth engine, so everything the OP-1 does around an engine still works as usual: the envelope, the effects, the LFOs, the octave, and saving sounds. Teenage Engineering's guide covers those: <a href="https://teenage.engineering/guides/op-1/original/synthesizer-mode" target="_blank" rel="noopener noreferrer">teenage.engineering/guides/op-1/original/synthesizer-mode</a>. This manual covers Mouth's own knobs, screen and sounds.</p>
+<div class="sub">
+<h3 id="notation">How to read the controls</h3>
+<p>The OP-1 has four encoders. This manual calls them by colour, left to right: <span class="enc enc-b">blue</span>, <span class="enc enc-g">green</span>, <span class="enc enc-w">white</span> and <span class="enc enc-o">orange</span>.</p>
+<ol>
+<li><strong>Turn</strong> an encoder to change a value. <strong>Push</strong> an encoder until it clicks to press it like a button.</li>
+<li><strong>Press</strong> a key, or <strong>hold</strong> it while you do something else. "<span class="okey okey-text">Shift</span> + <span class="okey okey-text">T1</span>" means hold <span class="okey okey-text">Shift</span> and press <span class="okey okey-text">T1</span>.</li>
+<li>Text in a black box, such as <span class="lcd">talk 1/8</span>, is what the screen shows.</li>
+</ol>
+<p>Screens have numbered dots. The list beside the picture says what each number shows. Dot colour matches the encoder that changes that part.</p>
+</div>
+</section>
+
+<section class="chapter" id="start"><h2>Get started</h2>
+<ol>
+<li>Install <code>mouth.knl</code> from the Hundekraft workshop's <strong>Your plugins</strong> page. Building it is described in the <a href="../README.md">Mouth README</a>.</li>
+<li>Press <img class="okey" src="keys/synth.png" alt="synth" title="synth"> and pick a sound with a sound key, 1 to 8.</li>
+<li>Hold <span class="okey okey-text">Shift</span> and press <span class="okey okey-text">T1</span>. Turn <span class="enc enc-b">blue</span> to <code>mouth</code> and press <span class="okey okey-text">T1</span>.</li>
+<li>Hold a key. You hear a voice babbling around "ah": talk is on when Mouth is first picked. <a href="#talk">Talk</a> explains how to switch it off.</li>
+</ol>
+<p>To start from a finished sound instead, install the <a href="#presets">presets</a>.</p>
+</section>
+
+<section class="chapter" id="screen"><h2>The screen</h2>
+<figure class="screen side"><div class="shot" role="img" aria-label="Screenshot to come: Mouth's screen while talking"><b>img/screen.png</b><span>Mouth's screen, a key held, talk on: the mouth half open, the blue mark near "ah", a white dot beside it, the bottom row on page 1.</span></div><figcaption><b>Fig. 1</b> Mouth's screen.</figcaption><ol class="legend"><li><i class="dot dot-n">1</i><span>The mouth: lips, upper teeth and tongue, shaped by the vowel and sized by the body</span></li><li><i class="dot dot-b">2</i><span>The blue mark: where <span class="enc enc-b">blue</span> points on the vowel strip, "ee" to "oo". An LFO on blue moves it</span></li><li><i class="dot dot-n">3</i><span>A white dot for each voice that is sounding, at the vowel it's singing</span></li><li><i class="dot dot-n">4</i><span>Each knob's name and value, in its colour</span></li></ol></figure>
+<p>The mouth follows the first voice that is sounding. It is wide and smiling for "ee", open with the tongue showing for "ah", and puckered for "oh" and "oo". In talk, it presses shut for a "b" or "m", puckers for a "w" and smiles for a "y". Breath parts the lips, and vibrato makes it wobble. With no key held, it follows the knobs, so you can see a vowel before you play it.</p>
+<p>A knob on its second page shows its page-2 name and a second line above its colour.</p>
+<figure class="screen small"><div class="shot" role="img" aria-label="Screenshot to come: blue on page 2"><b>img/screen-page2.png</b><span>The bottom row with blue on page 2: talk 1/8, and a second blue line above the blue one.</span></div><figcaption><b>Fig. 2</b> <span class="enc enc-b">blue</span> on page 2.</figcaption></figure>
+</section>
+
+<section class="chapter" id="sing"><h2>Sing</h2>
+<p>Page 1 shapes the voice. Every vowel and every body plays at about the same loudness, so you can sweep them without riding the volume.</p>
+<div class="table"><table><thead><tr><th scope="col">Knob</th><th scope="col">Does</th></tr></thead><tbody>
+<tr><td data-label="Knob"><span class="enc enc-b">blue</span> <span class="lcd">vowel</span></td><td data-label="Does">The vowel, gliding from <span class="lcd">ee</span> through <span class="lcd">ih</span> <span class="lcd">ay</span> <span class="lcd">eh</span> <span class="lcd">a</span> <span class="lcd">ah</span> <span class="lcd">aw</span> <span class="lcd">oh</span> to <span class="lcd">oo</span></td></tr>
+<tr><td data-label="Knob"><span class="enc enc-g">green</span> <span class="lcd">body</span></td><td data-label="Does">Who is singing: <span class="lcd">giant</span>, <span class="lcd">man</span>, <span class="lcd">woman</span>, <span class="lcd">child</span>, <span class="lcd">tiny</span>. It changes the size of the voice, not the note</td></tr>
+<tr><td data-label="Knob"><span class="enc enc-w">white</span> <span class="lcd">breath</span></td><td data-label="Does">Air in the voice. Fully right is a whisper</td></tr>
+<tr><td data-label="Knob"><span class="enc enc-o">orange</span> <span class="lcd">vibrato</span></td><td data-label="Does">Left half: vibrato depth, up to a semitone each way. It fades in a quarter second after each note starts. Right half: the label reads <span class="lcd">warble</span> and the vibrato speeds up to a fast warble</td></tr>
+</tbody></table></div>
+<aside class="note note-tip"><span>Tip</span><p>Mouth uses the OP-1's own envelope (<span class="okey okey-text">T2</span>). A slow attack and a long release turn it into a pad; a short decay with no sustain makes it a plucked "bah".</p></aside>
+<div class="sub">
+<h3 id="choir">Chords: a small choir</h3>
+<p>Mouth plays six notes at once. Every voice drifts slightly in pitch and has its own vibrato, so a chord sounds like several singers rather than one voice played six times. With talk on, each one babbles separately.</p>
+</div>
+</section>
+
+<section class="chapter" id="talk"><h2>Talk</h2>
+<p>Talk turns a held note into made-up syllables: the vowel hops around the one <span class="enc enc-b">blue</span> points at, and some syllables start with a quick closing, like "b", "m", "w" or "y". There are no real consonants, so it never says real words, but it sounds as if it does.</p>
+<p>Talk lives on the second page of <span class="enc enc-b">blue</span>, <span class="enc enc-g">green</span> and <span class="enc enc-w">white</span>. Push a knob until it clicks to switch it to page 2, and push it again to switch back. Page 2 moves one step per click of the encoder.</p>
+<div class="table"><table><thead><tr><th scope="col">Knob (page 2)</th><th scope="col">Does</th></tr></thead><tbody>
+<tr><td data-label="Knob (page 2)"><span class="enc enc-b">blue</span> <span class="lcd">talk</span></td><td data-label="Does"><span class="lcd">off</span>, or a syllable every <span class="lcd">1/2</span> <span class="lcd">1/4</span> <span class="lcd">1/4t</span> <span class="lcd">1/8</span> <span class="lcd">1/8t</span> <span class="lcd">1/16</span> <span class="lcd">1/16t</span> <span class="lcd">1/32</span> note of the OP-1's tempo</td></tr>
+<tr><td data-label="Knob (page 2)"><span class="enc enc-g">green</span> <span class="lcd">word</span></td><td data-label="Does"><span class="lcd">key</span>: each key says its own word. <span class="lcd">1</span> to <span class="lcd">16</span>: every key says that word</td></tr>
+<tr><td data-label="Knob (page 2)"><span class="enc enc-w">white</span> <span class="lcd">wild</span></td><td data-label="Does">0 to 100%: how far the syllables wander and how sharp their edges are</td></tr>
+</tbody></table></div>
+<p>When you let go of a key, talk stops making new syllables and the note fades out on its last vowel.</p>
+<div class="sub">
+<h3 id="words">Words</h3>
+<p>A word is a fixed sequence of syllables. With <span class="lcd">word key</span>, the key you press picks the word, so the same key always says the same thing and its neighbour says something else. Repeated, it starts to sound like a phrase, the way a chopped vocal does in a track.</p>
+<p>Pick a number instead and every key says that one word at its own pitch, so a melody sings a single phrase.</p>
+</div>
+<div class="sub">
+<h3 id="wild">Wild</h3>
+<ol>
+<li><strong>Low:</strong> the syllables stay close to the blue vowel and flow into each other: mumbling.</li>
+<li><strong>Middle:</strong> chatty, with a mix of soft and sharp starts.</li>
+<li><strong>High:</strong> the vowel jumps across the whole range, the starts are sharp, and now and then a syllable is held over the next beat, which gives the rhythm a spoken unevenness.</li>
+</ol>
+<p>Even at 0% a little movement remains, so talk is always audible while it's on.</p>
+</div>
+<div class="sub">
+<h3 id="tempo">Tempo and the sequencer</h3>
+<p>Talk follows the OP-1's tempo (its BPM setting, or MIDI clock) and starts fresh with each note. Notes from a sequencer start on the beat, so their syllables land on it too. Change the tempo and the talk speeds up or slows down with it.</p>
+</div>
+</section>
+
+<section class="chapter" id="lfo"><h2>Talking with LFOs</h2>
+<p>The OP-1's LFOs can turn Mouth's knobs for you. Moving <span class="enc enc-b">blue</span> moves the vowel, and a moving vowel sounds like talking even with talk switched off. On a synth sound, <span class="okey okey-text">T4</span> switches the LFO on and off, and <span class="okey okey-text">Shift</span> + <span class="okey okey-text">T4</span> picks its type. Each type uses the four encoders differently (from TE's guide):</p>
+<div class="table"><table><thead><tr><th scope="col">LFO</th><th scope="col">Encoders</th><th scope="col">With Mouth</th></tr></thead><tbody>
+<tr><td data-label="LFO">Value</td><td data-label="Encoders"><span class="enc enc-b">speed</span> <span class="enc enc-g">amount</span> <span class="enc enc-w">destination</span> <span class="enc enc-o">parameter</span></td><td data-label="With Mouth">Destination the synth, parameter <span class="enc enc-b">blue</span>: the vowel sweeps to and fro, a "wah-wah" when fast, a sigh when slow. On <span class="enc enc-g">green</span> the voice grows and shrinks instead. Most presets use this</td></tr>
+<tr><td data-label="LFO">Element</td><td data-label="Encoders"><span class="enc enc-b">source</span> <span class="enc enc-g">amount</span> <span class="enc enc-w">destination</span> <span class="enc enc-o">parameter</span></td><td data-label="With Mouth">Source the synth envelope, parameter blue: every note opens its vowel as it starts, like "wow". Source the g-force sensor: tilt the OP-1 to change the vowel. Source the mic: your own voice moves Mouth's</td></tr>
+<tr><td data-label="LFO">Random</td><td data-label="Encoders"><span class="enc enc-b">amount</span> <span class="enc enc-g">speed</span> <span class="enc enc-w">destination</span> <span class="enc enc-o">attack/decay</span></td><td data-label="With Mouth">Moves vowel, body, breath and vibrato all at once. Keep the amount small for a restless voice</td></tr>
+<tr><td data-label="LFO">Tremolo</td><td data-label="Encoders"><span class="enc enc-b">speed</span> <span class="enc enc-g">pitch</span> <span class="enc enc-w">volume</span> <span class="enc enc-o">envelope</span></td><td data-label="With Mouth">Pitch and volume only. Mouth's own vibrato usually does this better</td></tr>
+</tbody></table></div>
+<aside class="note note-tip"><span>Tip</span><p>Watch the blue mark on Mouth's screen: it shows where the LFO has pushed the vowel. The most word-like sound uses both: talk on for syllables, and a slow Value LFO on blue so the words drift.</p></aside>
+</section>
+
+<section class="chapter" id="presets"><h2>Presets</h2>
+<p>Eight finished sounds come with Mouth, in the project's <code>presets/mouth</code> folder. Most of them have a Value LFO already on <span class="enc enc-b">blue</span>.</p>
+<ol>
+<li>Hold <span class="okey okey-text">Shift</span> and press <span class="okey okey-text">COM</span>, then press <span class="okey okey-text">T3</span>. The OP-1 shows up on the computer as a disk.</li>
+<li>Copy the <code>mouth</code> folder into the disk's <code>synth</code> folder, so the disk has <code>synth/mouth/babble.aif</code> and the rest.</li>
+<li>Eject the disk. The OP-1 restarts by itself, loads the sounds and waits for a key press.</li>
+<li>To load one, hold <span class="okey okey-text">Shift</span> and press a sound key. Turn <span class="enc enc-b">blue</span> to the <code>mouth</code> folder and <span class="enc enc-g">green</span> to a sound.</li>
+</ol>
+<aside class="note note-warning"><span>Warning</span><p>Getting the presets onto the OP-1 hasn't worked reliably yet: after copying, they may not show up in the list. The OP-1 also holds a limited number of user sounds in total (300 on Hundekraft), so a full OP-1 can skip new ones.</p></aside>
+<div class="table"><table><thead><tr><th scope="col">Sound</th><th scope="col">What it does</th></tr></thead><tbody>
+<tr><td data-label="Sound"><code>babble</code></td><td data-label="What it does">The default voice talking at 1/8, with a slow vowel sweep from the LFO</td></tr>
+<tr><td data-label="Sound"><code>choir ah</code></td><td data-label="What it does">No talk. Play chords for a small choir</td></tr>
+<tr><td data-label="Sound"><code>giant monk</code></td><td data-label="What it does">A huge, dark "oh", an octave down</td></tr>
+<tr><td data-label="Sound"><code>chatterbox</code></td><td data-label="What it does">A tiny voice talking fast and wild</td></tr>
+<tr><td data-label="Sound"><code>whisper talk</code></td><td data-label="What it does">Breath only, saying word 3 on every key</td></tr>
+<tr><td data-label="Sound"><code>robot words</code></td><td data-label="What it does">No vibrato or breath, choppy: a machine trying to talk</td></tr>
+<tr><td data-label="Sound"><code>talking wah</code></td><td data-label="What it does">No talk. A wide, fast LFO on the vowel does the talking</td></tr>
+<tr><td data-label="Sound"><code>warble diva</code></td><td data-label="What it does">A fast warble on long, slow syllables</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="chapter" id="limits"><h2>Limits</h2>
+<ol>
+<li>Six voices, as every OP-1 synth engine.</li>
+<li>Nine vowels and five bodies; no real consonants, so no real words.</li>
+<li>16 fixed words, plus one per key.</li>
+<li>Talk follows tempos from 30 to 480 BPM.</li>
+<li>Velocity brightens the voice only when notes arrive with velocity, such as over MIDI: the original OP-1's keys always play at full.</li>
+</ol>
+</section>
+
+<section class="chapter" id="controls"><h2>All controls</h2>
+<div class="table"><table><thead><tr><th scope="col">Encoder</th><th scope="col">Page 1</th><th scope="col">Page 2 (push)</th></tr></thead><tbody>
+<tr><td data-label="Encoder"><span class="enc enc-b">blue</span></td><td data-label="Page 1">Vowel</td><td data-label="Page 2 (push)">Talk speed: off, 1/2 to 1/32</td></tr>
+<tr><td data-label="Encoder"><span class="enc enc-g">green</span></td><td data-label="Page 1">Body</td><td data-label="Page 2 (push)">Word: key, or 1 to 16</td></tr>
+<tr><td data-label="Encoder"><span class="enc enc-w">white</span></td><td data-label="Page 1">Breath</td><td data-label="Page 2 (push)">Wild: 0 to 100%</td></tr>
+<tr><td data-label="Encoder"><span class="enc enc-o">orange</span></td><td data-label="Page 1">Vibrato, then warble</td><td data-label="Page 2 (push)">None</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="chapter" id="credits"><h2>Where it comes from</h2>
+<p>Mouth is a formant synth: a pulse like the vocal folds' passes through five resonances, the formants, that make one vowel sound different from another. The formant frequencies for each vowel and body come from <a href="https://github.com/jamesondh/chimera-vocal-synth" target="_blank" rel="noopener noreferrer">CHIMERA</a>, a physically modelled voice synthesizer by Jameson Hodge (MIT licence). CHIMERA simulates a whole airway; Mouth borrows its answers, which is how it fits on the OP-1.</p>
+</section>
+
+</article>
+</div>
+</main>
+<footer><span>Mouth by Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission. Vowel data from CHIMERA (MIT).</span><span>Styled after the hundekraft manual; key images from it. Not affiliated with Teenage Engineering.</span></footer>
+</body>
+</html>

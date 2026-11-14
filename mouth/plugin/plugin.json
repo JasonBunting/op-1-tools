@@ -1,0 +1,14 @@
+{
+  "name": "mouth",
+  "kind": "synth",
+  "order": 0,
+  "symbol": "ENGINE_mouth",
+  "author": "Jason Bunting",
+  "version": "0.5",
+  "sources": ["mouth.c"],
+  "defaults": [20480, 10000, 3000, 12000],
+  "page2_defaults": [16384, 963, 16384],
+  "screen": {"svg": "mouth.svg", "symbol": "SCREEN_mouth"},
+  "loadable": true,
+  "claims": []
+}

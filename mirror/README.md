@@ -26,6 +26,7 @@ No need to build anything: the [Releases](https://github.com/JasonBunting/op-1-t
 
 | Path | What |
 | --- | --- |
+| [manual/manual.html](manual/manual.html) | The manual: setting it up and using the viewers. |
 | `plugin/` | The OP-1 plugin (C). `mirror.c` documents the wire protocol at the top. |
 | `plugin/test/host_test.c` | Runs the plugin on Linux/WSL against a fake framebuffer and records its SysEx. |
 | `windows/` | The Windows viewer (C#, WPF, [DryWetMIDI](https://github.com/melanchall/drywetmidi)). |

@@ -1,4 +1,4 @@
-"""Write fm_tables.h: vowel formants for the formant engine, taken from CHIMERA's vowel targets.
+"""Write fm_tables.h: vowel formants for the Mouth engine, taken from CHIMERA's vowel targets.
 
     python gen_tables.py <chimera>/crates/chimera/src/phonetics/vowelTargets.generated.json
 
