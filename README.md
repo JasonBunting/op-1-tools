@@ -6,7 +6,7 @@ Plugins and companion apps for the original OP-1 running [Hundekraft](https://hu
 | --- | --- | --- | --- |
 | [OP-1 Mirror](mirror/README.md) | Shows the OP-1's screen live on Windows or an Android phone: a plugin plus two viewer apps | Works, v0.7 | [Releases](https://github.com/JasonBunting/op-1-tools/releases) |
 | [Pattern+](patternplus/README.md) | A sequencer plugin like stock Pattern, plus pages, chains and saving | In progress, 0.4.1 | [Build from source](patternplus/README.md) |
-| [Mouth](mouth/README.md) | A singing, babbling voice synth: vowels, bodies from giant to tiny, and made-up words | In progress, 0.5 | [Build from source](mouth/README.md) |
+| [Mouth](mouth/README.md) | A singing, babbling voice synth: vowels, bodies from giant to tiny, and made-up words | In progress, 0.5.1 | [Build from source](mouth/README.md) |
 
 Shared as-is, in the hope it helps. It is a personal project and not actively supported: issues and pull requests
 may sit unanswered, so fork freely.

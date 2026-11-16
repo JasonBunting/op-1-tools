@@ -10,7 +10,7 @@
 #include "op1_plugin.h"
 #include "fm_dsp.h"
 
-#define FM_GAIN 2645                     /* one voice: rms about 2500 of 32767 on every vowel and body (level_fit) */
+#define FM_GAIN 1831                     /* one voice: rms about 2500 of 32767 on every vowel and body (level_fit) */
 
 static fm_voice voices[OP1_VOICES];
 
@@ -57,6 +57,7 @@ static void fm_render_cb(void *self, int16_t *out, const int16_t *params)
     int32_t vel = op1_voice_vel_gain(self);
     fm_knobs k;
     fm_knobs_make(&k, vowel, params[1], params[2], params[3], vel);
+    fm_track(&k, (uint32_t)inc[0]);
     fm_close(&k, v->kind, closure);
     int32_t gain = (FM_GAIN * vel) >> 15;
     gain = (((gain * level) >> 15) * k.level) >> 15;

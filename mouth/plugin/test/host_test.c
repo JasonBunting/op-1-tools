@@ -8,7 +8,7 @@
 #include <string.h>
 #include "fm_dsp.h"
 
-#define GAIN 2645                          /* mouth.c FM_GAIN, at full velocity */
+#define GAIN 1831                          /* mouth.c FM_GAIN, at full velocity */
 #define BEAT 22050                         /* 120 BPM */
 static int16_t sine[8192];
 static int failures;
@@ -43,6 +43,7 @@ static int32_t block(fm_voice *v, int32_t vowel15, int32_t body15, int32_t breat
     v->show_vowel = vowel; v->show_closure = closure;
     fm_knobs k;
     fm_knobs_make(&k, vowel, body15, breath, vib, vel);
+    fm_track(&k, inc0);
     fm_close(&k, v->kind, closure);
     int32_t gain = (((((GAIN * vel) >> 15) * level) >> 15) * k.level) >> 15;
     return fm_render(v, &k, inc, 128, gain, buf, sine);
@@ -132,6 +133,29 @@ int main(int argc, char **argv)
     if (lo < 1200) fail("too quiet");
     if (hi > 5000) fail("too loud for six voices");
     if (hi > lo * 2.0) fail("vowels or bodies differ by more than 6 dB");
+
+    /* 3b. the note is the loudest partial ("ee", "ah", "oo" at C3, C4, C5): a tuner reads the right note, and the voice
+     *     isn't thin (before the airflow and chest, middle-C "ah" had its 3rd harmonic 5x the fundamental: read as G5) */
+    {
+        static int16_t s[FM_RATE];
+        static const int32_t vw[3] = { 0, 20480, 32767 };
+        static const double hz[3] = { 130.81, 261.63, 523.25 };
+        for (int a = 0; a < 3; a++)
+            for (int p = 0; p < 3; p++) {
+                note(vw[a], vw[a], 10000, 10000, 0, 0, hz[p], 1.0, s, 0, -1);
+                double m[6];
+                for (int h = 1; h <= 5; h++) {
+                    double re = 0, im = 0;
+                    for (int i = FM_RATE / 4; i < FM_RATE; i++) {
+                        double ph = 2 * M_PI * hz[p] * h * i / FM_RATE;
+                        re += s[i] * cos(ph); im += s[i] * sin(ph);
+                    }
+                    m[h] = sqrt(re * re + im * im);
+                }
+                for (int h = 2; h <= 5; h++)
+                    if (m[h] > m[1]) { printf("FAIL: vowel %d at %.0f Hz: harmonic %d is louder than the note\n", a, hz[p], h); failures++; break; }
+            }
+    }
 
     /* 4. talk: the same key says the same word every time, another key another; a fixed word is the same on every
      *    key; syllables follow the tempo; after the key is let go no new syllable starts */

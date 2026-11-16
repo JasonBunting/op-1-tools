@@ -22,6 +22,7 @@ static double rms_of(int32_t vowel15, int32_t body15)
         for (int i = 0; i < 128; i++) inc[i] = (int32_t)(uint32_t)(pitch[p] / FM_RATE * 4294967296.0);
         fm_knobs k;
         fm_knobs_make(&k, vowel15, body15, 0, 0, 32767);
+        fm_track(&k, (uint32_t)inc[0]);
         for (int b = 0; b < 600; b++) {
             fm_render(&v, &k, inc, 128, (1024 * k.level) >> 15, buf, sine);   /* the current table applied; low: never clips */
             if (b >= 150) for (int i = 0; i < 128; i++) { acc += (double)buf[i] * buf[i]; n++; }

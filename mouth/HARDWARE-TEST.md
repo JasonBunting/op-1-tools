@@ -136,7 +136,11 @@ Turn talk back on (blue's page 2 to **1/8**) when done.
 1. **Copy the presets.** Hold **Shift** and press **COM**, then press **T3** (disk mode). On the computer, copy the
    `mouth/presets/mouth` folder into the OP-1 disk's `synth` folder (so the disk has `synth/mouth/babble.aif` and the
    rest). Eject the OP-1 disk.
-   - Expect: the OP-1 restarts by itself and waits for a key press. Press any key.
+   - Expect: the OP-1 restarts by itself, shows "Created synth patch." for each sound, and waits for a key press.
+     Press any key.
+   - If it shows **Failed to create synth patch** instead, the OP-1 is full of user sounds (it deletes the ones it
+     can't take). Go back to disk mode, delete a preset folder you don't use from `synth`, copy the `mouth` folder
+     again, and eject.
 2. **Open a preset.** Press the **synth key**, then hold **Shift** and press a **sound key** (say 7).
    - Expect: a list of sounds. Turn **blue** to the **mouth** folder (it may be listed by engine or by folder name),
      and **green** to pick a sound in it. Write down which key you pressed to load it.
@@ -161,9 +165,22 @@ Turn talk back on (blue's page 2 to **1/8**) when done.
 2. Switch the OP-1 off and on again. Press the synth key and sound key 8.
    - Expect: Mouth is still the engine, and pressing blue, green and white shows 1/16, 3 and 80%.
 
+## 13. Pitch and low end (0.5.1)
+
+1. Turn talk **off** (blue's page 2), set blue to **ah** and orange fully left. Open your tuner app and hold middle C
+   at octave **+0**.
+   - Expect: the tuner reads **C** (it used to read G5).
+2. Try **ee** and **oo** on the same key.
+   - Expect: C each time.
+3. Shift the octave to **+1** and **+2** and play a few notes on **ah**.
+   - Expect: still a voice with some body, not thin and squeaky. At +2 it gets close to a pure, flute-like tone; that's
+     how real high voices behave.
+4. Repeat section 10 (CPU) once: hold six keys with talk at **1/32** and wild at **100%**, and write down "synth" and
+   "pk" again. The new low end costs a little; "pk" should still be well under 100.
+
 ## What to report
 
 1. Any step where something was different (step number and what happened), and any photos of the screen.
-2. Section 10's two numbers ("synth" and "pk").
+2. Section 10's two numbers ("synth" and "pk"), and section 13's.
 3. Section 11: which key loaded a preset, and whether the blue mark moved in 3 and 4.
 4. Anything that didn't sound fun, too loud or too quiet.

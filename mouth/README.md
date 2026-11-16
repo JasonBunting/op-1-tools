@@ -17,8 +17,11 @@ The [manual](manual/manual.html) covers playing it; this README is the short ver
       `synth/mouth/babble.aif` and the rest (the same layout as Hundekraft's preset collections).
    3. Eject the disk. The OP-1 restarts by itself, loads the new sounds, and waits for a key press.
 
-   The OP-1 holds a limited number of user sounds in total; an existing sound with the same file name may keep its
-   old settings.
+   If the OP-1 says **Failed to create synth patch** for each sound while it syncs, it is full: it holds a limited
+   number of user synth sounds, and it deletes the ones it can't take. On Hundekraft this limit was reached with about
+   220 sounds on the disk, well under the 300 Hundekraft's preset collection mentions. Delete preset folders you don't
+   use from the disk's `synth` folder, copy the `mouth` folder again, and eject. An existing sound with the same file
+   name may keep its old settings.
 
 ## Controls
 

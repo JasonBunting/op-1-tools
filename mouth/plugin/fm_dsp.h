@@ -21,14 +21,28 @@
 #include "fm_levels.h"
 
 #define FM_RATE       88200
-#define FM_SRC_AMP    16384              /* source peak (the closing slope) */
+#define FM_SRC_AMP    8192               /* source peak (the closing slope): half scale leaves headroom at the extremes */
 #define FM_VIB_INC    262958             /* 5.4 Hz at 88.2 kHz, per sample (2^32 = one cycle) */
 #define FM_VIB_MAX    1966               /* +-6% (about a semitone) from orange halfway, Q15 */
 #define FM_VIB_RAMP   172                /* blocks to fade the vibrato in: 0.25 s */
 #define FM_DRIFT_MAX  98                 /* +-0.3% random pitch drift, Q15 */
 #define FM_BLOCK_OUT  64                 /* output samples (44.1 kHz) per render block */
+#ifndef FM_BODY
+#define FM_BODY       8192               /* how much of the vocal folds' airflow joins its slope: the voice's low end */
+#endif
+#define FM_FLOW_MEAN  9893               /* the flow pulse's average, Q15 (0.4/2 + 0.16 * 2/pi), taken out */
 
-static const uint16_t fm_bw[FM_FORMANTS] = { 80, 100, 150, 200, 250 };   /* a man's bandwidths, Hz */
+/* The low end (measured: tools in test/; before these, middle-C "ah" had its 3rd harmonic 5x the fundamental, so a
+ * tuner read G5 and the voice sounded thin): some airflow in the source, the airflow again after the resonances (chest,
+ * which the vowel doesn't shape), and a wider first resonance. With these the fundamental is the loudest partial on
+ * every vowel from C3 to C6. -D overrides them for tuning. */
+#ifndef FM_B1
+#define FM_B1 130                        /* the first formant's bandwidth, Hz */
+#endif
+#ifndef FM_CHEST
+#define FM_CHEST 16384                   /* airflow added after the resonances, Q15 (half: the source is half scale) */
+#endif
+static const uint16_t fm_bw[FM_FORMANTS] = { FM_B1, 100, 150, 200, 250 };   /* a man's bandwidths, Hz */
 
 /* talk speed steps: syllables per beat, times 2 (0 = talk off): off, 1/2, 1/4, 1/4T, 1/8, 1/8T, 1/16, 1/16T, 1/32 */
 #define FM_TALK_STEPS 9
@@ -39,7 +53,7 @@ enum { FM_SYL_VOWEL, FM_SYL_STOP, FM_SYL_NASAL, FM_SYL_W, FM_SYL_Y };
 
 typedef struct {                         /* one voice */
     uint32_t phase, rng, vib;
-    int32_t drift, drift_to, age, blk, tilt, gain;
+    int32_t drift, drift_to, age, blk, tilt, gain, dc;
     int32_t low[FM_FORMANTS], band[FM_FORMANTS];
     int32_t hz[FM_FORMANTS];             /* smoothed formants, Hz << 8; 0 = not yet set */
     /* talk: this note's own syllables */
@@ -196,6 +210,17 @@ static inline void fm_close(fm_knobs *k, int kind, int32_t closure15)
     k->hz[0] = f1 << 8; k->hz[1] = f2 << 8;
 }
 
+/* High notes: a singer raises the first formant to stay above the note, or the voice turns thin and squeaky. Keep F1
+ * at least 1.15 x the note (inc0: its per-sample phase step), but no closer than 300 Hz under F2: moving the formants
+ * above it would stack the resonators on one frequency, and their gains multiply. Before fm_close. */
+static inline void fm_track(fm_knobs *k, uint32_t inc0)
+{
+    int32_t f0 = (int32_t)(((inc0 >> 16) * 1378u) >> 10);                 /* Hz: inc * 88200 / 2^32 */
+    int32_t want = (f0 * 1178) >> 10, cap = (k->hz[1] >> 8) - 300;        /* x1.15; under F2 */
+    if (want > cap) want = cap;
+    if ((k->hz[0] >> 8) < want) k->hz[0] = want << 8;
+}
+
 /* count samples into out; inc = per-sample phase increments (2^32 = one cycle); gain15 output gain, reached by the
  * end of the block from the last block's. sine = 8192-entry Q15 table. Returns the largest filter state seen. */
 static int32_t fm_render(fm_voice *v, const fm_knobs *k, const int32_t *inc, int count, int32_t gain15,
@@ -221,7 +246,7 @@ static int32_t fm_render(fm_voice *v, const fm_knobs *k, const int32_t *inc, int
     const int32_t tc = 8192 + ((k->bright * 16384) >> 15);               /* source low-pass: soft dark, hard brighter */
 
     uint32_t phase = v->phase, rng = v->rng, vib = v->vib;
-    int32_t tilt = v->tilt, big = 0, g = v->gain, gstep = (gain15 - v->gain) / count;
+    int32_t tilt = v->tilt, big = 0, g = v->gain, gstep = (gain15 - v->gain) / count, dc = v->dc;
     int32_t l0 = v->low[0], l1 = v->low[1], l2 = v->low[2], l3 = v->low[3], l4 = v->low[4];
     int32_t b0 = v->band[0], b1 = v->band[1], b2 = v->band[2], b3 = v->band[3], b4 = v->band[4];
 
@@ -233,10 +258,17 @@ static int32_t fm_render(fm_voice *v, const fm_knobs *k, const int32_t *inc, int
         phase += i + (uint32_t)((int32_t)(i >> 15) * dev);
 
         /* source: the flow pulse's slope */
-        int32_t p = (int32_t)(phase >> 17), s, open;                     /* p: 0 .. 32767 */
-        if (p < 13107)      { s = (sine[(p * 5) >> 4] * (FM_SRC_AMP * 2 / 5)) >> 15; open = 1; }
-        else if (p < 18350) { s = -((sine[((p - 13107) * 25) >> 6] * FM_SRC_AMP) >> 15); open = 1; }
-        else                { s = 0; open = 0; }
+        /* source: the flow pulse's slope (the voice's edge), plus some of the flow itself (its low end: the
+         * slope alone leaves the fundamental weak, so the loudest harmonic was often the 3rd) */
+        int32_t p = (int32_t)(phase >> 17), s, open, fl;                 /* p: 0 .. 32767 */
+        if (p < 13107) {
+            int32_t a = (p * 5) >> 4;                                    /* 0 .. pi */
+            s = (sine[a] * (FM_SRC_AMP * 2 / 5)) >> 15; fl = (32767 - sine[(a + 2048) & 8191]) >> 1; open = 1;
+        } else if (p < 18350) {
+            int32_t a = ((p - 13107) * 25) >> 6;                         /* 0 .. pi/2 */
+            s = -((sine[a] * FM_SRC_AMP) >> 15); fl = sine[a + 2048]; open = 1;
+        } else { s = 0; fl = 0; open = 0; }
+        s += ((fl - FM_FLOW_MEAN) * FM_BODY) >> 15;
         s = (s * voice) >> 15;
         int32_t noise = ((int32_t)fm_rand(&rng) >> 19) * breath >> 13;  /* +-16384 at full white */
         s += open ? noise : noise >> 1;
@@ -254,12 +286,19 @@ static int32_t fm_render(fm_voice *v, const fm_knobs *k, const int32_t *inc, int
         if (a0 > big) big = a0;
         if (a1 > big) big = a1;
         g += gstep;
-        int32_t y = (l4 * g) >> 13;
+        int32_t o = l4 + (((fl - FM_FLOW_MEAN) * FM_CHEST) >> 15);
+        dc += (o - dc) >> 10;                                            /* a 14 Hz high-pass: no DC */
+        int32_t y = ((o - dc) * g) >> 13;
         out[j] = (int16_t)(y > 32767 ? 32767 : (y < -32767 ? -32767 : y));
     }
     v->gain = gain15;
     v->blk++;
-    v->phase = phase; v->rng = rng; v->vib = vib; v->tilt = tilt;
+    /* a guard: a filter pushed past its range (it shouldn't happen; the host test checks) would wrap and lock into a loud
+     * runaway, so a voice that gets there starts its filters over instead */
+    int32_t worst = 0, all[11] = { l0, l1, l2, l3, l4, b0, b1, b2, b3, b4, dc };
+    for (int i = 0; i < 11; i++) { int32_t a = all[i] < 0 ? -all[i] : all[i]; if (a > worst) worst = a; }
+    if (worst > (1 << 18)) { l0 = l1 = l2 = l3 = l4 = b0 = b1 = b2 = b3 = b4 = dc = tilt = 0; }
+    v->phase = phase; v->rng = rng; v->vib = vib; v->tilt = tilt; v->dc = dc;
     v->low[0] = l0; v->low[1] = l1; v->low[2] = l2; v->low[3] = l3; v->low[4] = l4;
     v->band[0] = b0; v->band[1] = b1; v->band[2] = b2; v->band[3] = b3; v->band[4] = b4;
     return big;

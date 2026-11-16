@@ -4,7 +4,7 @@
   "order": 0,
   "symbol": "ENGINE_mouth",
   "author": "Jason Bunting",
-  "version": "0.5",
+  "version": "0.5.1",
   "sources": ["mouth.c"],
   "defaults": [20480, 10000, 3000, 12000],
   "page2_defaults": [16384, 963, 16384],
