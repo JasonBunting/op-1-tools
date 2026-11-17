@@ -20,3 +20,6 @@ Directory.Build.local.props
 
 # Hundekraft source: download it from its releases and keep it outside the repository
 hundekraft-*-source/
+
+# Personal working files (for example the OP-1 guide conversion)
+local/
