@@ -185,11 +185,11 @@ int main(int argc, char **argv)
         }
         printf("1/8 at 120 BPM: %d syllables in 2 s (want 8, fewer when a slot holds)\n", starts);
         if (starts < 6 || starts > 8) fail("talk does not follow the tempo");
-        /* release: let go after 0.5 s; the vowel must stop changing once the last glide ends */
+        /* release: let go after 0.5 s; the vowel must stop changing once the last glide and edge end (<= 48 blocks) */
         talk = (fm_talk_knobs){ 6, 0, 32767 };                        /* 1/16, wild */
         syllables(a[0], 1378, key_a, 344);
         int moved = 0;
-        for (int n = 344 + 40; n < 1378; n++) if (a[0][2 * n] != a[0][2 * (n - 1)] || a[0][2 * n + 1]) moved = 1;
+        for (int n = 344 + 50; n < 1378; n++) if (a[0][2 * n] != a[0][2 * (n - 1)] || a[0][2 * n + 1]) moved = 1;
         if (moved) fail("talk kept talking after the key was let go");
         talk = (fm_talk_knobs){ 0, 0, 0 };
     }

@@ -12,7 +12,8 @@
 #define PP_CHAIN_MAX  32
 #define PP_STORE_MAX  1743                  /* the longest save text: 16 pages and a full chain */
 enum { PP_VIEW_GRID, PP_VIEW_CHAIN, PP_VIEW_SAVED, PP_VIEWS };
-#define PP_PAIR_TICKS 48                    /* two 1/16 steps at 96 ticks per beat: swing divides this */
+#define PP_PAIR_TICKS 48                    /* two 1/16 steps at 96 ticks per beat: swing divides this. As stock, steps
+                                               alternate long and short in the order played, whatever their columns */
 #define PP_VELOCITY   127                   /* stock R246 Pattern plays every note at 0x7F */
 #define PP_SWING_MIN  20                    /* stock's range, read from the device */
 #define PP_SWING_MAX  80
@@ -26,9 +27,9 @@ typedef struct {
 } pp_page_t;
 
 #define PP_UNDO 3                           /* cut / paste steps that can be taken back, per mode */
-typedef struct {                            /* what a page operation can change: never the chain */
-    pp_page_t pages[PP_PAGES];
-    uint8_t count, sel;
+typedef struct {                            /* the one page an operation changed: never the chain, nor other pages */
+    pp_page_t page;                         /* as it was before */
+    uint8_t index, sel, added;              /* added: the operation made this page (paste-new) */
 } pp_snap_t;
 
 typedef struct {
@@ -37,6 +38,7 @@ typedef struct {
     volatile uint32_t down;                 /* transposing keys held, bit per key */
     volatile int8_t transpose;
     volatile uint8_t play_page, pos, back, started, elapsed, step_len, sounding;
+    volatile uint8_t odd, pair_rest;        /* swing: the second step of a pair is next, and the ticks left for it */
     int16_t ids[PP_KEYS];                   /* note id + 1, per key */
     volatile uint8_t chain[PP_CHAIN_MAX];   /* page indexes; repeats share one page. Empty: the selected page loops */
     volatile uint8_t chain_len, chain_cursor, chain_pick, view, follow;
@@ -80,7 +82,8 @@ int pp_page_next(int mode);                 /* 0 moved, 1 created a blank page, 
 
 /* Page operations. A page is a named grid; its pattern (notes, section, swing, direction) is what is copied, cut and
  * pasted. Pages never move or go, so the chain, which is about positions, is never touched. Stopped only. Cut, paste
- * and paste-new can be undone; a new one past PP_UNDO forgets the oldest. */
+ * and paste-new can be undone; a new one past PP_UNDO forgets the oldest. Undo puts back the one page its operation
+ * changed and selects the page that was selected then: work done on other pages since stays. */
 enum { PP_OP_OK = 0, PP_OP_RUNNING = -1, PP_OP_EMPTY = -2, PP_OP_FULL = -3 };
 int pp_page_copy(int mode);                 /* the selected page's pattern to this mode's clipboard */
 int pp_page_cut(int mode);                  /* copy, then the page is left blank */
@@ -108,6 +111,7 @@ void pp_key_down(int mode, int key);        /* start, or change the transpositio
 void pp_key_up(int mode, int key);          /* safe for a key this mode does not hold */
 void pp_set_hold(int mode, int on);
 void pp_tick(int mode);                     /* mode: the one receiving ticks */
-void pp_rewind(int mode);                   /* silence; a running part starts again from its first step */
+void pp_rewind(int mode);                   /* silence; a running part starts again from its first step. Stopped, the
+                                               page shown stays as it is */
 void pp_silence_all(int mode);              /* as stock's stop: silence, release keys, HOLD off, no transposition */
 #endif

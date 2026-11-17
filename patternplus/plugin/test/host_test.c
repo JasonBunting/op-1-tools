@@ -193,6 +193,51 @@ int main(void)
     { int n = ons; while (ons == n) ticks(0, 1); }
     check("pair length at 20%", tick_of_last_on - t0, PP_PAIR_TICKS);
 
+    /* --- swing goes by the order played: an odd start and an odd length still keep the beat --- */
+    fresh();
+    page(0, 0)->start = 1; page(0, 0)->len = 3; page(0, 0)->swing = 66;
+    for (int c = 0; c < PP_COLS; c++) page(0, 0)->notes[c] = 1;
+    pp_set_hold(0, 1);
+    ticks(0, 1);
+    t0 = tick_of_last_on;
+    { int n = ons; while (ons == n) ticks(0, 1); }
+    check("odd start: the long step comes first", tick_of_last_on - t0, 31);
+    { int n = ons; while (ons < n + 5) ticks(0, 1); }
+    check("odd length: two loops are three pairs", tick_of_last_on - t0, 3 * PP_PAIR_TICKS);
+    check("odd length: back at the start", pp_bank[0].pos, 1);
+
+    /* --- a held mode left mid-step plays that step again, whole, when it is back --- */
+    fresh();
+    for (int c = 0; c < PP_COLS; c++) page(0, 0)->notes[c] = 1;
+    pp_set_hold(0, 1);
+    ticks(0, 6);
+    check("away: first step sounding", ons, 1);
+    ticks(1, 3);
+    check("away: silenced", sounding, 0);
+    ticks(0, 1);
+    check("back: the step sounds again", ons, 2);
+    check("back: the same step", pp_bank[0].pos, 0);
+    t0 = tick_of_last_on;
+    { int n = ons; while (ons == n) ticks(0, 1); }
+    check("back: at full length", tick_of_last_on - t0, PP_PAIR_TICKS / 2);
+    check("back: then the next step", pp_bank[0].pos, 1);
+
+    /* --- a chain made while one page loops starts at its first entry --- */
+    fresh();
+    pp_page_next(0);
+    pp_bank[0].sel = 0;
+    page(0, 0)->notes[0] = 1; page(0, 1)->notes[0] = 2;
+    pp_set_hold(0, 1);
+    pp_bank[0].chain_pick = 0; pp_chain_insert(0);
+    pp_bank[0].chain_pick = 1; pp_chain_insert(0);
+    check("looping page is no occurrence", pp_bank[0].chain_pos, -1);
+    ticks(0, 1 + PP_COLS * PP_PAIR_TICKS / 2);
+    check("chain starts at its first entry", pp_bank[0].chain_pos, 0);
+    check("first entry's page plays", pp_bank[0].play_page, 0);
+    ticks(0, PP_COLS * PP_PAIR_TICKS / 2);
+    check("then the second", pp_bank[0].play_page, 1);
+    pp_set_hold(0, 0);
+
     /* --- notes pair; a chord lasts its whole step and releases together, as stock --- */
     fresh();
     page(0, 0)->notes[0] = 1 << 2 | 1 << 5 | 1 << 9;
@@ -361,6 +406,20 @@ int main(void)
     page(0, 0)->start = 0; page(0, 0)->len = PP_COLS;
     pp_rewind(0);
     check("rewind silences", sounding, 0);
+    {   /* stopped, a rewind (a MIDI start reaches both modes) leaves the page shown alone */
+        pp_bank_t *b = &pp_bank[0];
+        uint8_t hold = b->hold, down = (uint8_t)b->down, len = b->chain_len, c0 = b->chain[0], sel = b->sel, count = b->count;
+        b->hold = 0; b->down = 0;
+        while (b->count < 3) pp_page_next(0);
+        b->chain[0] = 0; b->chain_len = 1; b->sel = 2;
+        pp_rewind(0);
+        check("stopped rewind keeps the page", b->sel, 2);
+        b->hold = 1;
+        pp_rewind(0);
+        check("running rewind goes to the chain's start", b->sel, 0);
+        b->hold = hold; b->down = down; b->chain_len = len; b->chain[0] = c0; b->sel = sel; b->count = count;
+        pp_rewind(0);
+    }
     pp_set_hold(0, 0);
     ticks(0, 200);
     check("every note released", offs, ons);
@@ -707,6 +766,29 @@ int main(void)
         check("E stays for the chain", b->count, 5);
         check("E blank", pp_page_blank(1, 4), 1);
         check("chain kept", b->chain[0], 4);
+        /* undo takes back its own page only: work on other pages since, and pages made since, stay */
+        fresh();
+        page(1, 0)->notes[0] = 1;
+        pp_page_cut(1);                                          /* A */
+        check("later: new page B", pp_page_next(1), 1);
+        page(1, 1)->notes[5] = 2; page(1, 1)->swing = 60;
+        check("later: undo cut", pp_undo(1), PP_OP_OK);
+        check("later: A back", (int)page(1, 0)->notes[0], 1);
+        check("later: A selected", b->sel, 0);
+        check("later: B kept", b->count, 2);
+        check("later: B's notes kept", (int)page(1, 1)->notes[5], 2);
+        check("later: B's swing kept", page(1, 1)->swing, 60);
+        /* a paste-new with a page made after it: undone, it stays, blank, and the later page is untouched */
+        pp_page_copy(1);
+        pp_page_paste_new(1);                                    /* C */
+        b->sel = 2;
+        check("later: new page D", pp_page_next(1), 1);
+        page(1, 3)->notes[7] = 4;
+        check("later: undo paste new", pp_undo(1), PP_OP_OK);
+        check("later: C blank", pp_page_blank(1, 2), 1);
+        check("later: four pages still", b->count, 4);
+        check("later: D's notes kept", (int)page(1, 3)->notes[7], 4);
+        check("later: A selected again", b->sel, 0);
         /* the only page: cut leaves it blank */
         fresh();
         page(1, 0)->notes[3] = 5; page(1, 0)->len = 4;

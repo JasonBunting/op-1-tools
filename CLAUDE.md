@@ -36,6 +36,6 @@ The repository is organized by project, so anyone can take one piece without the
 
 ## Hundekraft core
 
-Every plugin, doc, build path and release script follows the core installed on the OP-1 (3.2.3 at the time of
+Every plugin, doc, build path and release script follows the core installed on the OP-1 (3.3 at the time of
 writing). On a core upgrade, rebuild every plugin and update every reference in one pass. The official plugin guide is
 https://hundekraft.github.io/op1-workshop/llms.txt.

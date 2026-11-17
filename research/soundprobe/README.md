@@ -5,7 +5,7 @@ copy a whole synth sound and put it back later, including a change of engine. No
 [patternplus/docs/sound-recall-design-notes.md](../../patternplus/docs/sound-recall-design-notes.md).
 
 Build with `tools/build.sh soundprobe`, which makes `build/soundprobe.knl`. Install it through the workshop. It needs
-Hundekraft 3.2.3: it uses firmware addresses that another core may move.
+Hundekraft 3.2.3, where its firmware addresses were checked; it builds against 3.3 but hasn't been checked there.
 
 ## Controls (synth pages only)
 

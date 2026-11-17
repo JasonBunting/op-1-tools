@@ -86,6 +86,13 @@ static void fm_voice_note(fm_voice *v)
     v->syl_t = v->syl_len = v->off_from = v->off_to = v->cons = v->kind = v->released = 0;
     v->show_closure = 0;
 }
+/* once per voice, before its first note: voice i's own random sequence (drift, breath) and vibrato phase, so voices
+ * that start and stop together still differ */
+static inline void fm_voice_seed(fm_voice *v, int i)
+{
+    v->rng = 0x9E3779B9u * (2u * (uint32_t)i + 1u);
+    v->vib = (uint32_t)i * 0x2AAAAAABu;                                   /* a sixth of a cycle apart */
+}
 static inline void fm_voice_reset(fm_voice *v)   /* everything, for tests */
 {
     uint32_t rng = v->rng;
@@ -184,7 +191,7 @@ static inline int32_t fm_talk(fm_voice *v, int32_t center15, const fm_talk_knobs
     int32_t off = tt >= glide ? v->off_to : v->off_from + (v->off_to - v->off_from) * tt / glide;
     int32_t vw = center15 + off;
     *vowel15 = vw < 0 ? 0 : (vw > 32767 ? 32767 : vw);
-    if (v->kind == FM_SYL_VOWEL || v->released) return 32767;
+    if (v->kind == FM_SYL_VOWEL) return 32767;                            /* a released note finishes its edge: no jump */
     int32_t shape = tt >= dip ? 0 : (dip - tt) * 32767 / dip;
     int32_t c = (v->cons * shape) >> 15;
     *closure15 = c;

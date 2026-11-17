@@ -36,4 +36,4 @@ https://github.com/jamesondh/chimera-vocal-synth, under the MIT License:
     IN THE SOFTWARE.
 
 The complete corresponding source of mouth.knl is this folder (mouth.c, mouth.svg, fm_dsp.h, fm_tables.h, fm_levels.h, plugin.json),
-built and packed with tools/pack-plugin.sh against the Hundekraft 3.2.3 source; see the project README.
+built and packed with tools/pack-plugin.sh against the Hundekraft 3.3 source; see the project README.

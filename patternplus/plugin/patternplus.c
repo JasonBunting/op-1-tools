@@ -1,4 +1,4 @@
-/* Pattern+: a stock-Pattern-style grid sequencer with multiple pages, as a Hundekraft 3.2.3 sequencer type.
+/* Pattern+: a stock-Pattern-style grid sequencer with multiple pages, as a Hundekraft 3.3 sequencer type.
  * This build has the grid, pages, chains and saving (patternplus/docs/pattern-plus-poc-spec.md).
  * Screen layout and colors measured from a capture of stock Pattern on the device; the artwork is drawn here.
  * Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see LICENSE and NOTICE). */
@@ -33,8 +33,10 @@ int pp_out_on(int mode, int key, int transpose, int vel)
 {
     /* As stock R246 Pattern (0x01A08D24): a synth note is key + transpose; a drum's key picks the sound only and its
      * pitch is just the transposition. Since kennel 3.2.3 (2026-11-07) op1_seq_note_on takes a drum's pitch as
-     * note - (key + 0x35) - drum octave * 12, so both modes send the key's own note; older cores play drums flat. */
-    return op1_seq_note_on(mode, key + 0x35 + PP_OCTAVE(mode) * 12 + transpose, key, vel);
+     * note - (key + 0x35) - drum octave * 12, so a drum sends the key's own note at the drum octave. Since 3.3
+     * (2026-11-10) it adds the current synth octave to a synth note itself, so a synth note goes at octave 0 and the
+     * octave arrows transpose playback live, as on stock; adding it here too would shift it twice. */
+    return op1_seq_note_on(mode, key + 0x35 + (mode ? PP_OCTAVE(mode) * 12 : 0) + transpose, key, vel);
 }
 void pp_out_off(int id) { op1_seq_note_off(id); }
 
@@ -68,10 +70,12 @@ static void pp_pkey_up(void *self, int key)               /* both modes: the mod
 #define PP_DIR       "/yaffs2/user/patternplus"
 /* An auto-save that can't be read is never written over with an empty grid (Hundekraft's plugin guide): its text is
  * kept and written back unchanged until the main loop has copied it to unreadable-s.txt / unreadable-d.txt. Then saving
- * resumes. Loading a slot or clearing on purpose also lets it go. */
+ * resumes. Loading a slot or clearing on purpose also lets it go. A copy that fails is tried again after each later
+ * change, PP_KEPT_TRIES times a boot at most, and says each time that the work is not being saved. */
+#define PP_KEPT_TRIES 8
 static char pp_kept[2][PP_STORE_MAX];
 static volatile int16_t pp_kept_len[2];
-static volatile uint8_t pp_kept_tried[2];
+static volatile uint8_t pp_kept_try[2], pp_kept_tries[2];
 static int pp_store_ser(int pos, char *out, int n)        /* saver thread */
 {
     int len = pp_kept_len[pos & 1], o = 0;
@@ -89,6 +93,7 @@ static int pp_store_parse(int pos, const char *s, int len)
     if (r) {
         for (int i = 0; i < len && i < PP_STORE_MAX; i++) pp_kept[pos & 1][i] = s[i];
         pp_kept_len[pos & 1] = (int16_t)(len < PP_STORE_MAX ? len : PP_STORE_MAX);
+        pp_kept_try[pos & 1] = 1;
         op1_toast("pattern+ save unreadable, copy kept");
     }
     return r;
@@ -96,21 +101,33 @@ static int pp_store_parse(int pos, const char *s, int len)
 static char pp_sql[2048];                                 /* the INSERT around the longest save text */
 static sq_store_t pp_store = { .name = "patternplus", .ser = pp_store_ser, .parse = pp_store_parse,
                                .sql = pp_sql, .cap = sizeof pp_sql, .maxlen = PP_STORE_MAX + 1 };
-static void pp_changed(void) { sq_store_dirty(&pp_store); }
+static void pp_changed(void) { pp_kept_try[0] = pp_kept_try[1] = 1; sq_store_dirty(&pp_store); }
 static void pp_let_go(int mode) { pp_kept_len[mode & 1] = 0; }   /* the user replaced the work on purpose */
 
-enum { PP_JOB_NONE, PP_JOB_SCAN, PP_JOB_LOAD };
 enum { PP_ASK_NONE, PP_ASK_LOAD, PP_ASK_NEW, PP_ASK_PASTE };
 static char pp_slot_name[2][PP_SLOTS][PP_NAME_MAX + 1];   /* upper case; empty: nothing in the slot */
 static char pp_file_buf[PP_NAME_MAX + 1 + PP_STORE_MAX];
 static int8_t pp_loaded[2] = { -1, -1 };
-static volatile uint8_t pp_slot_at[2], pp_job, pp_job_mode, pp_job_slot, pp_ask, pp_ask_mode, pp_save_mode, pp_save_slot;
+/* work for the main loop: each has its own flag, so asking for one never loses another */
+static volatile uint8_t pp_want_scan[2], pp_want_load, pp_load_mode, pp_load_slot;
+static volatile uint8_t pp_slot_at[2], pp_ask, pp_ask_mode, pp_ask_page, pp_save_mode, pp_save_slot;
 static const char *volatile pp_msg;
 static volatile int16_t pp_msg_ms;
 #define PP_MSG_MS 3000
 static void pp_say(const char *m) { pp_msg = m; pp_msg_ms = PP_MSG_MS; }
-/* A question waits for green (yes) or orange (no) and belongs to the mode that asked it. */
-static void pp_ask_for(int mode, int ask, const char *m) { pp_ask = (uint8_t)ask; pp_ask_mode = (uint8_t)(mode & 1); pp_say(m); }
+/* A question waits for green (yes) or orange (no) and belongs to the mode that asked it, and to the page shown then. */
+static void pp_ask_for(int mode, int ask, const char *m)
+{
+    pp_ask_mode = (uint8_t)(mode & 1);
+    pp_ask_page = pp_bank[mode & 1].sel;
+    pp_ask = (uint8_t)ask;
+    pp_say(m);
+}
+/* The paste question names a page: once another page is shown (the cursor walked along the chain), it is withdrawn. */
+static void pp_ask_check(void)
+{
+    if (pp_ask == PP_ASK_PASTE && pp_bank[pp_ask_mode].sel != pp_ask_page) { pp_ask = PP_ASK_NONE; pp_msg_ms = 0; }
+}
 /* "<before><page letter><after>": one buffer, as only one message shows at a time */
 static char pp_msg_buf[40];
 static const char *pp_page_msg(const char *before, int page, const char *after)
@@ -179,23 +196,27 @@ static void pp_save_done(const char *text, int ok)        /* main loop */
     pp_slot_path(path, mode, slot);
     int fd = op1_file_open(path, OP1_FILE_WRITE | OP1_FILE_CREATE | OP1_FILE_TRUNC), wrote = -1;
     if (fd >= 0) { wrote = op1_file_write(fd, pp_file_buf, total); op1_file_close(fd); }
-    if (wrote != total) { pp_say("SAVE FAILED"); pp_job_mode = (uint8_t)mode; pp_job = PP_JOB_SCAN; return; }
+    if (wrote != total) { pp_say("SAVE FAILED"); pp_want_scan[mode & 1] = 1; return; }
     pp_set_name(mode, slot, text, n);
     pp_loaded[mode] = (int8_t)slot;
     pp_say("SAVED");
 }
 static op1_text_entry_t pp_entry = { "COLLECTION NAME", 0, 0, PP_NAME_MAX, 0, pp_save_done, 0 };
-static void pp_keep_unreadable(void)                      /* main loop: once per mode and boot */
+static void pp_keep_unreadable(void)                      /* main loop */
 {
     for (int m = 0; m < 2; m++) {
         int len = pp_kept_len[m];
-        if (!len || pp_kept_tried[m]) continue;
-        pp_kept_tried[m] = 1;
+        if (!len || !pp_kept_try[m] || pp_kept_tries[m] >= PP_KEPT_TRIES) continue;
+        pp_kept_try[m] = 0;
+        pp_kept_tries[m]++;
         op1_file_mkdir(PP_DIR);
         int fd = op1_file_open(m ? PP_DIR "/unreadable-d.txt" : PP_DIR "/unreadable-s.txt",
                                OP1_FILE_WRITE | OP1_FILE_CREATE | OP1_FILE_TRUNC), wrote = -1;
         if (fd >= 0) { wrote = op1_file_write(fd, pp_kept[m], len); op1_file_close(fd); }
-        if (wrote != len) continue;                       /* not copied: the database keeps it until a load or clear */
+        if (wrote != len) {                               /* not copied: the database keeps it until a load or clear */
+            op1_toast("pattern+ autosave off, save to slot");
+            continue;
+        }
         pp_let_go(m);
         pp_changed();
     }
@@ -205,11 +226,9 @@ static void pp_event(int id, int32_t arg)
     (void)arg;
     if (id != OP1_EV_SERVICE) return;
     pp_keep_unreadable();
-    if (!pp_job) return;
-    int job = pp_job;
-    if (job == PP_JOB_SCAN) pp_do_scan(pp_job_mode);
-    if (job == PP_JOB_LOAD) pp_do_load(pp_job_mode, pp_job_slot);
-    pp_job = PP_JOB_NONE;
+    for (int m = 0; m < 2; m++)                           /* flags clear first: a request made meanwhile is kept */
+        if (pp_want_scan[m]) { pp_want_scan[m] = 0; pp_do_scan(m); }
+    if (pp_want_load) { pp_want_load = 0; pp_do_load(pp_load_mode, pp_load_slot); }
 }
 static void pp_slot_move(int mode, int delta)
 {
@@ -233,7 +252,7 @@ static void pp_saved_press(int mode, int knob, int shift)
             pp_loaded[mode] = -1;
             pp_say("NEW");
             pp_changed();
-        } else if (!pp_job) { pp_job_mode = (uint8_t)mode; pp_job_slot = (uint8_t)slot; pp_job = PP_JOB_LOAD; }
+        } else { pp_load_mode = (uint8_t)mode; pp_load_slot = (uint8_t)slot; pp_want_load = 1; }
         return;
     }
     if (shift) {
@@ -362,30 +381,37 @@ static void pp_page_answer(int mode, int knob)            /* the paste question 
 }
 static void pp_press_ev(int mode, int knob, int shift)
 {
-    int chain_view = pp_bank[mode & 1].view;
+    int chain_view = pp_bank[mode & 1].view, save = 0;    /* save: something that is saved changed */
     if (pp_ask && pp_ask_mode != (mode & 1)) { pp_ask = PP_ASK_NONE; pp_msg_ms = 0; }   /* asked in the other mode */
+    pp_ask_check();
     if (shift && knob == PP_WHITE) {
         pp_view_toggle(mode);
         pp_ask = PP_ASK_NONE;
         pp_msg_ms = 0;
-        if (pp_bank[mode & 1].view == PP_VIEW_SAVED && !pp_job) { pp_job_mode = (uint8_t)(mode & 1); pp_job = PP_JOB_SCAN; }
+        if (pp_bank[mode & 1].view == PP_VIEW_SAVED) pp_want_scan[mode & 1] = 1;
         return;
     }
     if (chain_view == PP_VIEW_SAVED) { pp_saved_press(mode & 1, knob, shift); return; }
     if (pp_ask == PP_ASK_PASTE) { pp_page_answer(mode & 1, knob); return; }
     if (shift) {
         if (knob == PP_ORANGE) {                          /* playing: follow the chain again; stopped: undo */
-            if (pp_running(mode)) pp_resume_follow(mode);
-            else if (!chain_view) pp_say(pp_undo(mode) == PP_OP_OK ? "UNDONE" : "NOTHING TO UNDO");
+            if (pp_running(mode)) { pp_resume_follow(mode); save = 1; }
+            else if (!chain_view) {
+                save = pp_undo(mode) == PP_OP_OK;
+                pp_say(save ? "UNDONE" : "NOTHING TO UNDO");
+            }
         }
-        if (chain_view) { pp_changed(); return; }
-        if (knob == PP_BLUE) pp_page_prev(mode);
-        if (knob == PP_GREEN && pp_page_next(mode) < 0) pp_full_flash = PP_FLASH_MS;
+        if (!chain_view && knob == PP_BLUE) { pp_page_prev(mode); save = 1; }
+        if (!chain_view && knob == PP_GREEN) {
+            if (pp_page_next(mode) < 0) pp_full_flash = PP_FLASH_MS; else save = 1;
+        }
     } else if (chain_view) {
-        if (knob == PP_GREEN && pp_chain_insert(mode) < 0) pp_full_flash = PP_FLASH_MS;
-        if (knob == PP_WHITE) pp_chain_remove(mode);
+        if (knob == PP_GREEN) {
+            if (pp_chain_insert(mode) < 0) pp_full_flash = PP_FLASH_MS; else save = 1;
+        }
+        if (knob == PP_WHITE) { pp_chain_remove(mode); save = 1; }
     }
-    pp_changed();
+    if (save) pp_changed();                               /* the cursor, HOLD and the views are not saved */
 }
 static void pp_turn_ev(int mode, int knob, int delta, int shift)
 {
@@ -400,15 +426,17 @@ static void pp_turn_ev(int mode, int knob, int delta, int shift)
             if (knob == PP_BLUE && !shift) pp_slot_move(mode & 1, st);
             return;
         }
-        if (knob == PP_ORANGE && !shift) pp_set_hold(mode, st > 0);
-        if (knob == PP_BLUE && !shift) pp_chain_move(mode, st);
-        if (knob == PP_GREEN && !shift) pp_chain_pick(mode, st);
-        pp_changed();
+        if (shift) return;
+        if (knob == PP_ORANGE) pp_set_hold(mode, st > 0);
+        if (knob == PP_BLUE) pp_chain_move(mode, st);
+        if (knob == PP_GREEN) { pp_chain_pick(mode, st); pp_changed(); }
         return;
     }
+    int save = 1, page = pp_bank[mode & 1].sel;           /* the cursor and HOLD are not saved; the page shown is */
     switch (knob) {
     case PP_BLUE:
-        if (shift) pp_erase_move(mode, st); else pp_move_cursor(mode, st);
+        if (shift) pp_erase_move(mode, st);
+        else { pp_move_cursor(mode, st); save = pp_bank[mode & 1].sel != page; }
         break;
     case PP_GREEN:
         if (shift) pp_rotate(mode, st);
@@ -420,10 +448,10 @@ static void pp_turn_ev(int mode, int knob, int delta, int shift)
         break;
     case PP_ORANGE:
         if (shift) { pp_add_dir(mode, st); pp_dir_flash = PP_FLASH_MS; }
-        else pp_set_hold(mode, st > 0);
+        else { pp_set_hold(mode, st > 0); save = 0; }
         break;
     }
-    pp_changed();
+    if (save) pp_changed();
 }
 static int pp_shift_wants(int key) { return key >= 0 && key <= 23; }
 static void pp_midi_start(void) { pp_rewind(0); pp_rewind(1); }
@@ -482,6 +510,13 @@ static void pp_draw_arrow(void *r, int32_t x0, int32_t x1, int32_t y, int32_t he
     sq_line(r, back, y - head, x1, y, PP_LINE, c);
     sq_line(r, back, y + head, x1, y, PP_LINE, c);
 }
+static void pp_draw_box(void *r, int32_t x0, int32_t y0, int32_t x1, int32_t y1, const uint8_t *c)
+{
+    sq_line(r, x0, y0, x1, y0, PP_LINE, c);
+    sq_line(r, x1, y0, x1, y1, PP_LINE, c);
+    sq_line(r, x1, y1, x0, y1, PP_LINE, c);
+    sq_line(r, x0, y1, x0, y0, PP_LINE, c);
+}
 static void pp_draw_side(void *r, const pp_bank_t *b, const pp_page_t *p, int running)
 {
     char t[8], *e;
@@ -491,11 +526,7 @@ static void pp_draw_side(void *r, const pp_bank_t *b, const pp_page_t *p, int ru
             pp_swing_flash || p->swing != PP_SWING_NONE ? pp_c_swing : pp_c_swing_dim);   /* bright: changing, or any swing at all */
 
     const uint8_t *hold = b->hold ? pp_c_red : pp_c_red_dim;
-    int32_t hx0 = OP1_Q10(257), hx1 = OP1_Q10(295), hy0 = OP1_Q10(49), hy1 = OP1_Q10(67);
-    sq_line(r, hx0, hy0, hx1, hy0, PP_LINE, hold);
-    sq_line(r, hx1, hy0, hx1, hy1, PP_LINE, hold);
-    sq_line(r, hx1, hy1, hx0, hy1, PP_LINE, hold);
-    sq_line(r, hx0, hy1, hx0, hy0, PP_LINE, hold);
+    pp_draw_box(r, OP1_Q10(257), OP1_Q10(49), OP1_Q10(295), OP1_Q10(67), hold);
     sq_text(r, OP1_Q10(263), OP1_Q10(54), OP1_Q10(1.3), "HOLD", 0x400, hold);
 
     const uint8_t *dir = running || pp_dir_flash ? pp_c_red : pp_c_red_dim;
@@ -539,13 +570,7 @@ static void pp_draw_chain(void *r, const pp_bank_t *b, int running)
         const uint8_t *col = i == playing ? pp_c_dot : pp_page_blank((int)(b - pp_bank), b->chain[i]) ? pp_c_red
                            : i == cur ? pp_c_white : pp_c_grey;    /* red: the page has no pattern on it */
         sq_text(r, x, y, OP1_Q10(2.2), t, 0x500, col);
-        if (i == playing) {
-            int32_t x0 = x - OP1_Q10(4), x1 = x + OP1_Q10(16), y0 = y - OP1_Q10(4), y1 = y + OP1_Q10(19);
-            sq_line(r, x0, y0, x1, y0, PP_LINE, pp_c_dot);
-            sq_line(r, x1, y0, x1, y1, PP_LINE, pp_c_dot);
-            sq_line(r, x1, y1, x0, y1, PP_LINE, pp_c_dot);
-            sq_line(r, x0, y1, x0, y0, PP_LINE, pp_c_dot);
-        }
+        if (i == playing) pp_draw_box(r, x - OP1_Q10(4), y - OP1_Q10(4), x + OP1_Q10(16), y + OP1_Q10(19), pp_c_dot);
         if (i + 1 < len && (i + 1) % 8) {                 /* the > between entries */
             int32_t cx = x + OP1_Q10(21), cy = y + OP1_Q10(8);
             sq_line(r, cx, cy - OP1_Q10(4), cx + OP1_Q10(5), cy, PP_LINE, pp_c_grey);
@@ -604,6 +629,7 @@ static void pp_scr_update(void *scr, int dt)
     pp_flash_down(&pp_section_flash, dt);
     pp_flash_down(&pp_dir_flash, dt);
     pp_flash_down(&pp_full_flash, dt);
+    pp_ask_check();
     if (pp_msg_ms > 0 && pp_ask == PP_ASK_NONE) pp_msg_ms = (int16_t)(pp_msg_ms > dt ? pp_msg_ms - dt : 0);  /* a question waits for its answer */
     if (b->view == PP_VIEW_SAVED) { pp_draw_saved(r, m); return; }
     if (b->view) { pp_draw_chain(r, b, running); return; }

@@ -1,6 +1,6 @@
 # Pattern+ couch sheet and tests
 
-The grid, pages and basic chain playback have passed on the device. This build (0.5.1) adds stock's live edit: Shift + left / right while playing frees the cursor from the playhead. 0.5.0 made the cursor walk along the chain, and added Help as a key you hold to keep the cursor and HOLD on one page. Cutting, copying and pasting patterns between pages, with undo, came in 0.4. Saving is automatic and comes back after a power off; saved collections are a separate list you can name, load and start over from.
+The grid, pages and basic chain playback have passed on the device. 0.5.2 is for Hundekraft 3.3, where the synth octave arrows now transpose what a sequencer plays, as on stock; see the octave test below. 0.5.1 adds stock's live edit: Shift + left / right while playing frees the cursor from the playhead. 0.5.0 made the cursor walk along the chain, and added Help as a key you hold to keep the cursor and HOLD on one page. Cutting, copying and pasting patterns between pages, with undo, came in 0.4. Saving is automatic and comes back after a power off; saved collections are a separate list you can name, load and start over from.
 
 ## Before you trust it with a good idea
 
@@ -75,7 +75,7 @@ In the saved view:
 
 Saving onto a used slot replaces it after you finish the name. Synth and Drum each have their own 8 slots. Green text marks the slot you last loaded or saved.
 
-If the automatic save can't be read at power on, `pattern+ save unreadable, copy kept` appears, and Pattern+ starts with an empty page. The unreadable save is copied to `patternplus/unreadable-s.txt` (Synth) or `unreadable-d.txt` (Drum) before anything is saved over it. You can't easily cause this on purpose, so there's no test step for it.
+If the automatic save can't be read at power on, `pattern+ save unreadable, copy kept` appears, and Pattern+ starts with an empty page. The unreadable save is copied to `patternplus/unreadable-s.txt` (Synth) or `unreadable-d.txt` (Drum) before anything is saved over it. If that copy can't be written, `pattern+ autosave off, save to slot` appears after your next few changes: your work isn't being saved automatically until the copy succeeds, so save it to a slot. You can't easily cause this on purpose, so there's no test step for it.
 
 The grid's other controls, including Shift + note key, do nothing in the chain and saved views.
 
@@ -91,11 +91,62 @@ On the Synth, Drum, Tape and Mixer screens, holding a note key plays the page tr
 
 ## Chain behavior, provisional
 
-1. A chain with entries in it always plays from its first entry when you start. An empty chain loops the selected page, as before.
+1. A chain with entries in it always plays from its first entry when you start. An empty chain loops the selected page, as before. A chain made while a page loops starts at its first entry once that page finishes its bar.
 2. Pages change when a page finishes its cycle, including its direction and section. Repeats of a page share its notes, so editing B changes every B.
 3. The grid follows the playing page. Changing page by hand during chain playback stops that and shows `FREE`, and the cursor works on any page that isn't playing. Shift + orange push, or starting playback again, resumes following.
 4. Limits: 16 pages (A to P), 32 chain entries, one chain per mode.
 5. Holding Help when you start HOLD plays the page on screen instead of the first entry. After you let go, the chain carries on from that page.
+
+## Octave test (0.5.2, Hundekraft 3.3)
+
+1. On the Synth screen, with Pattern+ as the synth sequencer, make a page with a few notes and start HOLD (orange right).
+2. Listen to a note you know. Press the octave up arrow once while it plays. Expected: the whole pattern now plays one
+   octave higher, from the next note on. The notes on the grid don't change.
+3. Press the octave down arrow twice. Expected: one octave lower than where it started.
+4. Stop and start again. Expected: it plays at the current octave, not two octaves off. (On 3.3 a Pattern+ older than
+   0.5.2 plays synth notes shifted by the octave twice.)
+5. Drums: on the Drum screen, the same steps should change nothing: drum pads keep their sounds and pitch.
+
+## Review fixes test
+
+Not yet tried on the device. These cover fixes from a code review. Each step says what an older build did, so you can tell the fix from the fault.
+
+**Swing on a 3-step section.** In Synth mode, select `patternplus`, with one page, no chain and nothing playing.
+
+1. Hold Shift and press a note key three times, so the first three columns each have a dot. Turn white left until the bright part of the grid covers only those three columns. Turn green right until it reads `66%`.
+2. Turn orange right. Expected: the steps go long, short, long, short without a break, so each time round the long step lands on a different one of the three notes. It never stumbles or doubles up where the section repeats. Older builds played long, short, long and then long again at the repeat.
+3. If you have the tape's metronome clicking, let it run for a minute. Expected: the pattern stays lined up with the click. Older builds drifted late. Skip this if the metronome is a bother to set up.
+4. Turn orange left. Hold Shift and turn white right one step, so the section starts on the second column. Add a dot to any empty column inside it with Shift + note key. Turn orange right. Expected: the first step you hear is the long one. Older builds started with the short one.
+5. Turn orange left. Hold Shift and turn orange until the arrow points left. Turn orange right. Expected: again the first step is the long one.
+
+**Leaving a mode with HOLD on.** Put a dot on every column of a Synth page, and set green back to `50%`.
+
+6. Turn orange right. While it plays, press the Drum key, wait about a second, then press the Synth key. Expected: nothing rings on while you're in Drum, and the pattern sounds a note the moment you're back, with no gap. Older builds were silent for up to one step after coming back.
+
+**A chain made while a page loops.** Make pages A and B with different notes and no chain. Go to A.
+
+7. Turn orange right so A loops. Press Shift + white push for the chain view. Turn green to A and push green, then turn green to B and push green. Expected: no green box on either letter until A reaches the end of its bar. Then the box sits on `A` and A plays once more, then the box moves to `B`. Older builds boxed `A` straight away and went to B first.
+8. Turn orange left. Press Shift + white push twice to get back to the grid.
+
+**The paste question belongs to its page.** Still stopped, with the chain `A > B` from step 7.
+
+9. On A, press lift, then press drop. `PASTE OVER A? GREEN YES ORANGE NO` shows.
+10. Turn blue right until the cursor passes A's last step and the grid shows B. Expected: the question disappears. Push green. Expected: nothing is pasted and B's notes are unchanged. Older builds kept the question up and pasted over B.
+
+**Undo leaves other pages alone.**
+
+11. Go to A with Shift + blue push and press scissors: `CUT A`.
+12. Press Shift + green push to go to B. Hold Shift and press a note key B doesn't have yet, and remember which column it went on.
+13. Press Shift + orange push. Expected: `UNDONE`, and the grid shows A with its notes back.
+14. Press Shift + green push. Expected: B still has the note from step 12. Older builds removed it.
+
+**Loading straight after opening the saved view.** You need a named slot from the Saving test.
+
+15. Press Shift + white push twice to reach `SAVED`, then at once push green on the named slot and push green again to confirm. Expected: `LOADED`, every time you try it. Older builds sometimes cleared the question and loaded nothing.
+
+**Starting from a computer, optional.** Skip this unless the OP-1 is connected to a computer or sequencer that sends it start and stop.
+
+16. With the chain `A > B` and nothing playing, go to B. Press play on the computer. Expected: the grid stays on B. Older builds jumped to A.
 
 ## Chain cursor and Help test (0.5.0)
 

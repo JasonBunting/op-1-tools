@@ -1,6 +1,6 @@
 # Pattern+
 
-A sequencer type for Hundekraft 3.2.3 that looks and plays like the OP-1's stock Pattern sequencer, and adds:
+A sequencer type for Hundekraft 3.3 that looks and plays like the OP-1's stock Pattern sequencer, and adds:
 
 1. **Pages:** more than one pattern per mode, switched with Shift + blue and green pushes.
 2. **Chains:** play pages in an order you set, such as `A > B > C > C > D`.

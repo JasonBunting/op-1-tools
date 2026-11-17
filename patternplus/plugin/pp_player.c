@@ -18,6 +18,11 @@ static void page_defaults(pp_page_t *p)
     p->swing = PP_SWING_NONE;
     p->dir = PP_DIR_FORWARD;
 }
+static void blank_page(pp_page_t *p)
+{
+    for (int c = 0; c < PP_COLS; c++) p->notes[c] = 0;
+    page_defaults(p);
+}
 void pp_init(int mode)
 {
     pp_bank_t *b = bank(mode);
@@ -97,6 +102,7 @@ static void begin(pp_bank_t *b)
     b->play_page = b->sel;
     b->elapsed = 0;
     b->started = 0;
+    b->odd = 0;
     place_first(b);
 }
 /* The end of a page's cycle: the only place the playing page changes. */
@@ -136,9 +142,11 @@ static void advance(pp_bank_t *b)
 
 void pp_tick(int mode)
 {
-    pp_bank_t *b = bank(mode);
-    /* Ticks only reach the current mode's player: a note left in the other mode would never get its note-off. */
-    silence(bank(!(mode & 1)));
+    pp_bank_t *b = bank(mode), *o = bank(!(mode & 1));
+    /* Ticks only reach the current mode's player: a note left in the other mode would never get its note-off. A step
+     * cut short there plays again, whole, once its mode is back. */
+    if (o->started) { o->started = 0; o->elapsed = 0; o->odd ^= 1; }
+    silence(o);
     if (!b->init || !is_running(b)) { silence(b); return; }
     if (b->started) {
         b->elapsed++;
@@ -158,8 +166,16 @@ void pp_tick(int mode)
             int id = pp_out_on(mode, k, b->transpose, PP_VELOCITY);
             if (id >= 0) { b->ids[k] = (int16_t)(id + 1); b->sounding = 1; }
         }
-        int first = PP_PAIR_TICKS * p->swing / 100;         /* swing moves the middle of each pair of steps, either way */
-        b->step_len = (uint8_t)(at & 1 ? PP_PAIR_TICKS - first : first);
+        /* Swing moves the middle of each pair of steps, either way. Pairs go by the order played, not by column, and
+         * the second step takes what the first left, so every pair lasts PP_PAIR_TICKS whatever the section's start,
+         * length or direction, and whatever page or swing the second step meets. */
+        if (b->odd) b->step_len = b->pair_rest;
+        else {
+            int first = PP_PAIR_TICKS * p->swing / 100;
+            b->step_len = (uint8_t)first;
+            b->pair_rest = (uint8_t)(PP_PAIR_TICKS - first);
+        }
+        b->odd ^= 1;
         b->started = 1;
     }
 }
@@ -191,7 +207,13 @@ void pp_set_hold(int mode, int on)
 void pp_rewind(int mode)
 {
     pp_bank_t *b = bank(mode);
-    if (b->init) begin(b);
+    if (!b->init) return;
+    if (is_running(b)) { begin(b); return; }
+    silence(b);                             /* stopped: begin would move the page shown to the chain's first */
+    b->elapsed = 0;
+    b->started = 0;
+    b->odd = 0;
+    place_first(b);
 }
 void pp_silence_all(int mode)
 {
@@ -201,6 +223,7 @@ void pp_silence_all(int mode)
     ended(b);
     b->elapsed = 0;
     b->started = 0;
+    b->odd = 0;
     if (b->init) place_first(b);
 }
 
@@ -367,10 +390,8 @@ void pp_clear(int mode)
     b->follow = 1;
     b->elapsed = 0;
     b->started = 0;
-    for (int i = 0; i < PP_PAGES; i++) {
-        for (int c = 0; c < PP_COLS; c++) b->pages[i].notes[c] = 0;
-        page_defaults(&b->pages[i]);
-    }
+    b->odd = 0;
+    for (int i = 0; i < PP_PAGES; i++) blank_page(&b->pages[i]);
     b->has_clip = 0;
     b->undo_n = 0;
     place_first(b);
@@ -385,27 +406,25 @@ static void copy_page(pp_page_t *d, const pp_page_t *s)     /* by hand: a struct
     d->swing = s->swing;
     d->dir = s->dir;
 }
-static void blank_page(pp_page_t *p)
-{
-    for (int c = 0; c < PP_COLS; c++) p->notes[c] = 0;
-    page_defaults(p);
-}
 static void snap_copy(pp_snap_t *d, const pp_snap_t *s)
 {
-    for (int i = 0; i < PP_PAGES; i++) copy_page(&d->pages[i], &s->pages[i]);
-    d->count = s->count;
+    copy_page(&d->page, &s->page);
+    d->index = s->index;
     d->sel = s->sel;
+    d->added = s->added;
 }
-static void remember(pp_bank_t *b)          /* before a change that undo can take back */
+/* before a change to one page that undo can take back. added: the change makes that page */
+static void remember(pp_bank_t *b, int index, int added)
 {
     if (b->undo_n == PP_UNDO) {
         for (int i = 0; i + 1 < PP_UNDO; i++) snap_copy(&b->undo[i], &b->undo[i + 1]);
         b->undo_n--;
     }
     pp_snap_t *s = &b->undo[b->undo_n++];
-    for (int i = 0; i < PP_PAGES; i++) copy_page(&s->pages[i], &b->pages[i]);
-    s->count = b->count;
+    copy_page(&s->page, &b->pages[index]);
+    s->index = (uint8_t)index;
     s->sel = b->sel;
+    s->added = (uint8_t)added;
 }
 /* after the page count or the selection changed */
 static void settle(pp_bank_t *b)
@@ -436,7 +455,7 @@ int pp_page_cut(int mode)
     pp_bank_t *b = bank(mode);
     pp_init(mode);
     if (is_running(b)) return PP_OP_RUNNING;
-    remember(b);
+    remember(b, b->sel, 0);
     copy_page(&b->clip, sel_page(b));
     b->has_clip = 1;
     blank_page(sel_page(b));
@@ -448,7 +467,7 @@ int pp_page_paste(int mode)
     pp_init(mode);
     if (is_running(b)) return PP_OP_RUNNING;
     if (!b->has_clip) return PP_OP_EMPTY;
-    remember(b);
+    remember(b, b->sel, 0);
     copy_page(sel_page(b), &b->clip);
     return PP_OP_OK;
 }
@@ -459,7 +478,7 @@ int pp_page_paste_new(int mode)
     if (is_running(b)) return PP_OP_RUNNING;
     if (!b->has_clip) return PP_OP_EMPTY;
     if (b->count >= PP_PAGES) return PP_OP_FULL;
-    remember(b);
+    remember(b, b->count, 1);
     copy_page(&b->pages[b->count], &b->clip);
     b->sel = b->count++;
     settle(b);
@@ -472,13 +491,15 @@ int pp_undo(int mode)
     if (is_running(b)) return PP_OP_RUNNING;
     if (!b->undo_n) return PP_OP_EMPTY;
     const pp_snap_t *s = &b->undo[--b->undo_n];
-    for (int i = 0; i < PP_PAGES; i++) copy_page(&b->pages[i], &s->pages[i]);
-    /* Undoing a paste-new takes its pattern back, but a page the chain has used since stays, blank: the chain is
-     * never changed by page operations. */
-    int count = s->count;
-    for (int i = 0; i < b->chain_len; i++)
-        if (b->chain[i] >= count) count = b->chain[i] + 1;
-    b->count = (uint8_t)count;
+    pp_page_t *p = &b->pages[s->index];
+    if (!s->added) copy_page(p, &s->page);
+    else {
+        /* Undoing a paste-new takes its pattern back, and the page too while it is still the last one. A page the
+         * chain has used since, or with pages made after it, stays, blank: page operations never change the chain
+         * or other pages. */
+        blank_page(p);
+        if (s->index == b->count - 1 && find_occ(b, s->index) < 0) b->count--;
+    }
     b->sel = s->sel;
     settle(b);
     return PP_OP_OK;
@@ -516,7 +537,8 @@ int pp_chain_insert(int mode)
     if (len >= PP_CHAIN_MAX) return -1;
     for (int i = len; i > at; i--) b->chain[i] = b->chain[i - 1];
     b->chain[at] = b->chain_pick;
-    if (len && at <= b->chain_pos) b->chain_pos++;          /* the occurrence playing moved along */
+    if (!len) b->chain_pos = -1;                            /* the page looping is no occurrence: the chain starts at its first */
+    else if (at <= b->chain_pos) b->chain_pos++;            /* the occurrence playing moved along */
     b->chain_len = (uint8_t)(len + 1);
     if (at + 1 < PP_CHAIN_MAX) b->chain_cursor = (uint8_t)(at + 1);
     return 0;
