@@ -7,6 +7,7 @@ Plugins and companion apps for the original OP-1 running [Hundekraft](https://hu
 | [OP-1 Mirror](mirror/README.md) | Shows the OP-1's screen live on Windows or an Android phone: a plugin plus two viewer apps | Works, v0.7 | [Releases](https://github.com/JasonBunting/op-1-tools/releases) |
 | [Pattern+](patternplus/README.md) | A sequencer plugin like stock Pattern, plus pages, chains and saving | In progress, 0.5.2 | [Build from source](patternplus/README.md) |
 | [Mouth](mouth/README.md) | A singing, babbling voice synth: vowels, bodies from giant to tiny, and made-up words | In progress, 0.5.1 | [Build from source](mouth/README.md) |
+| [Ratatoskr](ratatoskr/README.md) | A grain cloud from the sampler's recording, with a playhead that roams, stretches, drifts and jumps | Untested, 0.1 | [Build from source](ratatoskr/README.md) |
 
 Shared as-is, in the hope it helps. It is a personal project and not actively supported: issues and pull requests
 may sit unanswered, so fork freely.
@@ -28,6 +29,7 @@ Each project is a folder of its own, so you can take just the piece you want:
 | `mirror/` | OP-1 Mirror: `plugin/` (the OP-1 side), `windows/` and `mobile/` viewers, `manual/`, `docs/`, `release.sh`. |
 | `patternplus/` | Pattern+: `plugin/`, `manual/`, `docs/`, and `HARDWARE-TEST.md`, the controls and device tests. |
 | `mouth/` | Mouth: `plugin/` (engine, formant table, preset generator, host test), `presets/`, `manual/`, `HARDWARE-TEST.md`. |
+| `ratatoskr/` | Ratatoskr: `plugin/` (engine, screen, host test) and `HARDWARE-TEST.md`. |
 | `research/` | Throwaway probes; see [Research tools](#research-tools). |
 | `tools/` | Shared scripts: the toolchain build, the plugin packer and `build.sh`. |
 | `op-1-tools.slnx` | Every C# project, for Visual Studio or `dotnet build`. |

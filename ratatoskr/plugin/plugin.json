@@ -1,0 +1,15 @@
+{
+  "name": "ratatoskr",
+  "kind": "synth",
+  "order": 0,
+  "symbol": "ENGINE_ratatoskr",
+  "author": "Jason Bunting",
+  "version": "0.1.0",
+  "sources": ["ratatoskr.c"],
+  "defaults": [16384, 14044, 21230, 12288],
+  "page2_defaults": [8460, 16384, 0],
+  "uses_sample": true,
+  "screen": {"svg": "ratatoskr.svg", "symbol": "SCREEN_ratatoskr"},
+  "loadable": true,
+  "claims": []
+}
