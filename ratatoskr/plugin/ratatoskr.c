@@ -101,12 +101,18 @@ const op1_engine_t ENGINE_ratatoskr = { rt_note_on, rt_render_cb, 0,
 static const uint8_t c_blue[4] = { 0x4D, 0x9E, 0xFF, 0xFF }, c_green[4] = { 0x00, 0xED, 0x95, 0xFF },
                      c_white[4] = { 0xFF, 0xFF, 0xFF, 0xFF }, c_red[4] = { 0xFF, 0x3A, 0x5D, 0xFF },
                      c_grey[4] = { 0x6F, 0x71, 0x73, 0xFF };
+/* the knob colours at 70%: the Shift settings not changed last, dimmer but still readable */
+static const uint8_t c_blue_d[4] = { 0x36, 0x6F, 0xB3, 0xFF }, c_green_d[4] = { 0x00, 0xA6, 0x68, 0xFF },
+                     c_white_d[4] = { 0xB3, 0xB3, 0xB3, 0xFF }, c_red_d[4] = { 0xB3, 0x29, 0x41, 0xFF };
 static const uint8_t *const col4[4] = { c_blue, c_green, c_white, c_red };
-enum { TX_LAB, TX_VAL = 4, TX_MSG = 8, TX_STAT, TX_N };
+static const uint8_t *const dim4[4] = { c_blue_d, c_green_d, c_white_d, c_red_d };
+enum { TX_LAB, TX_VAL = 4, TX_MSG = 8, TX_ST, TX_STD = TX_ST + 4, TX_N = TX_STD + 4 };
 static uint32_t tx[TX_N][OP1_TEXT_SIZE / 4];
 static char shown[TX_N][48];
 static uint8_t tx_made;
 static uint32_t seen_blk[OP1_VOICES];
+static int32_t st_was[4];                    /* the Shift settings last drawn, to spot the one just changed */
+static int8_t st_hot = -1, st_known;         /* that one (-1: none yet); st_known: st_was is filled */
 
 /* every line is kept on the screen: a point far off it makes AGG allocate until it crashes the OP-1 ("agg.cpp alloc
  * failed, too many blocks"), which a scaling slip in 0.1.0 did */
@@ -183,19 +189,29 @@ static void rt_screen_update(void *scr, int dt)
             op1_text_ctor(tx[TX_VAL + i], Q(8 + 78 * i), 127, TS, c_white);
         }
         op1_text_ctor(tx[TX_MSG], Q(90), 44, TS, c_grey);
-        op1_text_ctor(tx[TX_STAT], Q(8), 4, TS, c_grey);
+        for (int i = 0; i < 4; i++) {
+            op1_text_ctor(tx[TX_ST + i], Q(8 + 78 * i), 4, TS, col4[i]);
+            op1_text_ctor(tx[TX_STD + i], Q(8 + 78 * i), 4, TS, dim4[i]);
+        }
         tx_made = 1;
     }
     op1_screen_draw(scr, dt);
     void *r = op1_raster();
 
-    /* the Shift + turn settings, across the top: "jumps 30%  turns 20%  bounce  chaos 50%" */
+    /* the Shift + turn settings across the top, each above its knob in that knob's colour: "jumps 30%", "turns 20%",
+     * "bounce" or "wrap", "chaos 50%"; the one changed last is bright and underlined, the others a little dimmer */
     {
-        char s[48], *q = s;
-        q = put(q, "jumps "); q = put(num(q, (k.jumps * 100 + 16383) >> 15), "%  turns ");
-        q = put(num(q, (k.turns * 100 + 16383) >> 15), k.bounce ? "%  bounce  chaos " : "%  wrap  chaos ");
-        put(num(q, (k.chaos * 100 + 16383) >> 15), "%");
-        txt(r, TX_STAT, s);
+        const int32_t now[4] = { k.jumps, k.turns, k.bounce, k.chaos };
+        for (int i = 0; i < 4; i++) { if (st_known && now[i] != st_was[i]) st_hot = (int8_t)i; st_was[i] = now[i]; }
+        st_known = 1;
+        static const char *const nm[4] = { "jumps ", "turns ", "", "chaos " };
+        for (int i = 0; i < 4; i++) {
+            char s[16];
+            if (i == 2) put(s, k.bounce ? "bounce" : "wrap");
+            else put(num(put(s, nm[i]), (now[i] * 100 + 16383) >> 15), "%");
+            txt(r, i == st_hot ? TX_ST + i : TX_STD + i, s);
+        }
+        if (st_hot >= 0) ln(r, Q(8 + 78 * st_hot), Q(18), Q(70 + 78 * st_hot), Q(18), 0x400, col4[st_hot]);
     }
 
     const uint8_t *sb = op1_sample_buffer(slot);

@@ -11,7 +11,7 @@ The idea comes from [GrainBrick](https://github.com/ETRNLIAM/GrainBrick), a gran
 Hundekraft's own `granular`, `clouds` and `hail` cover plain granular playback; Ratatoskr's difference is the moving
 playhead. See [Ratatoskr or Hundekraft's granular?](#ratatoskr-or-hundekrafts-granular) to pick between them.
 
-Status: 0.2.0. Playing well on the OP-1 so far; saving and the new Shift settings are not yet checked there. The
+Status: 0.2.1. Playing well on the OP-1 so far; saving and the new Shift settings are not yet checked there. The
 [manual](manual/manual.html) covers playing it; this README is the short version, plus building and testing.
 
 ## Ratatoskr or Hundekraft's granular?
@@ -73,7 +73,7 @@ and covers half the recording (its middle half), slowly moving forwards (0.25x),
 
 ## Screen
 
-1. **Very top:** the Shift + turn settings, such as `jumps 30%  turns 20%  bounce  chaos 50%`.
+1. **Very top:** the Shift + turn settings, each above its knob in that knob's colour (`jumps 30%`, `turns 20%`, `bounce`, `chaos 50%`). The one changed last is brighter and underlined.
 2. **Top:** the recording as columns; the region's part is white, the rest grey. A white line is where the grains are
    read from right now.
 3. **Below it:** a green bracket marks the region, a blue arrow the playhead, and red ticks the grains that are
