@@ -4,7 +4,8 @@ A synth engine for the original OP-1 running Hundekraft 3.3: a voice that sings 
 Each note is a vocal-fold pulse shaped by five formants (the resonances that make "ee" sound like "ee"). The formant
 frequencies come from [CHIMERA](https://github.com/jamesondh/chimera-vocal-synth)'s vocal-tract model, for a man, a
 woman and a child. Six voices; every voice wanders slightly in pitch on its own, so chords sound like a small choir.
-There are no real consonants: talk mode makes words that sound like words but aren't.
+Talk mode makes words that sound like words but aren't: short runs of syllables with "b", "p", "m", "s", "w" and
+"y"-like starts, a gap, and the same word again.
 
 The [manual](manual/manual.html) covers playing it; this README is the short version, plus building and testing.
 
@@ -32,18 +33,19 @@ Page 2 knobs move one step per click. The bottom row of the screen always shows 
 | --- | --- | --- |
 | Blue | **vowel**: ee, ih, ay, eh, a, ah, aw, oh, oo, gliding between them | **talk**: off, or syllables at 1/2, 1/4, 1/4t, 1/8, 1/8t, 1/16, 1/16t, 1/32 of the OP-1 tempo |
 | Green | **body**: giant, man, woman, child, tiny (moves the formants, not the pitch) | **word**: "key" (each key says its own word) or word 1–16 (every key says the same one) |
-| White | **breath**: more air; fully right whispers | **wild**: 0–100%. Low mumbles around the blue vowel with soft edges; high jumps between vowels with sharp "b", "m", "w", "y"-like edges and an uneven rhythm |
+| White | **breath**: more air; fully right whispers | **wild**: 0–100%. Low mumbles around the blue vowel with soft edges; high jumps between vowels with sharp "b", "p", "m", "s", "w", "y"-like edges and an uneven rhythm |
 | Orange | **vibrato**: the left half sets its depth (up to a semitone, fading in after each note starts); the right half speeds it into a warble | none |
 
 Talk follows the OP-1's tempo (the BPM setting or MIDI clock) and starts with each note, so notes from the sequencer
-land their syllables on the beat. When you let go of a key, talk stops making new syllables and the note fades on its
-last vowel. Every vowel and body plays at about the same loudness.
+land their syllables on the beat. A word is two to five syllables, then a silent gap one syllable long; a held key
+says its word over and over. When you let go of a key, talk stops making new syllables and the note fades on its
+last vowel (or stays silent, if you let go in the gap). Every vowel and body plays at about the same loudness.
 
 ## Screen
 
 1. **Top:** a mouth: lips, upper teeth and a tongue. Wide and smiling for "ee", open with the tongue low for "ah",
    puckered for "oh" and "oo"; bigger for a bigger body. It follows the first sounding voice: talk syllables press the
-   lips shut ("b", "m"), pucker them ("w") or smile ("y"); breath parts the lips; the vibrato makes it wobble. With no
+   lips shut ("b", "p", "m"), pucker them ("w") or smile ("y"), and the mouth closes in the gap after a word; breath parts the lips; the vibrato makes it wobble. With no
    key held, it follows the knobs.
 2. **Middle:** a strip from "ee" to "oo". The blue mark is where blue points (an LFO on blue moves it); a white dot
    shows each sounding voice's vowel.

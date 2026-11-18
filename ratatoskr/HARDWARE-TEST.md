@@ -19,24 +19,27 @@ Words used here:
    OP-1**.
    - Expect: the OP-1 restarts, and the workshop says the plugin is installed.
 
-## 2. Record a sample
+## 2. Pick Ratatoskr
 
 1. Press the **synth key**, then **sound key 8** (or any sound you don't mind changing).
-2. Hold **Shift** and press **T1**. Turn **blue** until **sampler** is highlighted, then press **T1**.
-3. Press the **input key** (top right, with the microphone symbol) so the sampler is ready to record from the mic.
-4. Hold any keyboard key and sing, speak or play something with a melody into the mic for about five seconds, then
-   let go of the key.
-   - Expect: the sampler shows the recorded waveform, and keys play it back.
-
-## 3. Pick Ratatoskr
-
-1. Hold **Shift** and press **T1**. Turn **blue** until **ratatoskr** is highlighted, then press **T1**.
-   - Expect: a new screen. Near the top, the recording as white and grey columns; the middle half is white. A green
-     bracket under the white part, a blue arrow on it, and a thin white line through the columns. At the bottom, four
-     labels in blue, green, white and orange: **position** with a time in seconds, **size 100ms**, **speed +0.25x**,
+2. Hold **Shift** and press **T1**. Turn **blue** until **ratatoskr** is highlighted, then press **T1**.
+   - Expect: a new screen. If the sound has a sample already (from an earlier sampler recording), it shows near the
+     top as white and grey columns; otherwise the screen says **record a sample first**. At the bottom, four labels in
+     blue, green, white and orange: **start** with a time in seconds, **size 100ms**, **speed +0.25x**,
      **density 2.0x**.
-   - If the screen says **record a sample first**, the recording didn't take: go back to step 2.
    - If anything overlaps, is cut off or is missing, take a photo.
+
+## 3. Record a sample into it
+
+Record with Ratatoskr selected. Recording in the sampler and then switching to Ratatoskr can bring back an older
+sample saved on the OP-1 instead of the new one.
+
+1. Press the **input key** (top right, with the microphone symbol).
+2. Hold any keyboard key and sing, speak or play something with a melody into the mic for about five seconds, then
+   let go of the key.
+   - Expect: the screen stays on Ratatoskr. The columns near the top change to the shape of your recording; the
+     middle half is white. Under them, a green bracket under the white part, a blue arrow on it, and a thin white line
+     through the columns.
 
 ## 4. The first sound
 
@@ -57,9 +60,9 @@ Hold a middle key through each step (or set the sequencer to hold notes).
    - Expect: fully left, the playhead runs backwards fast (the arrow moves left, the sound plays backwards). In the
      middle, the label says **frozen** and the arrow stops: a held, unchanging texture. Fully right, it rushes forward
      at **+4.00x**. At three quarters right it shows about **+1.00x** and moves at the recording's own speed.
-2. **Position (blue):** set white to about +0.25x again, then turn blue from left to right.
-   - Expect: the white part of the columns and the green bracket slide along the recording; the sound changes to that
-     part.
+2. **Start (blue):** set white to about +0.25x again, then turn blue from left to right.
+   - Expect: the white part of the columns and the green bracket slide along the recording, keeping their length
+     until the bracket reaches the recording's end, where it gets shorter; the sound changes to that part.
 3. **Size (green):** turn it fully left, then fully right.
    - Expect: fully left (10ms), a buzzy, grainy sound. Fully right (500ms), long smooth swells where words or notes
      are recognisable.
@@ -74,24 +77,53 @@ Hold a middle key through each step (or set the sequencer to hold notes).
    - Expect: fully right, grains come from all over (up to 1.5s around the playhead): a scattered, shimmering cloud.
      Fully left, they all come from one spot.
 2. **Width:** press **green** (label **width**). Turn it fully left, then fully right. Press green again.
-   - Expect: fully left (0%), the bracket shrinks to a point and the playhead stops moving even with speed up. Fully
-     right (100%), the bracket covers the whole recording and the playhead travels the whole of it, wrapping from the
-     end back to the start.
-3. **Wander:** press **white** (label **wander**). Turn it to 100% and hold a key for twenty seconds.
-   - Expect: the white line wobbles around the arrow, and the arrow now and then jumps to a new place or turns round.
-     The sound drifts and jumps around the recording. At 0% it moves steadily again. Press white again.
+   - Expect: the bracket's left end stays where it is the whole time; only its right end moves. Fully left (0%), the
+     bracket shrinks to a point at its left end and the playhead stops moving even with speed up. Fully right (100%),
+     the bracket runs from its left end to the recording's end, and the playhead travels all of it, wrapping from the
+     end back to the left end.
+3. **Drift:** press **white** (label **drift**). Turn it to 100% and hold a key for twenty seconds.
+   - Expect: the white line wobbles around the blue arrow, up to a quarter of the bracket either way; the arrow itself
+     keeps moving steadily. At 0% the white line sits on the arrow again. Press white again.
 4. **Sample browser:** press **orange**.
    - Expect: the core's sample browser opens, listing the sampler presets. Pick one and press **white** to load it.
      The columns change to the new sample and Ratatoskr plays it. (Close the browser the way the core says.)
 
-## 7. Saving
+## 7. Shift settings (new in 0.2.0)
 
-1. With Ratatoskr set up how you like it, switch to **sound key 1** and back to **sound key 8**.
-   - Expect: all seven settings (four page 1, three page 2) are as you left them.
+Make sure no knob is on page 2 (no second line above any label), and set white's speed to about **+0.50x**. Hold a
+middle key through each step.
+
+1. Look at the top line of the screen.
+   - Expect: grey text reading **jumps 0%  turns 0%  wrap  chaos 0%**.
+2. **Jumps:** hold **Shift** and turn **blue** right, one click at a time, to **jumps 100%**. Let go of Shift.
+   - Expect: the top line counts up in steps of 10%. At 100% the blue arrow leaps to a new place in the bracket now
+     and then (roughly every two seconds) and keeps moving forwards from there. Turning blue without Shift still moves
+     the start.
+3. **Turns:** set jumps back to **0%** (Shift + blue left), then hold **Shift** and turn **green** to **turns 100%**.
+   - Expect: the arrow now and then reverses, roughly once a second, and the sound plays backwards for a while.
+4. **Edges:** set turns back to **0%**. Hold **Shift** and turn **white** one click right.
+   - Expect: the top line changes from **wrap** to **bounce**. When the arrow reaches the bracket's right end it
+     turns round and runs back to the left end, then forwards again: ping-pong. One click left goes back to **wrap**,
+     where it jumps from the right end back to the left end instead.
+5. **Chaos:** set jumps to **100%**, then hold **Shift** and turn **orange** to **chaos 100%**. Listen for thirty
+   seconds.
+   - Expect: the jumps no longer come evenly. There are quiet spells of several seconds with no jumps, then flurries
+     of several close together.
+6. **Shift doesn't change the pages:** with Shift settings changed, check the four page-1 labels and values at the
+   bottom.
+   - Expect: they are unchanged by the Shift turns.
+
+## 8. Saving
+
+1. With Ratatoskr set up how you like it, including some Shift settings, switch to **sound key 1** and back to
+   **sound key 8**.
+   - Expect: all seven knob settings (four page 1, three page 2) and the four Shift settings on the top line are as you
+     left them.
 2. Turn the OP-1 off and on again, then select **sound key 8**.
-   - Expect: Ratatoskr is still the engine, the recording is still there, and the settings are kept.
+   - Expect: Ratatoskr is still the engine, the recording is still there, and all the settings are kept, including
+     the top line.
 
-## 8. Load (optional, skip if short on time)
+## 9. Load (optional, skip if short on time; passed on 0.1.x)
 
 1. Set density fully right, size fully right, and hold six keys at once for ten seconds.
    - Expect: no crackles, dropouts or a frozen screen. If it crackles, note which settings and how many keys.

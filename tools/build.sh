@@ -3,6 +3,8 @@
 #   tools/build.sh                    every plugin: each <project>/plugin and research/<tool>/plugin folder
 #   tools/build.sh patternplus        only the named projects (their folder names)
 #   tools/build.sh -o DIR mirror      write into DIR (relative to the repository) instead of build/
+# Each build is also copied to <out>/versions/<id>-<version>.knl (the version from plugin.json), so earlier versions
+# stay at hand for sending back to the OP-1; bump the version in plugin.json to keep a new one.
 # Needs HUNDEKRAFT_KENNEL, the WSL path of ext/kennel in the Hundekraft source that matches the OP-1's core. Set it in
 # the environment or in .env at the repository root (copy .env.example). OP1_WSL_DISTRO picks the WSL distribution.
 set -euo pipefail
@@ -42,6 +44,11 @@ done
 
 for dir in "${plugins[@]}"; do
     id="$(sed -n 's/.*"name": *"\([^"]*\)".*/\1/p' "$dir/plugin.json" | head -1)"
+    ver="$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$dir/plugin.json" | head -1)"
     echo "== $dir -> $out/$id.knl"
     bash tools/pack-plugin.sh "$HUNDEKRAFT_KENNEL" "$dir" "$out/$id.knl"
+    if [ -n "$ver" ]; then                                   # every version kept: build/versions/<id>-<version>.knl
+        mkdir -p "$out/versions"
+        cp "$out/$id.knl" "$out/versions/$id-$ver.knl"
+    fi
 done

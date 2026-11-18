@@ -2,8 +2,9 @@
  * region of it. Pure C (no OP-1 calls), so the host test can run it; ratatoskr.c is the OP-1 glue and the screen.
  *
  * The playhead (rt_roam) is shared by every voice and moves once per audio block: through the region at the speed
- * knob's rate (backwards for the left half; frozen in the middle), wrapping at the region's ends, and, with wander up,
- * drifting off its line, jumping to random places and turning round now and then. Each voice (rt_voice) sprays
+ * knob's rate (backwards for the left half; frozen in the middle), wrapping or bouncing at the region's ends; drift
+ * moves its read point off its line, jumps send it to random places, turns send it the other way, and chaos makes the
+ * jumps and turns come in bursts. Each voice (rt_voice) sprays
  * grains around it at its own key's pitch: C4 plays the recording at its own speed.
  *
  * Numbers: the recording is int16 mono at 44.1 kHz; a voice renders RT_BLOCK samples at 88.2 kHz, so one block covers
@@ -23,11 +24,13 @@
 #define RT_MIN_LEN       256          /* shorter than this counts as nothing recorded */
 
 /* ---- knobs ----
- * page 1: blue position, green size, white speed, red density; page 2 (encoder presses): blue spray, green width,
- * white wander. Words are 0..32767. */
+ * page 1: blue position (the region's start), green size, white speed, red density; page 2 (encoder presses): blue spray,
+ * green width, white drift; Shift + turn (the engine's record): blue jumps, green turns, white bounce (edges: 0 wrap,
+ * 1 bounce), red chaos. Words are 0..32767. */
 typedef struct {
     int32_t position, size, speed, density;     /* page 1 */
-    int32_t spray, width, wander;               /* page 2 */
+    int32_t spray, width, drift;                /* page 2 */
+    int32_t jumps, turns, chaos, bounce;        /* Shift + turn */
 } rt_knobs;
 
 static inline int32_t rt_clamp(int32_t x, int32_t lo, int32_t hi) { return x < lo ? lo : (x > hi ? hi : x); }
@@ -76,9 +79,10 @@ static inline uint32_t rt_rand(uint32_t *s)            /* xorshift32; never 0 */
 /* ---- the playhead ---- */
 typedef struct {
     int32_t pos;            /* Q8 source samples */
-    int32_t dir;            /* +1, or -1 after wander turned it round */
-    int32_t drift, drift_to;/* Q8: wander's slow offset, and where it is heading */
+    int32_t dir;            /* +1, or -1 after a turn or a bounce */
+    int32_t drift, drift_to;/* Q8: drift's slow offset, and where it is heading */
     int32_t drift_left;     /* blocks until drift_to changes */
+    int32_t mood, mood_left;/* chaos: Q8 rate for jumps and turns (256 = steady), and blocks until it changes */
     uint32_t rng;
     int32_t lo, hi, read;   /* the last step's region and read point (source samples), for the screen */
 } rt_roam;
@@ -86,16 +90,12 @@ typedef struct {
 /* a knob's share of len (up to 264600, so len >> 3 times a word fits 32 bits; 8-sample steps are plenty) */
 static inline int32_t rt_at(int32_t k, int32_t len) { return ((len >> 3) * rt_clamp(k, 0, 32767)) >> 12; }
 
-/* the region: around position, width of the recording wide, kept inside it */
+/* the region: from position (its anchored left end), width of the recording to the right, cut off at the end */
 static inline void rt_region(int32_t len, int32_t position, int32_t width, int32_t *lo, int32_t *hi)
 {
-    int32_t c = rt_at(position, len);
-    int32_t half = rt_at(width, len) >> 1;
-    int32_t a = c - half, b = c + half;
-    if (a < 0) { b -= a; a = 0; }
-    if (b > len - 1) { a -= b - (len - 1); b = len - 1; }
-    if (a < 0) a = 0;
-    *lo = a; *hi = b;
+    int32_t a = rt_clamp(rt_at(position, len), 0, len - 1);
+    int32_t b = a + rt_at(width, len);
+    *lo = a; *hi = b > len - 1 ? len - 1 : b;
 }
 
 /* one audio block of the playhead; returns the read point (source samples) the grains spray around */
@@ -105,28 +105,47 @@ static inline int32_t rt_roam_step(rt_roam *r, int32_t len, const rt_knobs *k)
     rt_region(len, k->position, k->width, &lo, &hi);
     if (!r->dir) r->dir = 1;
     const int32_t lo8 = lo << 8, range8 = (hi - lo) << 8;
-    const int32_t w = rt_clamp(k->wander, 0, 32767), w2 = (w * w) >> 15;
+    const int32_t w = rt_clamp(k->drift, 0, 32767);
+    const int32_t j = rt_clamp(k->jumps, 0, 32767), j2 = (j * j) >> 15;
+    const int32_t t = rt_clamp(k->turns, 0, 32767), t2 = (t * t) >> 15;
+    /* chaos: every 0.4 .. 1.6 s a new rate for jumps and turns, 0.2x .. 2.8x at full chaos (steady at none), so they
+     * come in bursts and lulls */
+    const int32_t c = rt_clamp(k->chaos, 0, 32767);
+    if (--r->mood_left <= 0 || !r->mood) {
+        r->mood_left = 276 + (int32_t)(rt_rand(&r->rng) % 827u);
+        int32_t u = (int32_t)(rt_rand(&r->rng) % 666u);
+        int32_t m = 51 + u * u / 665;                         /* 0.2x .. 2.8x, Q8, squared: mostly lulls, now and
+                                                               * then a burst, about 1x on average */
+        r->mood = 256 + (((m - 256) * c) >> 15);
+    }
+    if (!c) r->mood = 256;
     if (range8 < (2 << 8)) {                                   /* no width: the playhead sits on the position */
         r->pos = lo8;
     } else {
         const int32_t step = rt_speed_q16(k->speed) >> 2;     /* Q8 per block: 1x = 64 << 8 */
         int32_t p = r->pos + r->dir * step - lo8;
+        if (k->bounce) {                                       /* ping-pong: reflect off the ends */
+            int n = 0;
+            while ((p < 0 || p >= range8) && n++ < 8) {
+                if (p >= range8) p = 2 * (range8 - 1) - p; else p = -p;
+                r->dir = -r->dir;
+            }
+        }
         if (p < 0 || p >= range8) {                            /* wrapped, or the region moved under it */
             p %= range8;
             if (p < 0) p += range8;
         }
-        if (w2) {
-            /* jumps: up to 0.6 a second; turns: up to 0.8 a second (probabilities per block, Q32 thresholds) */
-            if (rt_rand(&r->rng) < (uint32_t)w2 * 114u) p = (int32_t)(rt_rand(&r->rng) % (uint32_t)range8);
-            if (rt_rand(&r->rng) < (uint32_t)w2 * 152u) r->dir = -r->dir;
-        }
+        /* jumps: up to 0.6 a second; turns: up to 0.8 a second (probabilities per block, Q32 thresholds), times chaos */
+        if (j2 && rt_rand(&r->rng) < (((uint32_t)j2 * 114u) >> 8) * (uint32_t)r->mood)
+            p = (int32_t)(rt_rand(&r->rng) % (uint32_t)range8);
+        if (t2 && rt_rand(&r->rng) < (((uint32_t)t2 * 152u) >> 8) * (uint32_t)r->mood) r->dir = -r->dir;
         r->pos = lo8 + p;
     }
     /* the drift: a new aim every 0.3 .. 1.2 s, up to a quarter of the region either way, followed with a ~0.1 s lag */
     if (--r->drift_left <= 0) {
         r->drift_left = 207 + (int32_t)(rt_rand(&r->rng) % 620u);
         int32_t u = (int32_t)(rt_rand(&r->rng) >> 17) - 16384;            /* -16384 .. 16383 */
-        r->drift_to = (((u * w) >> 15) * (range8 >> 14)) >> 2;            /* +-range8 / 4 at full wander */
+        r->drift_to = (((u * w) >> 15) * (range8 >> 14)) >> 2;            /* +-range8 / 4 at full drift */
     }
     if (!w) r->drift_to = 0;
     r->drift += (r->drift_to - r->drift) >> 6;

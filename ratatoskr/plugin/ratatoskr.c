@@ -1,11 +1,14 @@
 /* Ratatoskr: a grain cloud for the OP-1 under Hundekraft, read around a playhead that scurries through the sampler
  * slot's recording (named for the squirrel that runs up and down the world tree). The DSP is rt_dsp.h.
  * Record a sound with the sampler engine on a synth slot, then pick ratatoskr on the same slot.
- *   blue   : position, the middle of the region the playhead roams        press: SPRAY, grains scattered around it
- *   green  : grain size, 10 ms .. 500 ms                                    press: WIDTH, the region, 0 .. the whole
- *   white  : speed: frozen in the middle, forwards right, backwards left,   press: WANDER: drift, jumps and turns
- *            up to 4x (1x three quarters of the way out)
+ *   blue   : start of the region the playhead roams                       press: SPRAY, grains scattered around it
+ *   green  : grain size, 10 ms .. 500 ms                                    press: WIDTH, the region from the start
+ *                                                                           rightwards, 0 .. the whole recording
+ *   white  : speed: frozen in the middle, forwards right, backwards left,   press: DRIFT, the read point wobbling
+ *            up to 4x (1x three quarters of the way out)                           around the playhead
  *   red    : density, 0.5x .. 4.4x overlap                                  press: the sampler's sample browser
+ * Shift + turn (the engine's record, shown across the top of the screen): blue JUMPS, green TURNS, white EDGES (wrap
+ * or bounce), red CHAOS (jumps and turns in bursts and lulls).
  * Keys play the cloud at their pitch (C4 is the recording's own). Page 2 uses word 7, so there is no hidden trim.
  * Hundekraft 3.3. Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see
  * LICENSE and NOTICE). */
@@ -18,10 +21,24 @@ static int32_t rec_len;                  /* the slot's recording, worked out at 
 static int last_idx = OP1_VOICES;        /* the voice rendered last: a lower or equal one starts a new block */
 static int32_t read_now;                 /* the playhead's read point this block */
 
-static void rt_knobs_of(const int16_t *p, rt_knobs *k)
+/* Shift + turn settings live in the engine's record (saved with the sound), as steps: jumps, turns and chaos in 0, 10 ..
+ * 100%, edges wrap or bounce. No record (a new sound, older firmware) reads as step 0 everywhere. */
+enum { REC_JUMPS, REC_TURNS, REC_EDGES, REC_CHAOS };
+#define PCT_STEPS 11
+static uint32_t rec_owner;
+static uint32_t rt_owner(void) { if (!rec_owner) rec_owner = op1_engine_rec_owner("ratatoskr"); return rec_owner; }
+static int32_t pct_word(const int16_t *rec, int i)
+{
+    int s = rec ? rt_clamp(rec[i], 0, PCT_STEPS - 1) : 0;
+    return s * 32767 / (PCT_STEPS - 1);
+}
+
+static void rt_knobs_of(const int16_t *p, const int16_t *rec, rt_knobs *k)
 {
     k->position = p[0]; k->size = p[1]; k->speed = p[2]; k->density = p[3];
-    k->spray = p[OP1_ENG_PAGE_WORD(0)]; k->width = p[OP1_ENG_PAGE_WORD(1)]; k->wander = p[OP1_ENG_PAGE_WORD(2)];
+    k->spray = p[OP1_ENG_PAGE_WORD(0)]; k->width = p[OP1_ENG_PAGE_WORD(1)]; k->drift = p[OP1_ENG_PAGE_WORD(2)];
+    k->jumps = pct_word(rec, REC_JUMPS); k->turns = pct_word(rec, REC_TURNS); k->chaos = pct_word(rec, REC_CHAOS);
+    k->bounce = rec && rec[REC_EDGES] > 0;
 }
 
 /* the recording's length: the end of the last peak bucket above a small threshold (as Hundekraft's granular), four
@@ -61,7 +78,7 @@ static void rt_render_cb(void *self, int16_t *out, const int16_t *params)
     const uint8_t *sb = op1_sample_buffer(op1_current_slot());
     const int16_t *data = sb ? op1_sample_data(sb) : 0;
     rt_knobs k;
-    rt_knobs_of(params, &k);
+    rt_knobs_of(params, op1_engine_record(op1_current_slot(), rt_owner()), &k);
     if (i <= last_idx && data && rec_len >= RT_MIN_LEN) read_now = rt_roam_step(&roam, rec_len, &k);
     last_idx = i;
     int32_t gain = (op1_voice_vel_gain(self) * 9741) >> 13;     /* +1.5 dB, as granular's level pass */
@@ -85,14 +102,19 @@ static const uint8_t c_blue[4] = { 0x4D, 0x9E, 0xFF, 0xFF }, c_green[4] = { 0x00
                      c_white[4] = { 0xFF, 0xFF, 0xFF, 0xFF }, c_red[4] = { 0xFF, 0x3A, 0x5D, 0xFF },
                      c_grey[4] = { 0x6F, 0x71, 0x73, 0xFF };
 static const uint8_t *const col4[4] = { c_blue, c_green, c_white, c_red };
-enum { TX_LAB, TX_VAL = 4, TX_MSG = 8, TX_N };
+enum { TX_LAB, TX_VAL = 4, TX_MSG = 8, TX_STAT, TX_N };
 static uint32_t tx[TX_N][OP1_TEXT_SIZE / 4];
-static char shown[TX_N][24];
+static char shown[TX_N][48];
 static uint8_t tx_made;
 static uint32_t seen_blk[OP1_VOICES];
 
+/* every line is kept on the screen: a point far off it makes AGG allocate until it crashes the OP-1 ("agg.cpp alloc
+ * failed, too many blocks"), which a scaling slip in 0.1.0 did */
+static int32_t on_x(int32_t x) { return rt_clamp(x, -Q(4), Q(324)); }
+static int32_t on_y(int32_t y) { return rt_clamp(y, -Q(4), Q(164)); }
 static void ln(void *r, int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t w, const uint8_t *c)
 {
+    x0 = on_x(x0); x1 = on_x(x1); y0 = on_y(y0); y1 = on_y(y1);
     if (x0 == x1 && y0 == y1) y1 += 256;
     op1_pt a = { x0, y0 }, b = { x1, y1 };
     op1_raster_line(r, &a, &b, w, c);
@@ -101,8 +123,8 @@ static void txt(void *r, int i, const char *s)
 {
     static const int32_t ident[9] = { 1024, 0, 0, 0, 1024, 0, 0, 0, 1024 };
     int same = 1;
-    for (int j = 0; j < 24; j++) { if (shown[i][j] != s[j]) { same = 0; break; } if (!s[j]) break; }
-    if (!same) { op1_text_set(tx[i], s); int j = 0; for (; j < 23 && s[j]; j++) shown[i][j] = s[j]; shown[i][j] = 0; }
+    for (int j = 0; j < 48; j++) { if (shown[i][j] != s[j]) { same = 0; break; } if (!s[j]) break; }
+    if (!same) { op1_text_set(tx[i], s); int j = 0; for (; j < 47 && s[j]; j++) shown[i][j] = s[j]; shown[i][j] = 0; }
     op1_text_draw(tx[i], r, ident);
 }
 static char *put(char *p, const char *s) { while (*s) *p++ = *s++; *p = 0; return p; }
@@ -133,10 +155,17 @@ static int32_t x_of(int32_t s, int32_t len)  /* source sample -> Q10 x */
 {
     if (len <= 0) return Q(BAR_X0);
     int32_t f = (rt_clamp(s, 0, len) << 11) / len;          /* 0 .. 2048; len < 2^19, so the shift fits */
-    return Q(BAR_X0) + f * ((BAR_X1 - BAR_X0) << 9);
+    return Q(BAR_X0) + f * ((BAR_X1 - BAR_X0) >> 1);        /* Q10: f / 2048 of the width, times 1024 */
 }
 
-static void rt_screen_init(void *scr) { (void)scr; }
+static void rt_screen_init(void *scr)
+{
+    (void)scr;
+    op1_engine_shift_record(&ENGINE_ratatoskr, 0, PCT_STEPS, REC_JUMPS);
+    op1_engine_shift_record(&ENGINE_ratatoskr, 1, PCT_STEPS, REC_TURNS);
+    op1_engine_shift_record(&ENGINE_ratatoskr, 2, 2, REC_EDGES);
+    op1_engine_shift_record(&ENGINE_ratatoskr, 3, PCT_STEPS, REC_CHAOS);
+}
 
 static void rt_screen_update(void *scr, int dt)
 {
@@ -147,17 +176,27 @@ static void rt_screen_update(void *scr, int dt)
     int16_t p[8];
     for (int i = 0; i < 8; i++) p[i] = i < 4 ? kl[i] : w[i];
     rt_knobs k;
-    rt_knobs_of(p, &k);
+    rt_knobs_of(p, op1_engine_record(slot, rt_owner()), &k);
     if (!tx_made) {
         for (int i = 0; i < 4; i++) {
             op1_text_ctor(tx[TX_LAB + i], Q(8 + 78 * i), 114, TS, col4[i]);
             op1_text_ctor(tx[TX_VAL + i], Q(8 + 78 * i), 127, TS, c_white);
         }
         op1_text_ctor(tx[TX_MSG], Q(90), 44, TS, c_grey);
+        op1_text_ctor(tx[TX_STAT], Q(8), 4, TS, c_grey);
         tx_made = 1;
     }
     op1_screen_draw(scr, dt);
     void *r = op1_raster();
+
+    /* the Shift + turn settings, across the top: "jumps 30%  turns 20%  bounce  chaos 50%" */
+    {
+        char s[48], *q = s;
+        q = put(q, "jumps "); q = put(num(q, (k.jumps * 100 + 16383) >> 15), "%  turns ");
+        q = put(num(q, (k.turns * 100 + 16383) >> 15), k.bounce ? "%  bounce  chaos " : "%  wrap  chaos ");
+        put(num(q, (k.chaos * 100 + 16383) >> 15), "%");
+        txt(r, TX_STAT, s);
+    }
 
     const uint8_t *sb = op1_sample_buffer(slot);
     const int32_t len = sb ? rt_recorded(sb) : 0;
@@ -211,12 +250,12 @@ static void rt_screen_update(void *scr, int dt)
     }
     char v[24];
     if (op1_eng_page[0]) { txt(r, TX_LAB, "spray"); secs(v, rt_spray(k.spray)); }
-    else { txt(r, TX_LAB, "position"); secs(v, rt_at(k.position, len)); }
+    else { txt(r, TX_LAB, "start"); secs(v, rt_at(k.position, len)); }
     txt(r, TX_VAL, v);
     if (op1_eng_page[1]) { txt(r, TX_LAB + 1, "width"); pct(v, k.width); }
     else { txt(r, TX_LAB + 1, "size"); secs(v, rt_size(k.size) >> 1); }
     txt(r, TX_VAL + 1, v);
-    if (op1_eng_page[2]) { txt(r, TX_LAB + 2, "wander"); pct(v, k.wander); }
+    if (op1_eng_page[2]) { txt(r, TX_LAB + 2, "drift"); pct(v, k.drift); }
     else {
         int32_t s = rt_speed_q16(k.speed);
         txt(r, TX_LAB + 2, "speed");
@@ -225,7 +264,7 @@ static void rt_screen_update(void *scr, int dt)
     }
     txt(r, TX_VAL + 2, v);
     txt(r, TX_LAB + 3, "density");
-    put(dec(v, rt_ovl8(k.density) * 10 / 8, 1), "x");
+    put(dec(v, (rt_ovl8(k.density) * 10 + 4) / 8, 1), "x");   /* rounded: 35 / 8 shows 4.4x */
     txt(r, TX_VAL + 3, v);
 }
 

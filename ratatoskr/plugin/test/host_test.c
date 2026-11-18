@@ -49,9 +49,10 @@ static int make_rec(void)
     return n;
 }
 
+/* the last argument sets drift, jumps and turns together (the old single "wander"); chaos and bounce start off */
 static rt_knobs knobs(int32_t pos, int32_t size, int32_t speed, int32_t dens, int32_t spray, int32_t width, int32_t wander)
 {
-    rt_knobs k = { pos, size, speed, dens, spray, width, wander };
+    rt_knobs k = { pos, size, speed, dens, spray, width, wander, wander, wander, 0, 0 };
     return k;
 }
 
@@ -83,11 +84,27 @@ static void test_laws(void)
 
 static void test_roam(int len)
 {
+    /* the region is anchored at its start: width only moves the right end, which stops at the recording's end */
+    {
+        int32_t lo0, hi0, anchored = 1, grows = 1, prev = -1;
+        for (int32_t w = 0; w <= 32767; w += 512) {
+            rt_region(len, 8192, w, &lo0, &hi0);
+            if (lo0 != rt_at(8192, len)) anchored = 0;
+            if (hi0 < prev) grows = 0;
+            prev = hi0;
+        }
+        check(anchored, "region: width keeps the start in place");
+        check(grows, "region: width only moves the end rightwards");
+        rt_region(len, 8192, 32767, &lo0, &hi0);
+        check(hi0 == len - 1, "region: full width runs to the recording's end");
+        rt_region(len, 32767, 16384, &lo0, &hi0);
+        check(lo0 <= hi0 && hi0 == len - 1, "region: a start at the very end stays a valid region");
+    }
     rt_roam r;
     rt_knobs k;
     /* 1x forward over the whole recording: 64 source samples a block, wrapping at the end */
     memset(&r, 0, sizeof r);
-    k = knobs(16384, 14044, speed_word(1.0), 12288, 0, 32767, 0);
+    k = knobs(0, 14044, speed_word(1.0), 12288, 0, 32767, 0);
     rt_roam_step(&r, len, &k);
     int32_t p0 = r.pos;
     rt_roam_step(&r, len, &k);
@@ -125,7 +142,7 @@ static void test_roam(int len)
     /* wander: jumps and turns at about the designed rates, never outside the recording */
     memset(&r, 0, sizeof r);
     r.rng = 12345;
-    k = knobs(16384, 14044, speed_word(0.5), 12288, 0, 32767, 32767);
+    k = knobs(0, 14044, speed_word(0.5), 12288, 0, 32767, 32767);
     int turns = 0, jumps = 0, out = 0, dir = 1;
     rt_roam_step(&r, len, &k);
     const int secs = 120;
@@ -142,6 +159,78 @@ static void test_roam(int len)
     check(turns > 0.5 * secs && turns < 1.2 * secs, "wander: turns about 0.8 a second");
     check(jumps > 0.3 * secs && jumps < 0.9 * secs, "wander: jumps about 0.6 a second");
     check(!out, "wander: the read point stays inside the recording");
+
+    /* each part alone: jumps without turns, turns without jumps, drift without either */
+    {
+        int tj = 0, jj = 0, td = 1;
+        memset(&r, 0, sizeof r); r.rng = 99;
+        k = knobs(0, 14044, speed_word(0.5), 12288, 0, 32767, 0);
+        k.jumps = 32767;
+        for (int b = 0; b < RT_BLOCKS_PER_S * 60; b++) {
+            int32_t before = r.pos;
+            rt_roam_step(&r, len, &k);
+            if (r.dir != 1) td = 0;
+            int32_t step = abs(r.pos - before) >> 8;
+            if (step > 200 && step < len - 200) jj++;
+        }
+        check(td && jj > 15, "wander parts: jumps alone jump and never turn");
+        memset(&r, 0, sizeof r); r.rng = 99;
+        k.jumps = 0; k.turns = 32767;
+        int d = 1;
+        for (int b = 0; b < RT_BLOCKS_PER_S * 60; b++) {
+            int32_t before = r.pos;
+            rt_roam_step(&r, len, &k);
+            if (r.dir != d) { tj++; d = r.dir; }
+            int32_t step = abs(r.pos - before) >> 8;
+            if (step > 200 && step < len - 200) jj = -1000;
+        }
+        check(tj > 25 && jj > 0, "wander parts: turns alone turn and never jump");
+    }
+
+    /* bounce: at 2x through a 1 s region it reverses at the ends, never wraps, and stays inside */
+    {
+        memset(&r, 0, sizeof r);
+        k = knobs(0, 14044, speed_word(2.0), 12288, 0, 8192, 0);
+        k.bounce = 1;
+        int flips = 0, wrapped = 0, inside = 1, d = 1;
+        rt_roam_step(&r, len, &k);
+        for (int b = 0; b < RT_BLOCKS_PER_S * 10; b++) {
+            int32_t before = r.pos;
+            rt_roam_step(&r, len, &k);
+            if (r.dir != d) { flips++; d = r.dir; }
+            if (abs(r.pos - before) > (512 << 8)) wrapped++;
+            if (r.read < r.lo || r.read > r.hi) inside = 0;
+        }
+        printf("bounce: %d reversals in 10 s at 2x over a %.2f s region\n", flips, (r.hi - r.lo) / 44100.0);
+        check(flips >= 18 && flips <= 22, "bounce: reverses at each end (about 20 in 10 s)");
+        check(!wrapped, "bounce: never wraps");
+        check(inside, "bounce: stays inside the region");
+        /* a region narrower than one block's step still behaves */
+        k.width = 40; k.speed = 32767;
+        inside = 1;
+        for (int b = 0; b < 2000; b++) { rt_roam_step(&r, len, &k); if (r.read < r.lo || r.read > r.hi) inside = 0; }
+        check(inside, "bounce: a tiny region at 4x stays inside");
+    }
+
+    /* chaos: the jump rate swings between seconds, about the same on average */
+    {
+        int per[60] = { 0 }, total = 0;
+        memset(&r, 0, sizeof r); r.rng = 4242;
+        k = knobs(0, 14044, speed_word(0.5), 12288, 0, 32767, 0);
+        k.jumps = 32767; k.chaos = 32767;
+        for (int s = 0; s < 60; s++)
+            for (int b = 0; b < RT_BLOCKS_PER_S; b++) {
+                int32_t before = r.pos;
+                rt_roam_step(&r, len, &k);
+                int32_t step = abs(r.pos - before) >> 8;
+                if (step > 200 && step < len - 200) { per[s]++; total++; }
+            }
+        int lo = 1000, hi = 0;
+        for (int s = 0; s < 60; s += 2) { int n = per[s] + per[s + 1]; if (n < lo) lo = n; if (n > hi) hi = n; }
+        printf("chaos: %.2f jumps/s, from %d to %d per 2 s\n", total / 60.0, lo, hi);
+        check(total > 0.4 * 60 && total < 0.85 * 60, "chaos: about the same average rate (0.6 a second)");
+        check(hi - lo >= 4, "chaos: bursts and lulls");
+    }
 }
 
 /* render secs of one voice at a pitch rate; returns peak, fills rms; checks every grain stays inside */

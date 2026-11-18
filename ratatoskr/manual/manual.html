@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ratatoskr Manual</title>
+<meta name="description" content="Ratatoskr, a synth engine for the OP-1 under Hundekraft: a grain cloud from your own recording, with a playhead that roams, stretches, drifts and jumps.">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+<header><a href="manual.html" class="wordmark">Ratatoskr <span>a grain cloud for hundekraft</span></a><span class="edition">ORIGINAL OP–1 · HUNDEKRAFT 3.3 · RATATOSKR 0.2.0</span></header>
+<main>
+<section class="intro"><div class="eyebrow">RATATOSKR / MANUAL</div><h1>Up and down the tree.</h1><p>Ratatoskr is a synth engine that turns a recording into a cloud of tiny overlapping grains. A playhead scurries through the recording, slow enough to stretch a word into a pad, fast enough to scatter it, forwards, backwards or frozen still, and it can drift, leap, turn and bounce about by itself. Every key plays the cloud at its own pitch.</p><div class="manual-actions"><a href="#start">Get started ↓</a><a href="#roam">The playhead ↓</a><a href="#recipes">Recipes ↓</a></div></section>
+<div class="manual-grid">
+<details class="toc" open><summary>Contents</summary><ol>
+<li><a href="#about">About this manual</a><ol><li><a href="#notation">How to read the controls</a></li></ol></li>
+<li><a href="#start">Get started</a></li>
+<li><a href="#record">Recording</a><ol><li><a href="#browser">Loading a saved sample</a></li></ol></li>
+<li><a href="#screen">The screen</a></li>
+<li><a href="#grains">Grains</a></li>
+<li><a href="#roam">The playhead</a><ol><li><a href="#region">The region</a></li><li><a href="#speed">Speed and stretching</a></li><li><a href="#wander">Wander: drift, jumps, turns, edges and chaos</a></li></ol></li>
+<li><a href="#play">Playing it</a></li>
+<li><a href="#lfo">With the OP-1's LFOs</a></li>
+<li><a href="#recipes">Recipes</a></li>
+<li><a href="#limits">Limits</a></li>
+<li><a href="#controls">All controls</a></li>
+<li><a href="#credits">Where it comes from</a></li>
+</ol></details>
+<article class="manual-body">
+
+<section class="chapter" id="about"><h2>About this manual</h2>
+<p>Ratatoskr is a synth engine, so everything the OP-1 does around an engine still works as usual: the envelope, the effects, the LFOs, the octave, and saving sounds. Teenage Engineering's guide covers those: <a href="https://teenage.engineering/guides/op-1/original/synthesizer-mode" target="_blank" rel="noopener noreferrer">teenage.engineering/guides/op-1/original/synthesizer-mode</a>. This manual covers Ratatoskr's own knobs, screen and playhead.</p>
+<div class="sub">
+<h3 id="notation">How to read the controls</h3>
+<p>The OP-1 has four encoders. This manual calls them by colour, left to right: <span class="enc enc-b">blue</span>, <span class="enc enc-g">green</span>, <span class="enc enc-w">white</span> and <span class="enc enc-o">orange</span>.</p>
+<ol>
+<li><strong>Turn</strong> an encoder to change a value. <strong>Push</strong> an encoder until it clicks to press it like a button.</li>
+<li><strong>Press</strong> a key, or <strong>hold</strong> it while you do something else. "<span class="okey okey-text">Shift</span> + <span class="okey okey-text">T1</span>" means hold <span class="okey okey-text">Shift</span> and press <span class="okey okey-text">T1</span>.</li>
+<li>Text in a black box, such as <span class="lcd">speed +0.25x</span>, is what the screen shows.</li>
+</ol>
+<p>Screens have numbered dots. The list beside the picture says what each number shows. Dot colour matches the encoder that changes that part.</p>
+</div>
+</section>
+
+<section class="chapter" id="start"><h2>Get started</h2>
+<ol>
+<li>Install <code>ratatoskr.knl</code> from the Hundekraft workshop's <strong>Your plugins</strong> page. Building it is described in the <a href="../README.md">Ratatoskr README</a>.</li>
+<li>Press <img class="okey" src="keys/synth.png" alt="synth" title="synth"> and pick a sound with a sound key, 1 to 8.</li>
+<li>Hold <span class="okey okey-text">Shift</span> and press <span class="okey okey-text">T1</span>. Turn <span class="enc enc-b">blue</span> to <code>ratatoskr</code> and press <span class="okey okey-text">T1</span>.</li>
+<li>Record something into it, as in <a href="#record">Recording</a>: press the input key, hold any key while you sing or play into the mic, and let go.</li>
+<li>Hold a key. You hear a soft, smeared version of your recording, creeping forwards through it at a quarter of its speed.</li>
+</ol>
+</section>
+
+<section class="chapter" id="record"><h2>Recording</h2>
+<p>Ratatoskr plays the sound's own sample: the same audio the stock sampler engine would play on that sound, up to six seconds, mono. Record it with Ratatoskr selected:</p>
+<ol>
+<li>Press the input key (top right, the microphone symbol). It records from the OP-1's selected input source, as the sampler does; TE's guide explains choosing the mic, line in or the radio.</li>
+<li>Hold any keyboard key and sing, speak or play. Let go to stop.</li>
+<li>The sound stays on Ratatoskr, and the new recording appears across the top of the screen.</li>
+</ol>
+<aside class="note note-warning"><span>Warning</span><p>Record with Ratatoskr selected rather than in the sampler engine before switching. When a sound switches to Ratatoskr, the OP-1 loads that sound's sample from its disk, which can be an older recording than the one you just made.</p></aside>
+<p>Material with movement in it works best: a sung phrase, a few chords, a spoken sentence, a drum loop. A single steady tone sounds much the same wherever the playhead is.</p>
+<div class="sub">
+<h3 id="browser">Loading a saved sample</h3>
+<p>Push <span class="enc enc-o">orange</span> to open the sampler's sample browser. It lists the sampler presets on the OP-1; pick one and press <span class="enc enc-w">white</span> to load its sample into the sound. The sound stays on Ratatoskr with its own settings.</p>
+</div>
+</section>
+
+<section class="chapter" id="screen"><h2>The screen</h2>
+<figure class="screen side"><div class="shot" role="img" aria-label="Screenshot to come: Ratatoskr's screen while playing"><b>img/screen.png</b><span>Ratatoskr's screen, a key held: the recording as columns with the region white, the green bracket under it, the blue arrow, the white read line and red grain ticks, the bottom row on page 1.</span></div><figcaption><b>Fig. 1</b> Ratatoskr's screen.</figcaption><ol class="legend"><li><i class="dot dot-n">0</i><span>Across the top: the Shift + turn settings, jumps, turns, wrap or bounce, and chaos</span></li><li><i class="dot dot-n">1</i><span>The recording as columns, one per slice of time, as tall as the sound there. The region's part is white, the rest grey</span></li><li><i class="dot dot-n">2</i><span>The thin white line: where the grains are being read from right now (the playhead plus wander's drift)</span></li><li><i class="dot dot-g">3</i><span>The green bracket: the region. Its left end is <span class="enc enc-b">blue</span>'s start; <span class="enc enc-g">green</span>'s width on page 2 sets its right end</span></li><li><i class="dot dot-b">4</i><span>The blue arrow: the playhead</span></li><li><i class="dot dot-n">5</i><span>Red ticks: every grain sounding now, one row per key held</span></li><li><i class="dot dot-n">6</i><span>Each knob's name and value, in its colour</span></li></ol></figure>
+<p>A knob on its second page shows its page-2 name and a second line above its colour. With nothing recorded on the sound, the screen says <span class="lcd">record a sample first</span> and the keys are silent.</p>
+</section>
+
+<section class="chapter" id="grains"><h2>Grains</h2>
+<p>A grain is a short slice of the recording that fades in and out smoothly. Ratatoskr starts new grains all the time, each taken from around the playhead, and overlaps them into a continuous cloud. Page 1's <span class="enc enc-g">green</span> and <span class="enc enc-o">orange</span>, and page 2's <span class="enc enc-b">blue</span>, shape the grains:</p>
+<div class="table"><table><thead><tr><th scope="col">Knob</th><th scope="col">Does</th></tr></thead><tbody>
+<tr><td data-label="Knob"><span class="enc enc-g">green</span> <span class="lcd">size</span></td><td data-label="Does">How long each grain is, <span class="lcd">10ms</span> to <span class="lcd">500ms</span>. Short grains buzz and blur the sound into texture; long ones keep words and notes recognisable</td></tr>
+<tr><td data-label="Knob"><span class="enc enc-o">orange</span> <span class="lcd">density</span></td><td data-label="Does">How much the grains overlap, <span class="lcd">0.5x</span> to <span class="lcd">4.4x</span>. Below 1x there are gaps between them; high values make a thick, smooth cloud. The level is evened out as it rises</td></tr>
+<tr><td data-label="Knob"><span class="enc enc-b">blue</span> page 2 <span class="lcd">spray</span></td><td data-label="Does">How far from the playhead each grain may start, up to 1.5 seconds either way, at random. At zero every grain starts at the playhead; turned up, the cloud mixes moments from all around it</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="chapter" id="roam"><h2>The playhead</h2>
+<p>The playhead is what moves. It travels through a stretch of the recording, the region, at the speed <span class="enc enc-w">white</span> sets, and the grains follow it. It is shared by every key you hold, and it only moves while something is playing, so each new note carries on from where the last one left off.</p>
+<div class="sub">
+<h3 id="region">The region</h3>
+<ol>
+<li><span class="enc enc-b">blue</span> <span class="lcd">start</span> sets where the region begins, shown in seconds into the recording.</li>
+<li><span class="enc enc-g">green</span> page 2 <span class="lcd">width</span> sets how far it reaches to the right, from <span class="lcd">0%</span> to the whole recording. The start stays put; only the end moves, and it stops at the recording's end.</li>
+<li>At width 0 the playhead sits on the start and doesn't move, whatever the speed: turning <span class="enc enc-b">blue</span> then scrubs through the recording by hand.</li>
+<li>When the playhead reaches the end of the region it wraps round to the start, and the other way round when it runs backwards. With edges set to <span class="lcd">bounce</span> (<a href="#wander">Shift + white</a>) it reverses instead.</li>
+</ol>
+</div>
+<div class="sub">
+<h3 id="speed">Speed and stretching</h3>
+<p><span class="enc enc-w">white</span> <span class="lcd">speed</span> is centred: in the middle it reads <span class="lcd">frozen</span> and the playhead stands still. Turn right to go forwards and left to go backwards, up to <span class="lcd">4.00x</span> either way. <span class="lcd">+1.00x</span>, three quarters of the way to the right, moves through the recording at its own speed.</p>
+<p>The speed of the playhead and the pitch of the grains are separate. Below 1x the recording is stretched out in time without dropping in pitch: at <span class="lcd">+0.25x</span> a one-second word takes four seconds. Above 1x it is squeezed, still at the same pitch. The pitch comes from the key you play.</p>
+<aside class="note note-tip"><span>Tip</span><p>Most of <span class="enc enc-w">white</span>'s turn is given to the slow speeds, where stretching happens. Frozen with a long grain size and high density gives a held, still pad of one moment of the recording.</p></aside>
+</div>
+<div class="sub">
+<h3 id="wander">Wander: drift, jumps, turns, edges and chaos</h3>
+<p>Five settings let the squirrel off its line. Drift is on <span class="enc enc-w">white</span>'s page 2. The other four are on <strong>Shift + turn</strong>: hold <span class="okey okey-text">Shift</span> and turn an encoder. They move one step per click, are saved with the sound, and show across the top of the screen, for example <span class="lcd">jumps 30%  turns 20%  bounce  chaos 50%</span>.</p>
+<div class="table"><table><thead><tr><th scope="col">Control</th><th scope="col">Does</th></tr></thead><tbody>
+<tr><td data-label="Control"><span class="enc enc-w">white</span> page 2 <span class="lcd">drift</span></td><td data-label="Does">0 to 100%: the read point (the thin white line) wobbles around the playhead, up to a quarter of the region either way, changing aim every second or so</td></tr>
+<tr><td data-label="Control"><span class="okey okey-text">Shift</span> + <span class="enc enc-b">blue</span> <span class="lcd">jumps</span></td><td data-label="Does">0 to 100% in 10% steps: now and then the playhead leaps to a random place in the region, up to about once every two seconds</td></tr>
+<tr><td data-label="Control"><span class="okey okey-text">Shift</span> + <span class="enc enc-g">green</span> <span class="lcd">turns</span></td><td data-label="Does">0 to 100% in 10% steps: now and then it turns round and runs the other way, up to a little under once a second</td></tr>
+<tr><td data-label="Control"><span class="okey okey-text">Shift</span> + <span class="enc enc-w">white</span> <span class="lcd">wrap</span> / <span class="lcd">bounce</span></td><td data-label="Does">What happens at the region's ends. <span class="lcd">wrap</span>: the playhead jumps back to the other end and carries on the same way. <span class="lcd">bounce</span>: it reverses, ping-ponging between the ends</td></tr>
+<tr><td data-label="Control"><span class="okey okey-text">Shift</span> + <span class="enc enc-o">orange</span> <span class="lcd">chaos</span></td><td data-label="Does">0 to 100% in 10% steps: jumps and turns stop coming at a steady random rate and arrive in bursts and lulls instead, with a new mood every second or so. On average they come about as often as without chaos</td></tr>
+</tbody></table></div>
+<p>Low drift gives a gently restless texture; jumps and turns scatter the recording into an ever-changing collage. Jumps and turns stay inside the region, so narrow the region to keep the wandering on one part of the recording. A new sound starts with all five at zero and wrap.</p>
+</div>
+</section>
+
+<section class="chapter" id="play"><h2>Playing it</h2>
+<ol>
+<li>Each key plays the cloud at its own pitch. C4 (the middle C at the normal octave) plays the recording at its own pitch.</li>
+<li>Six keys at once, as every OP-1 synth engine. Every key reads from the same playhead, so a chord is one cloud at several pitches.</li>
+<li>Ratatoskr uses the OP-1's own envelope (<span class="okey okey-text">T2</span>). A slow attack and a long release make it a pad; a short decay turns each note into a burst of grains.</li>
+<li>The OP-1's effects (<span class="okey okey-text">T3</span>) suit it well: a delay or a spring reverb spreads the cloud further.</li>
+</ol>
+</section>
+
+<section class="chapter" id="lfo"><h2>With the OP-1's LFOs</h2>
+<p>The OP-1's LFOs can turn Ratatoskr's page-1 knobs for you. On a synth sound, <span class="okey okey-text">T4</span> switches the LFO on and off, and <span class="okey okey-text">Shift</span> + <span class="okey okey-text">T4</span> picks its type. Each type uses the four encoders differently (from TE's guide):</p>
+<div class="table"><table><thead><tr><th scope="col">LFO</th><th scope="col">Encoders</th><th scope="col">With Ratatoskr</th></tr></thead><tbody>
+<tr><td data-label="LFO">Value</td><td data-label="Encoders"><span class="enc enc-b">speed</span> <span class="enc enc-g">amount</span> <span class="enc enc-w">destination</span> <span class="enc enc-o">parameter</span></td><td data-label="With Ratatoskr">Destination the synth, parameter <span class="enc enc-b">blue</span>: the region slides back and forth through the recording. With width at 0 this scrubs, like rocking a tape reel by hand. On <span class="enc enc-w">white</span>, the playhead swings between forwards and backwards</td></tr>
+<tr><td data-label="LFO">Element</td><td data-label="Encoders"><span class="enc enc-b">source</span> <span class="enc enc-g">amount</span> <span class="enc enc-w">destination</span> <span class="enc enc-o">parameter</span></td><td data-label="With Ratatoskr">Source the g-force sensor, parameter <span class="enc enc-b">blue</span>: tilt the OP-1 to move through the recording. Source the envelope, parameter <span class="enc enc-g">green</span>: grains grow longer as each note opens</td></tr>
+<tr><td data-label="LFO">Random</td><td data-label="Encoders"><span class="enc enc-b">amount</span> <span class="enc enc-g">speed</span> <span class="enc enc-w">destination</span> <span class="enc enc-o">attack/decay</span></td><td data-label="With Ratatoskr">Moves start, size, speed and density all at once. Keep the amount small, or the cloud changes character constantly</td></tr>
+</tbody></table></div>
+<p>The LFOs reach page 1 only. The white line and blue arrow on the screen show where an LFO has moved the playhead.</p>
+</section>
+
+<section class="chapter" id="recipes"><h2>Recipes</h2>
+<p>A Ratatoskr sound always plays whatever is recorded on it, so instead of presets, here are settings to dial in on your own recording. Start from a fresh Ratatoskr sound and change only what each recipe lists. Values are what the screen shows; "p2" means page 2.</p>
+<div class="table"><table><thead><tr><th scope="col">Recipe</th><th scope="col">Settings</th><th scope="col">Sounds like</th></tr></thead><tbody>
+<tr><td data-label="Recipe"><strong>Frozen pad</strong></td><td data-label="Settings"><span class="lcd">speed frozen</span> <span class="lcd">size 300ms</span> <span class="lcd">density 4.0x</span> <span class="lcd">spray 50ms</span>; slow attack and long release on <span class="okey okey-text">T2</span></td><td data-label="Sounds like">One moment of the recording held still as a chord pad. Move <span class="enc enc-b">start</span> to pick the moment</td></tr>
+<tr><td data-label="Recipe"><strong>Slow time</strong></td><td data-label="Settings"><span class="lcd">start 0.00s</span> <span class="lcd">width 100%</span> <span class="lcd">speed +0.10x</span> <span class="lcd">size 150ms</span> <span class="lcd">density 2.5x</span></td><td data-label="Sounds like">The whole recording, ten times slower, at its own pitch</td></tr>
+<tr><td data-label="Recipe"><strong>Ebb</strong></td><td data-label="Settings"><span class="lcd">speed -0.50x</span> <span class="lcd">size 200ms</span> <span class="lcd">density 3.0x</span> <span class="lcd">width 100%</span></td><td data-label="Sounds like">The recording drawn backwards, smooth rather than choppy</td></tr>
+<tr><td data-label="Recipe"><strong>Shimmer</strong></td><td data-label="Settings"><span class="lcd">size 80ms</span> <span class="lcd">density 4.4x</span> <span class="lcd">spray 300ms</span>; play an octave up</td><td data-label="Sounds like">A glittering haze around the playhead</td></tr>
+<tr><td data-label="Recipe"><strong>Buzz</strong></td><td data-label="Settings"><span class="lcd">size 10ms</span> to <span class="lcd">25ms</span> <span class="lcd">density 0.5x</span> <span class="lcd">speed +1.00x</span> <span class="lcd">spray 0ms</span></td><td data-label="Sounds like">A gritty, stuttering, machine-like read of the recording</td></tr>
+<tr><td data-label="Recipe"><strong>Scurry</strong></td><td data-label="Settings"><span class="lcd">width 100%</span> <span class="lcd">speed +1.00x</span> <span class="lcd">drift 40%</span> <span class="lcd">jumps 50%</span> <span class="lcd">turns 50%</span> <span class="lcd">size 60ms</span> <span class="lcd">density 2.0x</span></td><td data-label="Sounds like">The squirrel loose in the tree: darting forwards and back, leaping between parts</td></tr>
+<tr><td data-label="Recipe"><strong>Scrub</strong></td><td data-label="Settings"><span class="lcd">width 0%</span> <span class="lcd">size 100ms</span> <span class="lcd">density 3.0x</span>; a Value LFO on <span class="enc enc-b">blue</span>, slow</td><td data-label="Sounds like">Rocking back and forth over the recording, like a tape reel turned by hand</td></tr>
+</tbody></table></div>
+<p>When a recipe works on a recording, save the sound as TE's guide describes; the sound keeps Ratatoskr's settings.</p>
+</section>
+
+<section class="chapter" id="limits"><h2>Limits</h2>
+<ol>
+<li>Six voices, as every OP-1 synth engine, with up to six grains each.</li>
+<li>Recordings up to six seconds, mono, as the OP-1's sampler.</li>
+<li>The playhead moves only while a key sounds; between notes it waits.</li>
+<li>The OP-1's LFOs reach the page-1 knobs, not spray, width, drift or the Shift settings.</li>
+<li>The Shift settings need a core that saves engine records (Hundekraft 3.3 does). Older cores refuse the plugin.</li>
+<li>Velocity sets the level only when notes arrive with velocity, such as over MIDI: the original OP-1's keys always play at full.</li>
+</ol>
+</section>
+
+<section class="chapter" id="controls"><h2>All controls</h2>
+<div class="table"><table><thead><tr><th scope="col">Encoder</th><th scope="col">Page 1</th><th scope="col">Page 2 (push)</th><th scope="col">Shift + turn</th></tr></thead><tbody>
+<tr><td data-label="Encoder"><span class="enc enc-b">blue</span></td><td data-label="Page 1">Start: where the region begins</td><td data-label="Page 2 (push)">Spray: 0 to 1.5 s around the playhead</td><td data-label="Shift + turn">Jumps: 0 to 100%</td></tr>
+<tr><td data-label="Encoder"><span class="enc enc-g">green</span></td><td data-label="Page 1">Size: 10 ms to 500 ms</td><td data-label="Page 2 (push)">Width: 0 to 100% of the recording, rightwards from the start</td><td data-label="Shift + turn">Turns: 0 to 100%</td></tr>
+<tr><td data-label="Encoder"><span class="enc enc-w">white</span></td><td data-label="Page 1">Speed: frozen in the middle, forwards right, backwards left, up to 4x</td><td data-label="Page 2 (push)">Drift: 0 to 100%</td><td data-label="Shift + turn">Edges: wrap or bounce</td></tr>
+<tr><td data-label="Encoder"><span class="enc enc-o">orange</span></td><td data-label="Page 1">Density: 0.5x to 4.4x</td><td data-label="Page 2 (push)">Push: the sample browser</td><td data-label="Shift + turn">Chaos: 0 to 100%</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="chapter" id="credits"><h2>Where it comes from</h2>
+<p>Ratatoskr is named for the squirrel of Norse myth who runs up and down Yggdrasil, the world tree, carrying words between the eagle at its top and the dragon Níðhöggr gnawing at its roots. Here the tree is your recording, and the squirrel is the playhead.</p>
+<h3 id="vs-granular">Ratatoskr or Hundekraft's granular?</h3>
+<p>Hundekraft comes with its own <code>granular</code> engine, which also plays grains from the sound's recording. They differ in what moves:</p>
+<div class="table"><table><thead><tr><th scope="col"></th><th scope="col">granular</th><th scope="col">Ratatoskr</th></tr></thead><tbody>
+<tr><td data-label="">Where grains come from</td><td data-label="granular">One fixed point, until you turn <span class="enc enc-b">blue</span> or an LFO does</td><td data-label="Ratatoskr">A playhead travelling through a region, frozen to 4x, forwards or backwards</td></tr>
+<tr><td data-label="">Stretch, reverse, wandering</td><td data-label="granular">No</td><td data-label="Ratatoskr">Yes: speed, wrap or bounce, drift, jumps, turns, chaos</td></tr>
+<tr><td data-label="">Keys</td><td data-label="granular">Each key separate</td><td data-label="Ratatoskr">One shared playhead for every key</td></tr>
+<tr><td data-label="">Grain shapes</td><td data-label="granular">Six, including pluck and swell</td><td data-label="Ratatoskr">One, smooth (Hann)</td></tr>
+<tr><td data-label="">Pitch and gain pages</td><td data-label="granular">±24 semitones; 0–4x gain</td><td data-label="Ratatoskr">None</td></tr>
+<tr><td data-label="">Detune</td><td data-label="granular">A little per grain with spray</td><td data-label="Ratatoskr">None</td></tr>
+<tr><td data-label="">Grain size, density, grains per key</td><td data-label="granular">10–370 ms, up to 4x, 4</td><td data-label="Ratatoskr">10–500 ms, up to 4.4x, 6</td></tr>
+<tr><td data-label="">Load on the OP-1</td><td data-label="granular">Lighter</td><td data-label="Ratatoskr">Heavier, but six keys at full density play cleanly</td></tr>
+</tbody></table></div>
+<p>Use <code>granular</code> to shape grains from one spot: percussive or swelling grain shapes, a pitch or gain page, or the lightest load. Use Ratatoskr for textures that travel through a recording, stretch it out or run it backwards, and keep changing while you hold a note.</p>
+<p>The idea of a roaming playhead comes from <a href="https://github.com/ETRNLIAM/GrainBrick" target="_blank" rel="noopener noreferrer">GrainBrick</a>, a granular instrument for the TrimUI Brick handheld. The pitch constant, the level for overlapping grains and the way the recording's length is found follow Hundekraft's own <code>granular</code> engine, which plays grains without a moving playhead; Hundekraft's <code>clouds</code> and <code>hail</code> are granular effects.</p>
+</section>
+
+</article>
+</div>
+</main>
+<footer><span>Ratatoskr by Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission.</span><span>Styled after the hundekraft manual; key images from it. Not affiliated with Teenage Engineering.</span></footer>
+</body>
+</html>

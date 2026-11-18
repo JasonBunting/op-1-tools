@@ -1,5 +1,5 @@
 /* Host test of the Mouth engine's DSP: coefficients, stability at every knob corner, loudness, talk (tempo, words,
- * release), voice stealing, and WAVs to hear.
+ * gaps, release), voice stealing, and WAVs to hear.
  *   gcc -O2 -Wall -I mouth/plugin mouth/plugin/test/host_test.c -lm -o /tmp/fm_test && /tmp/fm_test [wav dir]
  * Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see LICENSE and NOTICE). */
 #include <math.h>
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
     for (int32_t vw = 0; vw <= 32767; vw += 4095)
         for (int32_t bd = 0; bd <= 32767; bd += 8191)
             for (int32_t br = 0; br <= 32767; br += 32767)
-                for (double hz = 55; hz <= 1800; hz *= 2)
+                for (double hz = 55; hz <= 3600; hz *= 2)
                     for (int tk = 0; tk < 2; tk++) {
                         talk = (fm_talk_knobs){ tk ? FM_TALK_STEPS - 1 : 0, 0, 32767 };
                         vel = tk ? 32767 : 4000;
@@ -133,6 +133,25 @@ int main(int argc, char **argv)
     if (lo < 1200) fail("too quiet");
     if (hi > 5000) fail("too loud for six voices");
     if (hi > lo * 2.0) fail("vowels or bodies differ by more than 6 dB");
+
+    /* 3a. high notes, where the note lands on a resonance, are no louder than low ones and don't clip (before the
+     *     level control in fm_render they were up to 10x louder from 600 Hz up and clipped from 1.2 kHz) */
+    {
+        static int16_t s[FM_RATE / 2];
+        double top = 0;
+        int clipped = 0;
+        for (double hz = 622; hz <= 1800; hz *= 1.4142135623730951)
+            for (int32_t bd = 0; bd <= 32767; bd += 8191)
+                for (int32_t vw = 0; vw <= 32767; vw += 4095) {
+                    double r;
+                    note(vw, vw, bd, bd, 0, 12000, hz, 0.5, s, &r, -1);
+                    if (r > top) top = r;
+                    for (int i = 0; i < (int)(0.5 * FM_RATE / 128) * 128; i++) if (abs(s[i]) >= 32767) clipped++;
+                }
+        printf("622 Hz .. 1760 Hz, every vowel and body: loudest rms %.0f, %d clipped samples\n", top, clipped);
+        if (top > 4000) fail("high notes are too loud");
+        if (clipped) fail("high notes clip");
+    }
 
     /* 3b. the note is the loudest partial ("ee", "ah", "oo" at C3, C4, C5): a tuner reads the right note, and the voice
      *     isn't thin (before the airflow and chest, middle-C "ah" had its 3rd harmonic 5x the fundamental: read as G5) */
@@ -185,11 +204,34 @@ int main(int argc, char **argv)
         }
         printf("1/8 at 120 BPM: %d syllables in 2 s (want 8, fewer when a slot holds)\n", starts);
         if (starts < 6 || starts > 8) fail("talk does not follow the tempo");
-        /* release: let go after 0.5 s; the vowel must stop changing once the last glide and edge end (<= 48 blocks) */
+        /* a word: two to five syllables, a gap of one slot, then the same word again, every time */
+        {
+            talk = (fm_talk_knobs){ 6, 0, 16384 };                    /* 1/16: 16 slots in 2 s */
+            int32_t said[64][2];
+            int ns = 0, rests = 0, gap[4] = { 0 };
+            memset(&v, 0, sizeof v);
+            fm_voice_reset(&v);
+            for (int n = 0; n < 1378 && ns < 64; n++) {
+                int32_t w0, c0, t0 = v.syl_t;
+                fm_talk(&v, 20480, &talk, key_a, BEAT, &w0, &c0);
+                if (v.syl_t == 1 && (t0 != 0 || n == 0)) {
+                    if (v.kind == FM_SYL_REST && rests < 4) gap[rests++] = ns;
+                    said[ns][0] = v.kind; said[ns][1] = v.off_to; ns++;
+                }
+            }
+            int len = rests >= 3 ? gap[1] - gap[0] : 0;
+            printf("1/16: a word of %d syllable starts and a gap, %d gaps in 2 s\n", len - 1, rests);
+            if (rests < 3) fail("a word has no gap after it");
+            else if (gap[0] < 1 || gap[0] > 5 || gap[2] - gap[1] != len ||
+                     memcmp(said[gap[0] + 1], said[gap[1] + 1], sizeof said[0] * (size_t)(len - 1)))
+                fail("a word is not the same when it comes round again");
+        }
+        /* release: let go after 0.5 s; the vowel and the mouth must stop changing once the last glide and edge end
+         * (<= 48 blocks); let go in a gap, the note stays silent */
         talk = (fm_talk_knobs){ 6, 0, 32767 };                        /* 1/16, wild */
         syllables(a[0], 1378, key_a, 344);
         int moved = 0;
-        for (int n = 344 + 50; n < 1378; n++) if (a[0][2 * n] != a[0][2 * (n - 1)] || a[0][2 * n + 1]) moved = 1;
+        for (int n = 344 + 50; n < 1378; n++) if (a[0][2 * n] != a[0][2 * (n - 1)] || a[0][2 * n + 1] != a[0][2 * n - 1]) moved = 1;
         if (moved) fail("talk kept talking after the key was let go");
         talk = (fm_talk_knobs){ 0, 0, 0 };
     }

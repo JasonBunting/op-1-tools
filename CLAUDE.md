@@ -10,7 +10,7 @@ The repository is organized by project, so anyone can take one piece without the
    1. `mirror/`: `plugin/`, `windows/`, `mobile/`, `manual/`, `docs/`, `release.sh`, `README.md`
    2. `patternplus/`: `plugin/`, `manual/`, `docs/`, `HARDWARE-TEST.md`, `README.md`
    3. `mouth/`: `plugin/` (with `gen_tables.py`, `presets.py` and `test/`), `presets/`, `manual/`, `README.md`, `HARDWARE-TEST.md`
-   4. `ratatoskr/`: `plugin/` (with `test/`), `README.md`, `HARDWARE-TEST.md` (a `manual/` is still to come)
+   4. `ratatoskr/`: `plugin/` (with `test/`), `manual/`, `README.md`, `HARDWARE-TEST.md`
    5. `research/<tool>/`: throwaway probes, such as `rastprobe/` (`plugin/`, `listener/`)
 2. Only shared things live at the root: `README.md` (an index of the projects), `LICENSE`, `CLAUDE.md`, `.env.example`,
    `op-1-tools.slnx` and `tools/` (scripts every project uses). Don't create root-level `docs/`, `firmware/`,

@@ -51,7 +51,7 @@
 
 <section class="chapter" id="screen"><h2>The screen</h2>
 <figure class="screen side"><div class="shot" role="img" aria-label="Screenshot to come: Mouth's screen while talking"><b>img/screen.png</b><span>Mouth's screen, a key held, talk on: the mouth half open, the blue mark near "ah", a white dot beside it, the bottom row on page 1.</span></div><figcaption><b>Fig. 1</b> Mouth's screen.</figcaption><ol class="legend"><li><i class="dot dot-n">1</i><span>The mouth: lips, upper teeth and tongue, shaped by the vowel and sized by the body</span></li><li><i class="dot dot-b">2</i><span>The blue mark: where <span class="enc enc-b">blue</span> points on the vowel strip, "ee" to "oo". An LFO on blue moves it</span></li><li><i class="dot dot-n">3</i><span>A white dot for each voice that is sounding, at the vowel it's singing</span></li><li><i class="dot dot-n">4</i><span>Each knob's name and value, in its colour</span></li></ol></figure>
-<p>The mouth follows the first voice that is sounding. It is wide and smiling for "ee", open with the tongue showing for "ah", and puckered for "oh" and "oo". In talk, it presses shut for a "b" or "m", puckers for a "w" and smiles for a "y". Breath parts the lips, and vibrato makes it wobble. With no key held, it follows the knobs, so you can see a vowel before you play it.</p>
+<p>The mouth follows the first voice that is sounding. It is wide and smiling for "ee", open with the tongue showing for "ah", and puckered for "oh" and "oo". In talk, it presses shut for a "b", "p" or "m", puckers for a "w", smiles for a "y", and closes in the gap after a word. Breath parts the lips, and vibrato makes it wobble. With no key held, it follows the knobs, so you can see a vowel before you play it.</p>
 <p>A knob on its second page shows its page-2 name and a second line above its colour.</p>
 <figure class="screen small"><div class="shot" role="img" aria-label="Screenshot to come: blue on page 2"><b>img/screen-page2.png</b><span>The bottom row with blue on page 2: talk 1/8, and a second blue line above the blue one.</span></div><figcaption><b>Fig. 2</b> <span class="enc enc-b">blue</span> on page 2.</figcaption></figure>
 </section>
@@ -72,17 +72,17 @@
 </section>
 
 <section class="chapter" id="talk"><h2>Talk</h2>
-<p>Talk turns a held note into made-up syllables: the vowel hops around the one <span class="enc enc-b">blue</span> points at, and some syllables start with a quick closing, like "b", "m", "w" or "y". There are no real consonants, so it never says real words, but it sounds as if it does.</p>
+<p>Talk turns a held note into made-up syllables: the vowel hops around the one <span class="enc enc-b">blue</span> points at, and some syllables start with a quick closing, like "b", "m", "w" or "y", a puff of air, like "p" or "t", or a hiss, like "s". The syllables are made up, so it never says real words, but it sounds as if it does.</p>
 <p>Talk lives on the second page of <span class="enc enc-b">blue</span>, <span class="enc enc-g">green</span> and <span class="enc enc-w">white</span>. Push a knob until it clicks to switch it to page 2, and push it again to switch back. Page 2 moves one step per click of the encoder.</p>
 <div class="table"><table><thead><tr><th scope="col">Knob (page 2)</th><th scope="col">Does</th></tr></thead><tbody>
 <tr><td data-label="Knob (page 2)"><span class="enc enc-b">blue</span> <span class="lcd">talk</span></td><td data-label="Does"><span class="lcd">off</span>, or a syllable every <span class="lcd">1/2</span> <span class="lcd">1/4</span> <span class="lcd">1/4t</span> <span class="lcd">1/8</span> <span class="lcd">1/8t</span> <span class="lcd">1/16</span> <span class="lcd">1/16t</span> <span class="lcd">1/32</span> note of the OP-1's tempo</td></tr>
 <tr><td data-label="Knob (page 2)"><span class="enc enc-g">green</span> <span class="lcd">word</span></td><td data-label="Does"><span class="lcd">key</span>: each key says its own word. <span class="lcd">1</span> to <span class="lcd">16</span>: every key says that word</td></tr>
 <tr><td data-label="Knob (page 2)"><span class="enc enc-w">white</span> <span class="lcd">wild</span></td><td data-label="Does">0 to 100%: how far the syllables wander and how sharp their edges are</td></tr>
 </tbody></table></div>
-<p>When you let go of a key, talk stops making new syllables and the note fades out on its last vowel.</p>
+<p>When you let go of a key, talk stops making new syllables and the note fades out on its last vowel. If you let go in the gap after a word, the note stays silent.</p>
 <div class="sub">
 <h3 id="words">Words</h3>
-<p>A word is a fixed sequence of syllables. With <span class="lcd">word key</span>, the key you press picks the word, so the same key always says the same thing and its neighbour says something else. Repeated, it starts to sound like a phrase, the way a chopped vocal does in a track.</p>
+<p>A word is a fixed sequence of two to five syllables, followed by a silent gap one syllable long. Hold a key and it says its word over and over. With <span class="lcd">word key</span>, the key you press picks the word, so the same key always says the same thing and its neighbour says something else. Repeated, it starts to sound like a phrase, the way a chopped vocal does in a track.</p>
 <p>Pick a number instead and every key says that one word at its own pitch, so a melody sings a single phrase.</p>
 </div>
 <div class="sub">
@@ -135,7 +135,7 @@
 <section class="chapter" id="limits"><h2>Limits</h2>
 <ol>
 <li>Six voices, as every OP-1 synth engine.</li>
-<li>Nine vowels and five bodies; no real consonants, so no real words.</li>
+<li>Nine vowels and five bodies; made-up syllables only, so no real words.</li>
 <li>16 fixed words, plus one per key.</li>
 <li>Talk follows tempos from 30 to 480 BPM.</li>
 <li>Velocity brightens the voice only when notes arrive with velocity, such as over MIDI: the original OP-1's keys always play at full.</li>

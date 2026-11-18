@@ -69,6 +69,9 @@ Words used here:
    - Expect: the green label reads **word**, with **key** under it.
 2. Play the same middle key four times, holding each for about one second.
    - Expect: the same "word" (the same pattern of syllables) every time.
+   - Then hold the same key for about four seconds.
+   - Expect: a few syllables, a short silence, then the same syllables again, over and over. Some syllables start
+     with a puff of air ("p"-like) or a short hiss ("s"-like).
 3. Play the key next to it, the same way.
    - Expect: a different word.
 4. Turn **green** right one click.
@@ -84,7 +87,7 @@ Words used here:
 2. Hold a middle key. Turn **white** left, one click at a time, to **0%**.
    - Expect: the syllables get gentler and stay near "ah"; it sounds like mumbling.
 3. Turn **white** right to **100%**.
-   - Expect: the syllables jump between very different vowels, with sharper starts ("b", "m", "w", "y"-like), and the
+   - Expect: the syllables jump between very different vowels, with sharper starts ("b", "p", "m", "s", "w", "y"-like), and the
      rhythm sometimes skips a beat.
 4. Turn it back to **50%**. Press **white** to go back.
 

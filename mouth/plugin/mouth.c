@@ -233,7 +233,7 @@ static void fm_screen_update(void *scr, int dt)
     int32_t mw = (((Q(26) + 36 * t2) * (1024 - (round15 >> 7))) >> 10) * size >> 10;  /* half-width, up to 78 px */
     int32_t o = ((Q(3) + 30 * t1) * size) >> 10;
     o -= ((o - Q(1)) * closure) >> 15;
-    if (kind == FM_SYL_STOP || kind == FM_SYL_NASAL) o -= (o * closure) >> 15;   /* pressed shut */
+    if (kind == FM_SYL_STOP || kind == FM_SYL_PUFF || kind == FM_SYL_NASAL) o -= (o * closure) >> 15;   /* pressed shut */
     o += (Q(2) * k[2]) >> 15;                              /* breath parts the lips */
     if (lead >= 0) {                                       /* it wobbles with the vibrato: up to +-25% at full orange */
         int32_t wob = (OP1_SINE_TABLE[(voices[lead].vib >> 19) & 8191] * (k[3] >> 2)) >> 15;   /* +-8191 */
