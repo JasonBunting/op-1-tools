@@ -1,10 +1,11 @@
-# Ratatoskr: hardware test
+# Ratatoskr: hardware test (0.3.1)
 
 Every step says what to do, then what you should see or hear. If what happens is different, write down the step
 number and what happened, and keep going unless the OP-1 froze. At the end there's a short list of things to report.
 
-You need: the OP-1 on Hundekraft 3.3.1, the computer with the workshop open, and `build/ratatoskr.knl`. About 20
-minutes.
+You need: the OP-1 on Hundekraft 3.3.1, the computer with the workshop open, and `build/ratatoskr.knl`. About 25
+minutes. 0.3.0 is a redesign: the knobs mean different things from 0.2, so a sound saved with 0.2 will sound different.
+To go back, `build/versions/ratatoskr-0.2.2.knl` is the last 0.2.
 
 Words used here:
 
@@ -15,131 +16,118 @@ Words used here:
 
 ## 1. Install
 
-1. In the workshop, under **Your plugins**, add `build/ratatoskr.knl`. Press **Review changes**, then **Send to
-   OP-1**.
+1. In the workshop, under **Your plugins**, replace ratatoskr with `build/ratatoskr.knl`. Press **Review changes**,
+   then **Send to OP-1**.
    - Expect: the OP-1 restarts, and the workshop says the plugin is installed.
 
 ## 2. Pick Ratatoskr
 
 1. Press the **synth key**, then **sound key 8** (or any sound you don't mind changing).
 2. Hold **Shift** and press **T1**. Turn **blue** until **ratatoskr** is highlighted, then press **T1**.
-   - Expect: a new screen. If the sound has a sample already (from an earlier sampler recording), it shows near the
-     top as white and grey columns; otherwise the screen says **record a sample first**. At the bottom, four labels in
-     blue, green, white and orange: **start** with a time in seconds, **size 100ms**, **speed +0.25x**,
-     **density 2.0x**.
-   - If anything overlaps, is cut off or is missing, take a photo.
+   - Expect: a tree in the middle of the screen: branches, a white eagle at the top, a green dragon at the roots. If
+     the sound has a sample, the trunk is made of horizontal lines (the recording, from the roots up), with an orange
+     squirrel to its right, halfway up, pointing at the trunk. With no sample, the trunk is missing and the screen says
+     **no sample**. At the bottom, four labels in blue, green, white and orange: **pos** (seconds), **size 50 ms**,
+     **scat 0 ms**, **motion hold**.
+   - Take a photo of the screen either way. Note anything that overlaps, is cut off, or is hard to see (especially the
+     dark green branches).
 
 ## 3. Record a sample into it
-
-Record with Ratatoskr selected. Recording in the sampler and then switching to Ratatoskr can bring back an older
-sample saved on the OP-1 instead of the new one.
 
 1. Press the **input key** (top right, with the microphone symbol).
 2. Hold any keyboard key and sing, speak or play something with a melody into the mic for about five seconds, then
    let go of the key.
-   - Expect: the screen stays on Ratatoskr. The columns near the top change to the shape of your recording; the
-     middle half is white. Under them, a green bracket under the white part, a blue arrow on it, and a thin white line
-     through the columns.
+   - Expect: the screen stays on Ratatoskr. The trunk changes to the shape of your recording: wide rows where it was
+     loud, narrow where it was quiet. The squirrel sits halfway up.
 
-## 4. The first sound
+## 4. The first sound (hold)
 
-1. Hold a middle key for ten seconds, then let go.
-   - Expect: a soft, smeared version of your recording, slowly moving forward through it at about a quarter of its
-     speed, at its own pitch on C4. The blue arrow and the white line creep to the right; red ticks flicker under the
-     bracket while the key is held. Letting go fades the sound with the stock envelope.
-2. Play a few different keys, one at a time.
-   - Expect: higher keys sound higher, lower keys lower. Each new note carries on from where the last one left off.
-3. Hold a chord of three keys.
-   - Expect: three pitches of the same cloud, and three rows of red ticks.
+1. Hold a middle key for five seconds, then let go.
+   - Expect: a steady, repeating texture of the moment halfway through your recording, at its own pitch on C4. White
+     dashes flicker left of the trunk, level with the squirrel. The squirrel doesn't move.
+2. Hold C4 and the C an octave above together.
+   - Expect: the same texture an octave apart.
 
 ## 5. Page 1 knobs
 
-Hold a middle key through each step (or set the sequencer to hold notes).
+Hold a middle key through each step.
 
-1. **Speed (white):** turn white fully left, then to the middle, then fully right.
-   - Expect: fully left, the playhead runs backwards fast (the arrow moves left, the sound plays backwards). In the
-     middle, the label says **frozen** and the arrow stops: a held, unchanging texture. Fully right, it rushes forward
-     at **+4.00x**. At three quarters right it shows about **+1.00x** and moves at the recording's own speed.
-2. **Start (blue):** set white to about +0.25x again, then turn blue from left to right.
-   - Expect: the white part of the columns and the green bracket slide along the recording, keeping their length
-     until the bracket reaches the recording's end, where it gets shorter; the sound changes to that part.
-3. **Size (green):** turn it fully left, then fully right.
-   - Expect: fully left (10ms), a buzzy, grainy sound. Fully right (500ms), long smooth swells where words or notes
-     are recognisable.
-4. **Density (orange):** turn it fully left, then fully right.
-   - Expect: fully left (0.5x), separate grains with gaps between them. Fully right (4.4x), a thick, smooth cloud.
-     The volume should stay roughly even; it should not distort.
+1. **Position (blue):** turn blue slowly from left to right.
+   - Expect: the squirrel climbs from the roots to the crown, and the sound changes to that part of the recording. The
+     blue value shows the position in seconds while you turn.
+2. **Size (green):** turn it fully left, then fully right, then back to **50 ms**.
+   - Expect: fully left (**12 ms**), a buzzy, grainy sound. Fully right (**250 ms**), longer, smoother pieces where
+     words or notes are recognisable.
+3. **Scatter (white):** turn it right to about **200 ms**.
+   - Expect: the white dashes spread above and below the squirrel while the squirrel stays still; the sound becomes a
+     blur of nearby moments. Fully right is **500 ms**. Turn it back to **0 ms**.
+4. **Motion (orange):** turn it one zone at a time through all six names, holding a key for about five seconds on
+   each.
+   - **hold:** the squirrel stays put.
+   - **forward:** the squirrel climbs slowly (a quarter of the recording's speed), tilted up; at the top of the range it starts
+     again at the bottom. The sound plays forward, stretched out, at the same pitch.
+   - **reverse:** it climbs down, tilted down, and starts again at the top.
+   - **bounce:** it climbs to the top of the range, turns round, climbs down to the bottom, and so on.
+   - **wander:** it drifts a little up and down around where it was, changing aim about once a second.
+   - **jump:** it leaps to a new spot about once a second and stays there until the next leap.
+5. **Phrases:** set **forward**. Hold a key for five seconds, let go, and look at the squirrel; then press the key
+   again.
+   - Expect: when you let go, the squirrel stops where it is. When you press again, it starts again from the position
+     (halfway, unless you turned blue). While one key is held, pressing a second key does not move it back.
+6. **Live position:** still on **forward**, hold a key and watch the blue value.
+   - Expect: it counts up with the squirrel. While you turn blue it shows the position you're setting instead, and
+     about a second after you stop turning it goes back to following the squirrel.
 
 ## 6. Page 2 knobs
 
-1. **Spray:** press **blue**. The blue label changes to **spray** and a second line appears above it. Turn blue fully
-   right, listen, then fully left. Press blue again to go back.
-   - Expect: fully right, grains come from all over (up to 1.5s around the playhead): a scattered, shimmering cloud.
-     Fully left, they all come from one spot.
-2. **Width:** press **green** (label **width**). Turn it fully left, then fully right. Press green again.
-   - Expect: the bracket's left end stays where it is the whole time; only its right end moves. Fully left (0%), the
-     bracket shrinks to a point at its left end and the playhead stops moving even with speed up. Fully right (100%),
-     the bracket runs from its left end to the recording's end, and the playhead travels all of it, wrapping from the
-     end back to the left end.
-3. **Drift:** press **white** (label **drift**). Turn it to 100% and hold a key for twenty seconds.
-   - Expect: the white line wobbles around the blue arrow, up to a quarter of the bracket either way; the arrow itself
-     keeps moving steadily. At 0% the white line sits on the arrow again. Press white again.
-4. **Sample browser:** press **orange**.
+1. **Range:** press **blue**. The label changes to **range 100%** and a second line appears above it. Turn it left to
+   about **20%**, with motion on **bounce**, and hold a key.
+   - Expect: only the part of the trunk the squirrel travels stays bright; the rest goes dim. The squirrel bounces
+     between the ends of the bright part. Turn blue back to page 1 (press
+     it), then turn it fully left or fully right: the range slides inward to stay the same size at the ends of the
+     recording. Press blue, set **100%**, press blue again.
+2. **Shape:** press **green** (label **shape hann**). A curve appears on the right under **grain shape**.
+   - Turn it through **hann**, **triangle**, **pluck**, **swell** with a key held and size around 150 ms.
+   - Expect: the curve changes: a rounded hill, a pointed peak, a fast rise with a long fall, a long rise with a fast
+     fall. Pluck sounds more attacked, swell more like a backwards swell. The squirrel and the dashes keep the same
+     rhythm. Press green again: the curve goes away.
+3. **Speed:** press **orange** (label **speed**).
+   - On **hold** it shows **-**.
+   - On **forward**, **reverse** or **bounce** it shows a speed: **0.25x** in the middle, **0.05x** fully left, **2.00x**
+     fully right. The squirrel moves that fast.
+   - On **wander** or **jump** it shows how often a second: **1.0/s** in the middle, **0.1/s** fully left, **4.0/s**
+     fully right.
+   - Press orange again.
+4. **Sample browser:** press **white**.
    - Expect: the core's sample browser opens, listing the sampler presets. Pick one and press **white** to load it.
-     The columns change to the new sample and Ratatoskr plays it. (Close the browser the way the core says.)
+     The trunk changes to the new sample and Ratatoskr plays it.
 
-## 7. Shift settings (new in 0.2.0)
+## 7. Overlap (Shift + green)
 
-Make sure no knob is on page 2 (no second line above any label), and set white's speed to about **+0.50x**. Hold a
-middle key through each step.
-
-1. Look at the top line of the screen.
-   - Expect: grey text reading **jumps 0%  turns 0%  wrap  chaos 0%**.
-2. **Jumps:** hold **Shift** and turn **blue** right, one click at a time, to **jumps 100%**. Let go of Shift.
-   - Expect: the top line counts up in steps of 10%. At 100% the blue arrow leaps to a new place in the bracket now
-     and then (roughly every two seconds) and keeps moving forwards from there. Turning blue without Shift still moves
-     the start.
-3. **Turns:** set jumps back to **0%** (Shift + blue left), then hold **Shift** and turn **green** to **turns 100%**.
-   - Expect: the arrow now and then reverses, roughly once a second, and the sound plays backwards for a while.
-4. **Edges:** set turns back to **0%**. Hold **Shift** and turn **white** one click right.
-   - Expect: the top line changes from **wrap** to **bounce**. When the arrow reaches the bracket's right end it
-     turns round and runs back to the left end, then forwards again: ping-pong. One click left goes back to **wrap**,
-     where it jumps from the right end back to the left end instead.
-5. **Chaos:** set jumps to **100%**, then hold **Shift** and turn **orange** to **chaos 100%**. Listen for thirty
-   seconds.
-   - Expect: the jumps no longer come evenly. There are quiet spells of several seconds with no jumps, then flurries
-     of several close together.
-6. **Shift doesn't change the pages:** with Shift settings changed, check the four page-1 labels and values at the
-   bottom.
-   - Expect: they are unchanged by the Shift turns.
+1. Hold **Shift**.
+   - Expect: the green label changes to **overlap 2x** while Shift is held.
+2. Still holding Shift, turn **green** right one click at a time, holding a middle key in between.
+   - Expect: **2.5x, 3x, 3.5x, 4x**, then round to **0.5x, 1x, 1.5x** and it stops. The sound gets smoother and denser up
+     to 4x; at 0.5x the grains have gaps between them. The volume stays roughly even. Turning left goes back. Let go
+     of Shift: the label goes back to **size**.
 
 ## 8. Saving
 
-1. With Ratatoskr set up how you like it, including some Shift settings, switch to **sound key 1** and back to
+1. Set every knob away from its default (including page 2 and the overlap). Switch to **sound key 1** and back to
    **sound key 8**.
-   - Expect: all seven knob settings (four page 1, three page 2) and the four Shift settings on the top line are as you
-     left them.
+   - Expect: all seven knob settings and the overlap are as you left them.
 2. Turn the OP-1 off and on again, then select **sound key 8**.
-   - Expect: Ratatoskr is still the engine, the recording is still there, and all the settings are kept, including
-     the top line.
+   - Expect: Ratatoskr is still the engine, the recording is still there, and all the settings are kept.
 
-## 9. Load (optional, skip if short on time; passed on 0.1.x)
+## 9. Load
 
-1. Set density fully right, size fully right, and hold six keys at once for ten seconds.
+1. Set size fully right, overlap **4x**, motion **forward**, and hold six keys at once for ten seconds.
    - Expect: no crackles, dropouts or a frozen screen. If it crackles, note which settings and how many keys.
-
-## 10. Sharper screen lines (0.2.2)
-
-1. With a sample recorded (section 3), hold a key and look closely at the screen.
-   - Expect: the waveform columns, the green region bracket, the blue playhead arrow and the white read line look crisp:
-     no soft, doubled or half-lit rows. The thin white read line may look slightly bolder than before.
-2. Turn green (width) slowly from one end to the other.
-   - Expect: the bracket's ends move a pixel at a time and stay sharp; nothing flickers.
 
 ## Report
 
 1. Any step that didn't match, with its number.
-2. Photos of the screen if it looked wrong.
-3. How the slow speeds (0.1x to 0.5x) sound: smooth, or rough and phasey? This decides whether smoother stretching is
-   worth adding.
-4. Anything about the controls that felt backwards or hard to find.
+2. Photos of the screen: the tree, the squirrel tilted while moving, and the shape curve.
+3. Whether the branches and the dim part of the trunk are visible enough.
+4. How the slow speeds (0.05x to 0.25x) sound: smooth, or rough and phasey?
+5. Anything about the controls that felt backwards or hard to find.

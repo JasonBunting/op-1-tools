@@ -1,44 +1,38 @@
 # Ratatoskr
 
-A synth engine for the original OP-1 running Hundekraft 3.3.1: a cloud of grains read from the sampler's recording,
-around a playhead that scurries through it. Named for the squirrel that runs up and down the world tree.
+A synth engine for the original OP-1 running Hundekraft 3.3.1: overlapping grains read from the sampler's recording,
+around a playhead that moves through it. Named for the squirrel that runs up and down the world tree: on the screen the
+recording is Yggdrasil's trunk, the squirrel is the playhead, the eagle marks the crown and the dragon the roots.
 
-Record something into a sound running Ratatoskr, and the recording becomes a texture. The playhead moves through a region of the recording at any speed from frozen to 4x, forwards or backwards,
-so slow speeds stretch the sound out without lowering its pitch. It can drift, jump, turn round and bounce between the
-region's ends by itself. Each key plays the cloud at its own pitch: C4 is the recording's own.
+Blue puts the squirrel somewhere in the recording; orange picks how it travels (hold, forward, reverse, bounce, wander,
+jump). Slow travel stretches the sound out without changing its pitch. Each key plays the grains at its own pitch: C4
+is the recording's own.
 
 The idea comes from [GrainBrick](https://github.com/ETRNLIAM/GrainBrick), a granular instrument for the TrimUI Brick.
-Hundekraft's own `granular`, `clouds` and `hail` cover plain granular playback; Ratatoskr's difference is the moving
-playhead. See [Ratatoskr or Hundekraft's granular?](#ratatoskr-or-hundekrafts-granular) to pick between them.
+The 0.3 design follows [Ratatoskr-Design-Spec.md](Ratatoskr-Design-Spec.md). Hundekraft's own `granular`, `clouds` and
+`hail` cover plain granular playback; Ratatoskr's difference is the moving playhead. See
+[Ratatoskr or Hundekraft's granular?](#ratatoskr-or-hundekrafts-granular).
 
-Status: 0.2.2. Playing well on the OP-1 so far; saving and the new Shift settings are not yet checked there. The
-[manual](manual/manual.html) covers playing it; this README is the short version, plus building and testing.
+Status: 0.3.1, a redesign of 0.2 (a single motion knob instead of speed, drift, jumps, turns and chaos; grain shapes; a
+tree screen). Host tests pass; not yet tried on the OP-1. The last 0.2 build is `build/versions/ratatoskr-0.2.2.knl`.
+The [manual](manual/manual.html) still describes 0.2 and needs rewriting once 0.3 has been played.
 
 ## Ratatoskr or Hundekraft's granular?
 
-Both are synth engines that play grains from the sound's own recording (up to 6 s, recorded with the input key while
-the engine is selected), both open the core's sample browser, and in both C4 plays the recording at its own pitch.
-They differ in what moves:
+Both play grains from the sound's own recording (up to 6 s, recorded with the input key while the engine is selected),
+both open the core's sample browser, and in both C4 plays the recording at its own pitch. They differ in what moves:
 
 | | Hundekraft's `granular` | Ratatoskr |
 | --- | --- | --- |
-| Where grains come from | One fixed point (blue), until you turn it or an LFO does | A playhead travelling through a region, frozen to 4x, forwards or backwards; wrap or bounce at the ends |
-| Time-stretch and reverse | No | Yes, from the playhead's speed |
-| Movement on its own | No | Drift, jumps, turns and chaos |
-| Keys | Each key separate | One shared playhead: chords move together, and each note carries on where the last left off |
-| Grain shape | Six: hann, gauss, tukey, tri, pluck, swell | Hann only |
-| Pitch offset | ±24 semitones (page 2) | None; use the keys and octave |
-| Sample gain | 0–4x (page 2), for quiet recordings | None |
-| Detune | Spray adds a little random detune per grain | None |
-| Grain size | About 10–370 ms | 10–500 ms |
-| Density | 0.5x–4x | 0.5x–4.4x |
-| Grains per key | 4 | 6 |
-| CPU | Lighter: hand-written Blackfin assembly | Plain C; fine in practice (six keys at full density tested) |
-| Screen | Animated waves, one per knob | The recording, the region, the playhead and live grains |
-
-Choose `granular` to shape grains from one spot: percussive pluck or swell grains, a pitch or gain page, or the
-lightest load. Choose Ratatoskr for textures that travel through a recording, stretch it out or run it backwards, and
-keep changing while you hold a note.
+| Where grains come from | One fixed point, until you turn it or an LFO does | A playhead that holds, travels, bounces, wanders or jumps through a range |
+| Time-stretch and reverse | No | Yes, from forward, reverse and bounce at 0.05x–2x |
+| Keys | Each key separate | One shared playhead: chords move together; a new phrase starts at the position |
+| Grain shape | Six | Four: hann, triangle, pluck, swell |
+| Pitch offset, sample gain | Page 2 | None |
+| Grain size | About 10–370 ms | 12–250 ms |
+| Overlap | 0.5x–4x | 0.5x–4x (Shift + green) |
+| CPU | Lighter: hand-written Blackfin assembly | Plain C |
+| Screen | Animated waves, one per knob | The recording as a tree, the squirrel, grain flashes |
 
 ## Install and first sound
 
@@ -50,37 +44,49 @@ keep changing while you hold a note.
 
 Record with Ratatoskr selected rather than in the sampler before switching: when a sound switches to Ratatoskr, the
 core loads the sound's sample from the OP-1's disk, which can be an older recording than the one you just made.
-Orange's press opens the sampler's sample browser, to load a saved sample instead.
+White's press opens the sampler's sample browser, to load a saved sample instead.
 
 ## Controls
 
-Blue, green and white each have a second page: press the knob until it clicks to switch, press again to switch back.
-The bottom row of the screen shows which page each knob is on.
+Blue, green and orange each have a second page: press the knob until it clicks to switch, press again to switch back.
+A doubled line over a label shows the knob is on page 2.
 
-| Knob | Page 1 | Page 2 (press) | Shift + turn |
-| --- | --- | --- | --- |
-| Blue | **start**: where the region the playhead roams begins | **spray**: grains scattered up to 1.5 s around the playhead | **jumps**: 0–100%, leaps to random places, up to about 0.6 a second |
-| Green | **size**: grain length, 10 ms to 500 ms | **width**: how far the region reaches right of the start, from nothing (the playhead sits on the start) to the whole recording; the start stays put and only the end moves, stopping at the recording's end | **turns**: 0–100%, reversals, up to about 0.8 a second |
-| White | **speed**: frozen in the middle, forwards to the right, backwards to the left, up to 4x; 1x is three quarters of the way out | **drift**: 0–100%, the read point wobbling around the playhead, up to a quarter of the region | **edges**: wrap or bounce (ping-pong) at the region's ends |
-| Orange | **density**: grains overlapping 0.5x to 4.4x | press: the sampler's sample browser, to load a different sample into the sound | **chaos**: 0–100%, jumps and turns in bursts and lulls (the same rate on average) |
+| Knob | Page 1 | Page 2 (press) |
+| --- | --- | --- |
+| Blue | **pos**: where the squirrel starts, 0–100% of the recording, shown in seconds; while playing it shows where the squirrel is | **range**: 5–100% of the recording around the position, where the squirrel may travel; slid inward at the ends to keep its size |
+| Green | **size**: grain length, 12–250 ms, logarithmic | **shape**: hann, triangle, pluck, swell, with the curve drawn on the right |
+| White | **scat**: scatter, each grain up to 0–500 ms either side of the squirrel | press: the sampler's sample browser |
+| Orange | **motion**: hold, forward, reverse, bounce, wander, jump | **speed**: 0.05x–2x for forward, reverse and bounce (0.25x in the middle); 0.1–4 a second for wander and jump (1 in the middle) |
 
-Shift + turn settings move in steps (10% for the percentages), are saved with the sound in the engine's record, and
-show across the top of the screen.
+**Shift + green: overlap**, 0.5x–4x, shown on the green label while Shift is held. A new sound starts at 2x; turning
+right goes 2.5x, 3x, 3.5x, 4x, then 0.5x, 1x, 1.5x. The order wraps because the core gives every new sound step 0 of a
+Shift setting, and Ratatoskr can't take Shift turns itself (the core refuses the engine input hook on engines that use
+a sample).
 
-The playhead is shared by all the keys you hold and only moves while something plays, so the next note carries on
-where the last one left off. At the region's ends it wraps round, or reverses with edges set to bounce. A new sound's region starts a quarter of the way in
-and covers half the recording (its middle half), slowly moving forwards (0.25x), 100 ms grains at 2x density and a little spray.
+The motions:
+
+1. **Hold:** the squirrel stays put; grains keep coming from that spot.
+2. **Forward:** it climbs to the top of the range and starts again at the bottom.
+3. **Reverse:** it climbs down and starts again at the top.
+4. **Bounce:** it turns round at each end.
+5. **Wander:** it glides to a nearby spot (within 5% of the range), then picks another.
+6. **Jump:** it leaps to a random spot in the range and stays there until the next leap.
+
+The playhead is shared by every key. The first key after all keys are up starts it at the position; more keys join it
+where it is; it stops when the last key goes up. Turning blue moves it to the new position at once, and changing the
+motion carries on from where it is. Grains keep the size and shape they were launched with.
 
 ## Screen
 
-1. **Very top:** the Shift + turn settings, each above its knob in that knob's colour (`jumps 30%`, `turns 20%`, `bounce`, `chaos 50%`). The one changed last is brighter and underlined.
-2. **Top:** the recording as columns; the region's part is white, the rest grey. A white line is where the grains are
-   read from right now.
-3. **Below it:** a green bracket marks the region, a blue arrow the playhead, and red ticks the grains that are
-   sounding (one row per voice).
-4. **Bottom:** each knob's name and value. A knob on page 2 shows its page-2 name and a second line.
+1. **The tree:** the recording runs up the trunk from the roots (its start) to the crown (its end); each row is as wide
+   as that slice's loudest moment. The range is bright, the rest dim. The eagle sits in the crown and the dragon at the roots.
+2. **The squirrel:** at the playhead, right of the trunk with a line pointing at it; tilted up or down while it
+   travels.
+3. **Grain flashes:** white dashes left of the trunk where grains were just launched.
+4. **The shape:** with green on page 2, the grain's curve on the right.
+5. **Bottom:** each knob's name and value in its colour.
 
-With nothing recorded on the sound, the screen says "record a sample first" and the keys are silent.
+With nothing recorded on the sound, the trunk is missing, the screen says **no sample** and the keys are silent.
 
 ## Testing on the OP-1
 
@@ -90,12 +96,13 @@ See [HARDWARE-TEST.md](HARDWARE-TEST.md).
 
 | File | What |
 | --- | --- |
-| `plugin/ratatoskr.c` | The OP-1 glue (voices, the shared playhead, page 2, the sample browser) and the screen. |
-| `plugin/rt_dsp.h` | The playhead and the grains. Integer only, no OP-1 calls. |
-| `plugin/ratatoskr.svg` | The screen's SVG: empty, since `ratatoskr.c` draws everything. |
-| `plugin/test/host_test.c` | Host test: the knob laws, the playhead, grains inside the recording, pitch, loudness; writes WAVs. |
-| `manual/` | The manual (`manual.html`, its style and key images; screenshots go in `img/`). |
+| `plugin/ratatoskr.c` | The OP-1 glue (voices, phrases, the shared playhead, page 2, the sample browser, the overlap record) and the screen. |
+| `plugin/rt_dsp.h` | The controls' laws, the route, the motions, the grain shapes and the grains. Integer only, no OP-1 calls. |
+| `plugin/ratatoskr.svg` | The branches and roots, and the eagle, dragon and squirrel that `ratatoskr.c` moves. |
+| `plugin/test/host_test.c` | Host test: the laws, the route, every motion, phrases, the shapes, grains inside the recording, pitch, loudness; writes WAVs. |
+| `manual/` | The manual (`manual.html`, its style and key images; screenshots go in `img/`). Still 0.2. |
 | `HARDWARE-TEST.md` | The device test. |
+| `Ratatoskr-Design-Spec.md` | The 0.3 design. |
 
 Build with `tools/build.sh ratatoskr` (makes `build/ratatoskr.knl`). Host test, in WSL from the repository root (WAVs
 go to `build/`):
@@ -105,9 +112,12 @@ gcc -O2 -Wall -I ratatoskr/plugin ratatoskr/plugin/test/host_test.c -lm -o /tmp/
 ```
 
 The playhead moves once per audio block: the voice loop renders voices in order, so a voice whose number is not above
-the last one rendered starts a new block. Each voice has six grains with Hann windows, read with linear interpolation.
-The playhead's region uses 8-sample steps.
+the last one rendered starts a new block. A voice whose key-up never came (a steal) is dropped from the held keys once
+it stops rendering. Each voice has eight grains, read with linear interpolation through a 256-step window table; a
+grain that would run past the recording at a high key is shortened, and the launch rate stays that of the set size.
 
 ## Later, maybe
 
-A light WSOLA-style alignment for smoother stretching, if slow speeds sound rough on the device.
+1. Grain reverse (a chance per grain of reading backwards), from the spec.
+2. A light WSOLA-style alignment for smoother stretching, if slow speeds sound rough on the device.
+3. Matched loudness between the shapes, after listening.

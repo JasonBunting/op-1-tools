@@ -1,4 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="320px" height="160px" viewBox="0 0 320 160">
-<!-- ratatoskr: everything is drawn by ratatoskr.c (the recording, the region, the playhead, the grains, the bottom row) -->
+<!-- ratatoskr: the branches and roots stay put; ratatoskr.c draws the trunk (the recording) and the grain flashes, and
+     moves the eagle (the route's top), the dragon (its bottom) and the squirrel (the playhead). Each is drawn around its
+     own origin: the eagle's feet, the dragon's back, the squirrel's nose. -->
+<g id="branches">
+<path fill="none" stroke="#3E7A5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M154 30L134 30L118 21"/>
+<path fill="none" stroke="#3E7A5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M158 58L176 44L198 44L212 35"/>
+<path fill="none" stroke="#3E7A5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M150 98L130 104"/>
+<path fill="none" stroke="#3E7A5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M162 98L184 104"/>
+</g>
+<g id="eagle">
+<path fill="#E4EEDA" d="M-17 -5L-5 -11L0 -4L5 -10L15 -9L19 -6L9 -4L4 0L-4 0Z"/>
+<path fill="#000000" d="M11 -7.5L12.5 -7.5L12.5 -6.5L11 -6.5Z"/>
+</g>
+<g id="dragon">
+<path fill="#6FBF8F" d="M-14 3L-7 0L-1 3L6 -1L12 2L16 0L14 4L8 4L2 6L-6 4L-12 6Z"/>
+</g>
+<g id="squirrel">
+<path fill="#F2A06A" d="M0 0L5 -4L7 -10L10 -5L20 -5L23 4L13 7L4 4Z"/>
+<path fill="#B8643A" d="M21 -4L26 -9L32 -8L35 -3L33 3L28 6L24 2Z"/>
+<path fill="#000000" d="M7.5 -1.5L9 -1.5L9 0L7.5 0Z"/>
+</g>
 </svg>

@@ -1,5 +1,6 @@
-/* Host test of Ratatoskr's DSP (rt_dsp.h): the knob laws, the playhead (speed, direction, wrap, width, wander), the
- * grains (inside the recording, pitch, loudness at full density), silence with nothing recorded, and WAVs to hear.
+/* Host test of Ratatoskr's DSP (rt_dsp.h): the control laws, the route, the six motions, phrase restarts, the grain
+ * shapes, grains kept inside the recording (scatter, short recordings, high keys), pitch, loudness at 4x overlap,
+ * silence with nothing recorded, and WAVs to hear.
  *   gcc -O2 -Wall -I ratatoskr/plugin ratatoskr/plugin/test/host_test.c -lm -o /tmp/rt_test && /tmp/rt_test [wav dir]
  * Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see LICENSE and NOTICE). */
 #include <math.h>
@@ -13,6 +14,7 @@
 #define C4_RATE  512u                       /* 22.10: 0.5 source samples per voice sample, the recording's speed */
 static int16_t sine[8192];
 static int16_t rec[SRC_RATE * 6];           /* 6 s, as the sampler's limit */
+static rt_shapes shapes;
 static int failures;
 
 static void fail(const char *what) { printf("FAIL: %s\n", what); failures++; }
@@ -34,7 +36,7 @@ static void wav(const char *dir, const char *name, const int16_t *s, int n, uint
     printf("wrote %s\n", path);
 }
 
-/* a recording to roam through: 16 notes of a minor scale, 250 ms each, a few harmonics, plucked */
+/* a recording to move through: 16 notes of a minor scale, 250 ms each, a few harmonics, plucked */
 static int make_rec(void)
 {
     static const int semis[16] = { 0, 3, 5, 7, 10, 12, 10, 7, 5, 3, 0, -2, 0, 3, 7, 12 };
@@ -49,305 +51,273 @@ static int make_rec(void)
     return n;
 }
 
-/* the last argument sets drift, jumps and turns together (the old single "wander"); chaos and bounce start off */
-static rt_knobs knobs(int32_t pos, int32_t size, int32_t speed, int32_t dens, int32_t spray, int32_t width, int32_t wander)
-{
-    rt_knobs k = { pos, size, speed, dens, spray, width, wander, wander, wander, 0, 0 };
-    return k;
-}
+/* the knob word in the middle of a motion's or a shape's zone */
+static int32_t zone(int i, int n) { return (int32_t)(((2 * i + 1) * 32768L) / (2 * n)); }
 
-/* a speed knob word for a speed (x, signed) */
-static int32_t speed_word(double x)
+/* defaults: position 50%, 50 ms, no scatter, hold, the whole recording, hann, the middle speed, 2x */
+static rt_knobs knobs(void)
 {
-    double m = sqrt(fabs(x) / 4.0);
-    int32_t a = RT_SPEED_DEAD + (int32_t)(m * (16383 - RT_SPEED_DEAD) + 0.5);
-    return x < 0 ? 16384 - a : 16384 + a;
+    rt_knobs k = { 16384, 15400, 0, zone(RT_HOLD, RT_MOTIONS), 32767, zone(RT_HANN, RT_SHAPES), 16384, 0 };
+    return k;
 }
 
 static void test_laws(void)
 {
-    check(rt_speed_q16(16384) == 0 && rt_speed_q16(16384 + RT_SPEED_DEAD) == 0 && rt_speed_q16(16384 - RT_SPEED_DEAD) == 0,
-          "speed: the middle is frozen");
-    int32_t full = rt_speed_q16(32767), back = rt_speed_q16(0);
-    check(full > 262000 && full <= 262144, "speed: fully right is 4x");
-    check(back < -262000 && back >= -262144, "speed: fully left is -4x");
-    int32_t one = rt_speed_q16(speed_word(1.0));
-    check(abs(one - 65536) < 700, "speed: 1x where expected");
-    int32_t prev = -300000, mono = 1;
-    for (int32_t k = 0; k <= 32767; k += 7) { int32_t s = rt_speed_q16(k); if (s < prev) mono = 0; prev = s; }
-    check(mono, "speed: rises left to right");
-    check(rt_size(0) == 882 && abs(rt_size(32767) - 44100) < 8, "size: 10 ms .. 500 ms");
-    check(rt_ovl8(0) == 4 && rt_ovl8(32767) == 35, "density: 0.5x .. 4.4x");
-    check(rt_spray(0) == 0 && abs(rt_spray(32767) - 66150) < 8, "spray: 0 .. 1.5 s");
-    printf("laws: 1x at word %d, 0.25x at word %d\n", speed_word(1.0), speed_word(0.25));
+    check(abs(rt_size(0) - 1058) <= 2 && abs(rt_size(32767) - 22050) < 80, "size: 12 .. 250 ms");
+    check(abs(rt_size(15400) - 4410) < 30, "size: 50 ms by default");
+    int mono = 1;
+    for (int32_t k = 7, p = rt_size(0); k <= 32767; k += 7) { int32_t s = rt_size(k); if (s < p) mono = 0; p = s; }
+    check(mono, "size: rises");
+    check(rt_scatter(0) == 0 && abs(rt_scatter(32767) - 22050) < 4, "scatter: 0 .. 500 ms");
+    check(rt_scatter(16384) < 6000, "scatter: the low end gets most of the turn");
+    for (int m = 0; m < RT_MOTIONS; m++) check(rt_motion(zone(m, RT_MOTIONS)) == m, "motion: six zones");
+    check(rt_motion(0) == RT_HOLD && rt_motion(32767) == RT_JUMP, "motion: hold .. jump");
+    for (int s = 0; s < RT_SHAPES; s++) check(rt_shape(zone(s, RT_SHAPES)) == s, "shape: four zones");
+    check(rt_ovl8(0) == 16, "overlap: no record is 2x");
+    int32_t lo = 99, hi = 0;
+    for (int s = 0; s < RT_OVL_STEPS; s++) { int32_t o = rt_ovl8(s); if (o < lo) lo = o; if (o > hi) hi = o; }
+    check(lo == 4 && hi == 32, "overlap: 0.5x .. 4x");
+    double t0 = rt_travel_q16(0) / 65536.0, tm = rt_travel_q16(16384) / 65536.0, t1 = rt_travel_q16(32767) / 65536.0;
+    check(fabs(t0 - 0.05) < 0.002 && fabs(tm - 0.25) < 0.002 && fabs(t1 - 2.0) < 0.02, "speed: 0.05x .. 0.25x .. 2x");
+    double e0 = rt_events_q16(0) / 65536.0, em = rt_events_q16(16384) / 65536.0, e1 = rt_events_q16(32767) / 65536.0;
+    check(fabs(e0 - 0.1) < 0.003 && fabs(em - 1.0) < 0.005 && fabs(e1 - 4.0) < 0.04, "speed: 0.1 .. 1 .. 4 a second");
+    double worst = 0;
+    for (int x = -16 * 4096; x < 14 * 4096; x += 37) {
+        double want = pow(2.0, x / 4096.0) * 65536.0, got = rt_exp2(x);
+        if (want > 4096) { double e = fabs(got / want - 1); if (e > worst) worst = e; }
+    }
+    check(worst < 0.004, "exp2 within 0.4%");
 }
 
-static void test_roam(int len)
+static void test_route(void)
 {
-    /* the region is anchored at its start: width only moves the right end, which stops at the recording's end */
-    {
-        int32_t lo0, hi0, anchored = 1, grows = 1, prev = -1;
-        for (int32_t w = 0; w <= 32767; w += 512) {
-            rt_region(len, 8192, w, &lo0, &hi0);
-            if (lo0 != rt_at(8192, len)) anchored = 0;
-            if (hi0 < prev) grows = 0;
-            prev = hi0;
-        }
-        check(anchored, "region: width keeps the start in place");
-        check(grows, "region: width only moves the end rightwards");
-        rt_region(len, 8192, 32767, &lo0, &hi0);
-        check(hi0 == len - 1, "region: full width runs to the recording's end");
-        rt_region(len, 32767, 16384, &lo0, &hi0);
-        check(lo0 <= hi0 && hi0 == len - 1, "region: a start at the very end stays a valid region");
+    const int32_t len = 100000;
+    int32_t lo, hi;
+    rt_route(len, 16384, 32767, &lo, &hi);
+    check(lo <= 4 && hi >= len - 10, "route: the whole recording at 100%");
+    rt_route(len, 16384, 0, &lo, &hi);                         /* 5% around the middle */
+    check(abs((hi - lo) - len / 20) < 20 && abs((lo + hi) / 2 - len / 2) < 20, "route: 5% centred on the position");
+    rt_route(len, 0, 8192, &lo, &hi);
+    int32_t w = hi - lo;
+    check(lo == 0 && w > len / 4, "route: slid inward at the start, width kept");
+    rt_route(len, 32767, 8192, &lo, &hi);
+    check(hi == len - 1 && abs((hi - lo) - w) <= 1, "route: slid inward at the end, width kept");
+}
+
+/* run the playhead for n blocks; returns its final position (source samples) */
+static int32_t run(rt_roam *r, int32_t len, const rt_knobs *k, int n, int restart_first)
+{
+    int32_t x = 0;
+    for (int i = 0; i < n; i++) x = rt_roam_step(r, len, k, restart_first && i == 0);
+    return x;
+}
+
+static void test_motions(void)
+{
+    const int32_t len = make_rec();
+    rt_roam r; memset(&r, 0, sizeof r); rt_roam_init(&r);
+    rt_knobs k = knobs();
+    int32_t home = rt_at(k.position, len);
+    check(run(&r, len, &k, 689, 1) == home, "hold: stays at the position");
+
+    k.motion = zone(RT_FORWARD, RT_MOTIONS);
+    int32_t a = run(&r, len, &k, 1, 1), b = run(&r, len, &k, 689, 0);
+    check(a > home - 64 && a <= home + 32 && abs((b - a) - SRC_RATE / 4) < 200, "forward: 0.25 s a second from the position");
+    k.speed = 32767;
+    int32_t c = run(&r, len, &k, 689, 0), moved = c - b;
+    if (moved < 0) moved += len - 1;
+    check(abs(moved - 2 * SRC_RATE) < 400, "forward: 2x at full speed, wrapping to the roots");
+
+    k.speed = 16384; k.motion = zone(RT_REVERSE, RT_MOTIONS);
+    a = run(&r, len, &k, 1, 1); b = run(&r, len, &k, 689, 0);
+    check(abs((a - b) - SRC_RATE / 4) < 200, "reverse: down 0.25 s a second");
+
+    /* bounce in a 10% range at 2x: about 0.4 s of range a second, so reversals, never leaving it */
+    k.motion = zone(RT_BOUNCE, RT_MOTIONS); k.range = 1700; k.speed = 32767;
+    int32_t lo, hi; rt_route(len, k.position, k.range, &lo, &hi);
+    int out = 0, turns = 0, last = 0, prev = run(&r, len, &k, 1, 1);
+    for (int i = 0; i < 689 * 4; i++) {
+        int32_t x = rt_roam_step(&r, len, &k, 0);
+        if (x < lo || x > hi) out = 1;
+        int d = x > prev ? 1 : (x < prev ? -1 : 0);
+        if (d && last && d != last) turns++;
+        if (d) last = d;
+        prev = x;
     }
-    rt_roam r;
-    rt_knobs k;
-    /* 1x forward over the whole recording: 64 source samples a block, wrapping at the end */
-    memset(&r, 0, sizeof r);
-    k = knobs(0, 14044, speed_word(1.0), 12288, 0, 32767, 0);
-    rt_roam_step(&r, len, &k);
-    int32_t p0 = r.pos;
-    rt_roam_step(&r, len, &k);
-    int32_t d = r.pos - p0;
-    check(abs(d - (64 << 8)) < 64 << 2, "roam: 1x moves 64 samples a block");
-    int wraps = 0, inside = 1;
-    for (int b = 0; b < RT_BLOCKS_PER_S * 10; b++) {
-        int32_t before = r.pos;
-        rt_roam_step(&r, len, &k);
-        if (r.pos < before) wraps++;
-        if (r.read < r.lo || r.read > r.hi) inside = 0;
+    check(!out, "bounce: stays in the range");
+    check(turns >= 15 && turns <= 25, "bounce: reverses at each end");
+
+    /* wander: within 5% of the span of where it was a second ago, moving smoothly */
+    k = knobs(); k.motion = zone(RT_WANDER, RT_MOTIONS);
+    prev = run(&r, len, &k, 1, 1);
+    int32_t far = 0, jump = 0, at = prev, moves = 0;
+    for (int i = 0; i < 689 * 10; i++) {
+        int32_t x = rt_roam_step(&r, len, &k, 0);
+        if (abs(x - prev) > jump) jump = abs(x - prev);
+        if (i % 689 == 688) { if (abs(x - at) > far) far = abs(x - at); if (x != at) moves++; at = x; }
+        prev = x;
     }
-    check(wraps >= 2 && wraps <= 3, "roam: 1x through 4 s wraps about every 4 s");
-    check(inside, "roam: the read point stays in the region without wander");
-    /* backwards */
-    k.speed = speed_word(-1.0);
-    p0 = r.pos;
-    rt_roam_step(&r, len, &k);
-    d = r.pos - p0;
-    check(d < 0 || d > (len / 2) << 8, "roam: left of the middle goes backwards");
-    /* frozen */
-    k.speed = 16384;
-    p0 = r.pos;
-    for (int b = 0; b < 100; b++) rt_roam_step(&r, len, &k);
-    check(r.pos == p0, "roam: frozen stays put");
-    /* no width: on the position */
-    k.width = 0; k.speed = speed_word(2.0); k.position = 8192;
-    for (int b = 0; b < 50; b++) rt_roam_step(&r, len, &k);
-    check(abs(r.read - rt_at(8192, len)) <= 1, "roam: zero width sits on the position");
-    /* a narrow region keeps the playhead inside it */
-    k.width = 3277; k.position = 24576;
+    check(far <= len / 20 + 8 && moves >= 7, "wander: about one new target a second, within 5%");
+    check(jump < 64, "wander: glides, no leaps");
+
+    /* jump: about one a second at the middle speed, anywhere in the range, holding between */
+    k = knobs(); k.motion = zone(RT_JUMP, RT_MOTIONS);
+    prev = run(&r, len, &k, 1, 1);
+    check(prev == home, "jump: a phrase starts at the position");
+    int jumps = 0;
+    for (int i = 0; i < 689 * 20; i++) { int32_t x = rt_roam_step(&r, len, &k, 0); if (x != prev) jumps++; prev = x; }
+    check(jumps >= 17 && jumps <= 21, "jump: one a second");
+
+    /* a new phrase starts at the position; turning the position moves it at once; a new motion goes on from where
+     * it is */
+    k = knobs(); k.motion = zone(RT_FORWARD, RT_MOTIONS);
+    run(&r, len, &k, 689, 1);
+    check(run(&r, len, &k, 1, 1) <= home + 32, "restart: back to the position");
+    run(&r, len, &k, 689, 0);
+    k.position = 8192;
+    check(abs(rt_roam_step(&r, len, &k, 0) - rt_at(8192, len)) <= 32, "position: turning it moves the playhead");
+    run(&r, len, &k, 689, 0);
+    int32_t here = r.read;
+    k.motion = zone(RT_HOLD, RT_MOTIONS);
+    check(abs(rt_roam_step(&r, len, &k, 0) - here) <= 1, "motion: a change goes on from where it is");
+}
+
+static void test_shapes(void)
+{
     int ok = 1;
-    for (int b = 0; b < RT_BLOCKS_PER_S * 5; b++) { rt_roam_step(&r, len, &k); if (r.read < r.lo || r.read > r.hi) ok = 0; }
-    check(ok, "roam: a narrow region holds the playhead");
-    /* wander: jumps and turns at about the designed rates, never outside the recording */
-    memset(&r, 0, sizeof r);
-    r.rng = 12345;
-    k = knobs(0, 14044, speed_word(0.5), 12288, 0, 32767, 32767);
-    int turns = 0, jumps = 0, out = 0, dir = 1;
-    rt_roam_step(&r, len, &k);
-    const int secs = 120;
-    for (int b = 0; b < RT_BLOCKS_PER_S * secs; b++) {
-        int32_t before = r.pos;
-        rt_roam_step(&r, len, &k);
-        if (r.dir != dir) { turns++; dir = r.dir; }
-        int32_t step = abs(r.pos - before) >> 8;
-        if (step > 200 && step < len - 200) jumps++;      /* not a wrap, not a normal step */
-        if (r.read < 0 || r.read >= len) out++;
+    for (int s = 0; s < RT_SHAPES; s++) {
+        int peak = 0, at = 0;
+        for (int i = 0; i <= 256; i++) if (shapes[s][i] > peak) { peak = shapes[s][i]; at = i; }
+        if (shapes[s][0] != 0 || shapes[s][256] != 0 || peak < 32000) ok = 0;
+        if (s == RT_HANN && abs(at - 128) > 1) ok = 0;
+        if (s == RT_TRIANGLE && abs(at - 128) > 1) ok = 0;
+        if (s == RT_PLUCK && abs(at - 38) > 1) ok = 0;
+        if (s == RT_SWELL && abs(at - 218) > 1) ok = 0;
     }
-    printf("wander: %.2f turns/s, %.2f jumps/s (aims 0.8, 0.6; jumps include ones that land near)\n",
-           (double)turns / secs, (double)jumps / secs);
-    check(turns > 0.5 * secs && turns < 1.2 * secs, "wander: turns about 0.8 a second");
-    check(jumps > 0.3 * secs && jumps < 0.9 * secs, "wander: jumps about 0.6 a second");
-    check(!out, "wander: the read point stays inside the recording");
-
-    /* each part alone: jumps without turns, turns without jumps, drift without either */
-    {
-        int tj = 0, jj = 0, td = 1;
-        memset(&r, 0, sizeof r); r.rng = 99;
-        k = knobs(0, 14044, speed_word(0.5), 12288, 0, 32767, 0);
-        k.jumps = 32767;
-        for (int b = 0; b < RT_BLOCKS_PER_S * 60; b++) {
-            int32_t before = r.pos;
-            rt_roam_step(&r, len, &k);
-            if (r.dir != 1) td = 0;
-            int32_t step = abs(r.pos - before) >> 8;
-            if (step > 200 && step < len - 200) jj++;
-        }
-        check(td && jj > 15, "wander parts: jumps alone jump and never turn");
-        memset(&r, 0, sizeof r); r.rng = 99;
-        k.jumps = 0; k.turns = 32767;
-        int d = 1;
-        for (int b = 0; b < RT_BLOCKS_PER_S * 60; b++) {
-            int32_t before = r.pos;
-            rt_roam_step(&r, len, &k);
-            if (r.dir != d) { tj++; d = r.dir; }
-            int32_t step = abs(r.pos - before) >> 8;
-            if (step > 200 && step < len - 200) jj = -1000;
-        }
-        check(tj > 25 && jj > 0, "wander parts: turns alone turn and never jump");
-    }
-
-    /* bounce: at 2x through a 1 s region it reverses at the ends, never wraps, and stays inside */
-    {
-        memset(&r, 0, sizeof r);
-        k = knobs(0, 14044, speed_word(2.0), 12288, 0, 8192, 0);
-        k.bounce = 1;
-        int flips = 0, wrapped = 0, inside = 1, d = 1;
-        rt_roam_step(&r, len, &k);
-        for (int b = 0; b < RT_BLOCKS_PER_S * 10; b++) {
-            int32_t before = r.pos;
-            rt_roam_step(&r, len, &k);
-            if (r.dir != d) { flips++; d = r.dir; }
-            if (abs(r.pos - before) > (512 << 8)) wrapped++;
-            if (r.read < r.lo || r.read > r.hi) inside = 0;
-        }
-        printf("bounce: %d reversals in 10 s at 2x over a %.2f s region\n", flips, (r.hi - r.lo) / 44100.0);
-        check(flips >= 18 && flips <= 22, "bounce: reverses at each end (about 20 in 10 s)");
-        check(!wrapped, "bounce: never wraps");
-        check(inside, "bounce: stays inside the region");
-        /* a region narrower than one block's step still behaves */
-        k.width = 40; k.speed = 32767;
-        inside = 1;
-        for (int b = 0; b < 2000; b++) { rt_roam_step(&r, len, &k); if (r.read < r.lo || r.read > r.hi) inside = 0; }
-        check(inside, "bounce: a tiny region at 4x stays inside");
-    }
-
-    /* chaos: the jump rate swings between seconds, about the same on average */
-    {
-        int per[60] = { 0 }, total = 0;
-        memset(&r, 0, sizeof r); r.rng = 4242;
-        k = knobs(0, 14044, speed_word(0.5), 12288, 0, 32767, 0);
-        k.jumps = 32767; k.chaos = 32767;
-        for (int s = 0; s < 60; s++)
-            for (int b = 0; b < RT_BLOCKS_PER_S; b++) {
-                int32_t before = r.pos;
-                rt_roam_step(&r, len, &k);
-                int32_t step = abs(r.pos - before) >> 8;
-                if (step > 200 && step < len - 200) { per[s]++; total++; }
-            }
-        int lo = 1000, hi = 0;
-        for (int s = 0; s < 60; s += 2) { int n = per[s] + per[s + 1]; if (n < lo) lo = n; if (n > hi) hi = n; }
-        printf("chaos: %.2f jumps/s, from %d to %d per 2 s\n", total / 60.0, lo, hi);
-        check(total > 0.4 * 60 && total < 0.85 * 60, "chaos: about the same average rate (0.6 a second)");
-        check(hi - lo >= 4, "chaos: bursts and lulls");
-    }
+    check(ok, "shapes: from 0 to their peaks (middle, middle, 15%, 85%) and back to 0");
+    check(abs(shapes[RT_HANN][64] - 16384) < 200, "hann: half way up at a quarter");
 }
 
-/* render secs of one voice at a pitch rate; returns peak, fills rms; checks every grain stays inside */
-static int voice_run(int len, rt_knobs k, uint32_t rate, double secs, int16_t *dst, double *rms, int *outside)
+/* render n blocks of one voice; returns the peak */
+static int render(rt_voice *v, rt_roam *r, const int16_t *data, int32_t len, const rt_knobs *k, uint32_t rate,
+                  int16_t *out, int n, rt_flashes *fl)
 {
-    static rt_voice v;
-    static rt_roam r;
-    memset(&v, 0, sizeof v);
-    memset(&r, 0, sizeof r);
-    r.rng = 777;
-    rt_voice_note(&v, 0);
-    int blocks = (int)(secs * RT_BLOCKS_PER_S), peak = 0;
-    double sum = 0;
-    int16_t buf[RT_BLOCK];
-    for (int b = 0; b < blocks; b++) {
-        int32_t read = rt_roam_step(&r, len, &k);
-        rt_voice_render(&v, rec, len, read, &k, rate, 32767, buf, sine);
-        for (int i = 0; i < RT_GRAINS; i++)
-            if (v.g[i].winc && (v.g[i].pos >> RT_FRAC) >= (uint32_t)len) (*outside)++;
-        for (int n = 0; n < RT_BLOCK; n++) {
-            int a = abs(buf[n]);
-            if (a > peak) peak = a;
-            sum += (double)buf[n] * buf[n];
-            if (dst) dst[b * RT_BLOCK + n] = buf[n];
-        }
+    rt_launch l; rt_launch_of(k, shapes, &l);
+    int peak = 0;
+    for (int b = 0; b < n; b++) {
+        int32_t read = rt_roam_step(r, len, k, b == 0);
+        rt_voice_render(v, data, len, read, &l, rate, 32767, out + b * RT_BLOCK, fl, (uint32_t)b);
+        for (int i = 0; i < RT_BLOCK; i++) if (abs(out[b * RT_BLOCK + i]) > peak) peak = abs(out[b * RT_BLOCK + i]);
     }
-    *rms = sqrt(sum / ((double)blocks * RT_BLOCK));
     return peak;
 }
 
-/* the main frequency of n samples at rate, from zero crossings */
-static double crossing_hz(const int16_t *s, int n, double rate)
+static int32_t zero_crossings(const int16_t *s, int n)
 {
-    int c = 0;
-    for (int i = 1; i < n; i++) if ((s[i - 1] < 0) != (s[i] < 0)) c++;
-    return c / 2.0 * rate / n;
+    int32_t z = 0;
+    for (int i = 1; i < n; i++) if ((s[i - 1] < 0) != (s[i] < 0)) z++;
+    return z;
 }
 
-static void test_grains(int len, const char *dir)
+static void test_grains(const char *dir)
 {
-    static int16_t out[OUT_RATE * 12];
-    double rms;
-    int outside = 0;
-    /* a frozen texture on one note, a pure tone: C4 should play it at its own pitch */
-    for (int i = 0; i < len; i++) rec[i] = (int16_t)(sin(2 * M_PI * 220.0 * i / SRC_RATE) * 12000);
-    rt_knobs k = knobs(16384, 20000, 16384, 12288, 0, 0, 0);
-    voice_run(len, k, C4_RATE, 2.0, out, &rms, &outside);
-    double hz = crossing_hz(out + OUT_RATE / 2, OUT_RATE, OUT_RATE);
-    printf("pitch: a 220 Hz recording plays at %.1f Hz at C4\n", hz);
-    check(fabs(hz - 220.0) < 3.0, "grains: C4 plays the recording at its own pitch");
-    voice_run(len, k, C4_RATE * 2, 1.0, out, &rms, &outside);
-    hz = crossing_hz(out + OUT_RATE / 4, OUT_RATE / 2, OUT_RATE);
-    check(fabs(hz - 440.0) < 6.0, "grains: an octave up doubles the pitch");
+    const int32_t len = make_rec();
+    static int16_t out[OUT_RATE * 8];
+    static rt_flashes fl;
+    rt_voice v; rt_roam r;
+    const int blocks = OUT_RATE * 4 / RT_BLOCK;
 
-    /* full density, the biggest grains, full-scale sine: no more than a sliver clipped */
-    for (int i = 0; i < len; i++) rec[i] = (int16_t)(sin(2 * M_PI * 220.0 * i / SRC_RATE) * 32000);
-    k = knobs(16384, 32767, speed_word(0.5), 32767, 32767, 32767, 32767);
-    int peak = voice_run(len, k, C4_RATE, 6.0, out, &rms, &outside);
-    int clipped = 0;
-    for (int i = 0; i < 6 * OUT_RATE; i++) if (abs(out[i]) >= 32767) clipped++;
-    printf("loudness: full density peak %d, rms %.0f, %d clipped\n", peak, rms, clipped);
-    check(clipped < 6 * OUT_RATE / 1000, "grains: full density barely clips a full-scale recording");
+    /* a steady tone: hold on one sine at C4 and an octave up */
+    static int16_t tone[SRC_RATE * 2];
+    for (int i = 0; i < SRC_RATE * 2; i++) tone[i] = (int16_t)(12000 * sin(2 * M_PI * 441.0 * i / SRC_RATE));
+    rt_knobs k = knobs();
+    memset(&v, 0, sizeof v); memset(&r, 0, sizeof r); rt_roam_init(&r); rt_voice_note(&v, 0);
+    render(&v, &r, tone, SRC_RATE * 2, &k, C4_RATE, out, 689, 0);
+    double hz = zero_crossings(out + OUT_RATE / 4, OUT_RATE / 2) / 2.0 * 2;
+    check(fabs(hz - 441) < 12, "pitch: C4 plays the recording's own pitch");
+    memset(&v, 0, sizeof v); rt_voice_note(&v, 0);
+    render(&v, &r, tone, SRC_RATE * 2, &k, C4_RATE * 2, out, 689, 0);
+    hz = zero_crossings(out + OUT_RATE / 4, OUT_RATE / 2) / 2.0 * 2;
+    check(fabs(hz - 882) < 20, "pitch: an octave up");
 
-    /* every corner of every knob: nothing outside the recording, nothing silent that should sound */
-    make_rec();
-    static const int32_t corners[3] = { 0, 16384, 32767 };
-    int silent = 0;
-    for (int a = 0; a < 3; a++) for (int b = 0; b < 3; b++) for (int c = 0; c < 3; c++) for (int d = 0; d < 3; d++)
-        for (int e = 0; e < 3; e++) {
-            k = knobs(corners[a], corners[b], corners[c], corners[d], corners[e], corners[(a + e) % 3], corners[(b + c) % 3]);
-            voice_run(len, k, C4_RATE + (uint32_t)(a * 300), 0.5, 0, &rms, &outside);
-            if (rms < 50) silent++;
-        }
-    check(!outside, "grains: never read outside the recording");
-    printf("corners: %d of 243 nearly silent (the recording has quiet tails)\n", silent);
-    check(silent < 40, "grains: knob corners sound");
-
-    /* nothing recorded: silence */
-    {
-        rt_voice v; memset(&v, 0, sizeof v);
-        int16_t buf[RT_BLOCK];
-        k = knobs(16384, 16384, 16384, 16384, 0, 16384, 0);
-        rt_voice_render(&v, rec, 100, 0, &k, C4_RATE, 32767, buf, sine);
-        int z = 1;
-        for (int n = 0; n < RT_BLOCK; n++) if (buf[n]) z = 0;
-        check(z, "grains: silence with nothing recorded");
-        rt_voice_render(&v, 0, 0, 0, &k, C4_RATE, 32767, buf, sine);
+    /* every shape and overlap at full scale: no clipping */
+    static int16_t loud[SRC_RATE * 2];
+    for (int i = 0; i < SRC_RATE * 2; i++) loud[i] = (int16_t)(32000 * sin(2 * M_PI * 110.0 * i / SRC_RATE));
+    int clip = 0, quiet = 0;
+    for (int s = 0; s < RT_SHAPES; s++) for (int o = 0; o < RT_OVL_STEPS; o++) {
+        k = knobs(); k.shape = zone(s, RT_SHAPES); k.overlap = o; k.size = 32767;
+        memset(&v, 0, sizeof v); memset(&r, 0, sizeof r); rt_roam_init(&r); rt_voice_note(&v, 0);
+        int p = render(&v, &r, loud, SRC_RATE * 2, &k, C4_RATE, out, 689, 0);
+        if (p >= 32767) clip++;
+        if (p < 8000) quiet++;
     }
+    check(!clip, "loudness: no clipping at any shape and overlap");
+    check(!quiet, "loudness: every shape and overlap is heard");
 
-    if (!dir) return;
-    /* the WAVs: the melody recording, roamed */
-    make_rec();
-    k = knobs(8192, 14044, 16384, 16384, 3000, 0, 0);
-    voice_run(len, k, C4_RATE, 6.0, out, &rms, &outside);
-    wav(dir, "rt_frozen.wav", out, 6 * OUT_RATE, OUT_RATE);
-    k = knobs(16384, 14044, speed_word(0.25), 12288, 8460, 32767, 0);
-    voice_run(len, k, C4_RATE, 12.0, out, &rms, &outside);
-    wav(dir, "rt_stretch_quarter.wav", out, 12 * OUT_RATE, OUT_RATE);
-    k = knobs(16384, 9000, speed_word(-1.0), 20000, 2000, 32767, 0);
-    voice_run(len, k, C4_RATE, 8.0, out, &rms, &outside);
-    wav(dir, "rt_backwards.wav", out, 8 * OUT_RATE, OUT_RATE);
-    k = knobs(16384, 14044, speed_word(0.5), 16384, 8460, 32767, 26000);
-    voice_run(len, k, C4_RATE, 12.0, out, &rms, &outside);
-    wav(dir, "rt_wander.wav", out, 12 * OUT_RATE, OUT_RATE);
-    k = knobs(16384, 32767, speed_word(0.1), 32767, 20000, 16384, 12000);
-    voice_run(len, k, C4_RATE, 12.0, out, &rms, &outside);
-    wav(dir, "rt_cloud.wav", out, 12 * OUT_RATE, OUT_RATE);
+    /* grains stay whole inside the recording: wide scatter at the ends, a short recording, a high key */
+    int bad = 0;
+    for (int t = 0; t < 4; t++) {
+        int32_t l = t == 2 ? 2000 : len;
+        k = knobs(); k.scatter = 32767; k.position = (t & 1) ? 32767 : 0; k.size = 32767;
+        uint32_t rate = t == 3 ? C4_RATE * 8 : C4_RATE;
+        memset(&v, 0, sizeof v); memset(&r, 0, sizeof r); rt_roam_init(&r); rt_voice_note(&v, 0);
+        memset(&fl, 0, sizeof fl);
+        rt_launch la; rt_launch_of(&k, shapes, &la);
+        for (int b = 0; b < 2000; b++) {
+            int32_t read = rt_roam_step(&r, l, &k, b == 0);
+            rt_voice_render(&v, rec, l, read, &la, rate, 32767, out, &fl, (uint32_t)b);
+            for (int g = 0; g < RT_GRAINS; g++) {
+                if (!v.g[g].winc) continue;
+                uint32_t left = (0x80000000u - v.g[g].wph) / v.g[g].winc;
+                uint64_t end = (uint64_t)v.g[g].pos + (uint64_t)left * v.g[g].rate;
+                if ((end >> RT_FRAC) >= (uint64_t)(l - 1)) bad++;
+            }
+        }
+        if (fl.n == 0) bad++;
+    }
+    check(!bad, "grains: whole inside the recording (scatter at the ends, short, high)");
+
+    /* hold + scatter: flashes spread around a still playhead */
+    k = knobs(); k.scatter = 20000;
+    memset(&v, 0, sizeof v); memset(&r, 0, sizeof r); rt_roam_init(&r); rt_voice_note(&v, 0); memset(&fl, 0, sizeof fl);
+    render(&v, &r, rec, len, &k, C4_RATE, out, 689, &fl);
+    int32_t mn = len, mx = 0;
+    for (uint32_t i = 0; i < fl.n && i < RT_FLASHES; i++) { if (fl.at[i] < mn) mn = fl.at[i]; if (fl.at[i] > mx) mx = fl.at[i]; }
+    check(fl.n > 30 && fl.n < 50 && mx - mn > rt_scatter(20000), "hold + scatter: about 40 launches a second, spread out");
+
+    memset(&v, 0, sizeof v); rt_voice_note(&v, 0);
+    check(render(&v, &r, 0, 0, &k, C4_RATE, out, 10, 0) == 0, "silence with nothing recorded");
+
+    if (dir) {
+        const char *names[3] = { "rt_hold.wav", "rt_wander.wav", "rt_jump.wav" };
+        const int modes[3] = { RT_HOLD, RT_WANDER, RT_JUMP };
+        for (int m = 0; m < 3; m++) {
+            k = knobs(); k.motion = zone(modes[m], RT_MOTIONS); k.scatter = m == 0 ? 12000 : 0;
+            memset(&v, 0, sizeof v); memset(&r, 0, sizeof r); rt_roam_init(&r); rt_voice_note(&v, 0);
+            render(&v, &r, rec, len, &k, C4_RATE, out, blocks, 0);
+            wav(dir, names[m], out, blocks * RT_BLOCK, OUT_RATE);
+        }
+        const char *sn[RT_SHAPES] = { "rt_shape_hann.wav", "rt_shape_triangle.wav", "rt_shape_pluck.wav", "rt_shape_swell.wav" };
+        for (int s = 0; s < RT_SHAPES; s++) {
+            k = knobs(); k.shape = zone(s, RT_SHAPES); k.size = 26000; k.overlap = 5;   /* 0.5x: hear each grain */
+            k.motion = zone(RT_FORWARD, RT_MOTIONS);
+            memset(&v, 0, sizeof v); memset(&r, 0, sizeof r); rt_roam_init(&r); rt_voice_note(&v, 0);
+            render(&v, &r, rec, len, &k, C4_RATE, out, blocks / 2, 0);
+            wav(dir, sn[s], out, blocks / 2 * RT_BLOCK, OUT_RATE);
+        }
+    }
 }
 
 int main(int argc, char **argv)
 {
-    for (int i = 0; i < 8192; i++) sine[i] = (int16_t)lrint(sin(2 * M_PI * i / 8192) * 32767);
-    int len = make_rec();
+    for (int i = 0; i < 8192; i++) sine[i] = (int16_t)lrint(32767 * sin(2 * M_PI * i / 8192));
+    rt_shapes_init(shapes, sine);
     test_laws();
-    test_roam(len);
-    test_grains(len, argc > 1 ? argv[1] : 0);
-    if (failures) { printf("%d FAILED\n", failures); return 1; }
+    test_route();
+    test_motions();
+    test_shapes();
+    test_grains(argc > 1 ? argv[1] : 0);
+    if (failures) { printf("%d failed\n", failures); return 1; }
     printf("all passed\n");
     return 0;
 }
