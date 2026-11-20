@@ -4,10 +4,10 @@ Plugins and companion apps for the original OP-1 running [Hundekraft](https://hu
 
 | Project | What it is | Status | Get it |
 | --- | --- | --- | --- |
-| [OP-1 Mirror](mirror/README.md) | Shows the OP-1's screen live on Windows or an Android phone: a plugin plus two viewer apps | Works, v0.7 | [Releases](https://github.com/JasonBunting/op-1-tools/releases) |
-| [Pattern+](patternplus/README.md) | A sequencer plugin like stock Pattern, plus pages, chains and saving | In progress, 0.5.2 | [Build from source](patternplus/README.md) |
-| [Mouth](mouth/README.md) | A singing, babbling voice synth: vowels, bodies from giant to tiny, and made-up words | In progress, 0.5.1 | [Build from source](mouth/README.md) |
-| [Ratatoskr](ratatoskr/README.md) | A grain cloud from the sampler's recording, with a playhead that roams, stretches, drifts and jumps | In progress, 0.2.1 | [Build from source](ratatoskr/README.md) |
+| [OP-1 Mirror](mirror/README.md) | Shows the OP-1's screen live on Windows or an Android phone: a plugin plus two viewer apps | Works, v0.7.1 | [Releases](https://github.com/JasonBunting/op-1-tools/releases) |
+| [Pattern+](patternplus/README.md) | A sequencer plugin like stock Pattern, plus pages, chains and saving | In progress, 0.5.3 | [Build from source](patternplus/README.md) |
+| [Mouth](mouth/README.md) | A singing, babbling voice synth: vowels, bodies from giant to tiny, and made-up words | In progress, 0.5.2 | [Build from source](mouth/README.md) |
+| [Ratatoskr](ratatoskr/README.md) | A grain cloud from the sampler's recording, with a playhead that roams, stretches, drifts and jumps | In progress, 0.2.2 | [Build from source](ratatoskr/README.md) |
 
 Shared as-is, in the hope it helps. It is a personal project and not actively supported: issues and pull requests
 may sit unanswered, so fork freely.
@@ -17,7 +17,7 @@ may sit unanswered, so fork freely.
 1. An original OP-1 running Hundekraft 3.3. The mirror plugin also runs on 3.1.4 and 3.2.3.
 2. To build from source:
    1. the .NET 8 SDK or later, for the mirror's viewers (the Android one also needs .NET 10 and the MAUI workload);
-   2. for the plugins, WSL (Ubuntu 24.04) with a `bfin-elf` toolchain and the Hundekraft 3.3 source (for its SDK
+   2. for the plugins, WSL (Ubuntu 24.04) with a `bfin-elf` toolchain and the Hundekraft 3.3.1 source (for its SDK
       headers and packer).
 
 ## Layout

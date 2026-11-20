@@ -1,4 +1,4 @@
-/* Pattern+: a stock-Pattern-style grid sequencer with multiple pages, as a Hundekraft 3.3 sequencer type.
+/* Pattern+: a stock-Pattern-style grid sequencer with multiple pages, as a Hundekraft 3.3.1 sequencer type.
  * This build has the grid, pages, chains and saving (patternplus/docs/pattern-plus-poc-spec.md).
  * Screen layout and colors measured from a capture of stock Pattern on the device; the artwork is drawn here.
  * Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see LICENSE and NOTICE). */
@@ -94,7 +94,7 @@ static int pp_store_parse(int pos, const char *s, int len)
         for (int i = 0; i < len && i < PP_STORE_MAX; i++) pp_kept[pos & 1][i] = s[i];
         pp_kept_len[pos & 1] = (int16_t)(len < PP_STORE_MAX ? len : PP_STORE_MAX);
         pp_kept_try[pos & 1] = 1;
-        op1_toast("pattern+ save unreadable, copy kept");
+        op1_toast("Pattern+ save unreadable, copy kept");
     }
     return r;
 }
@@ -214,7 +214,7 @@ static void pp_keep_unreadable(void)                      /* main loop */
                                OP1_FILE_WRITE | OP1_FILE_CREATE | OP1_FILE_TRUNC), wrote = -1;
         if (fd >= 0) { wrote = op1_file_write(fd, pp_kept[m], len); op1_file_close(fd); }
         if (wrote != len) {                               /* not copied: the database keeps it until a load or clear */
-            op1_toast("pattern+ autosave off, save to slot");
+            op1_toast("Pattern+ autosave off, save to slot");
             continue;
         }
         pp_let_go(m);

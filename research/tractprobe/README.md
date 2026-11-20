@@ -5,7 +5,7 @@ a vocal synth inspired by [CHIMERA](https://github.com/jamesondh/chimera-vocal-s
 Kelly-Lochbaum vocal tract) driven by a simple vocal-fold pulse. More sections cost more CPU and also make the
 tract longer: 44 sections is about an adult male's 17 cm.
 
-Build with `tools/build.sh tractprobe`, which makes `build/tractprobe.knl`. It builds against Hundekraft 3.3 and uses no firmware addresses.
+Build with `tools/build.sh tractprobe`, which makes `build/tractprobe.knl`. It builds against Hundekraft 3.3.1 and uses no firmware addresses.
 
 | File | What |
 | --- | --- |

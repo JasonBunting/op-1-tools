@@ -5,7 +5,7 @@
  *   white  : breath (fully right whispers)                  press: WILD: how far and how sharply it babbles
  *   orange : vibrato depth, then speed (warble)
  * Page 2 uses word 7, so there is no hidden preset trim.
- * Hundekraft 3.3. Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see
+ * Hundekraft 3.3.1. Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see
  * LICENSE and NOTICE). */
 #include "op1_plugin.h"
 #include "fm_dsp.h"
@@ -79,6 +79,7 @@ const op1_engine_t ENGINE_mouth = { fm_note_on, fm_render_cb, fm_note_off,
  *   a vowel strip, "ee" .. "oo": blue's place (a blue mark) and every sounding voice's vowel (a dot);
  *   the bottom row: each knob's name and value; a knob on page 2 shows its page-2 name and a doubled line. */
 #include "op1_synth.h"
+#include "seq/seq_text.h"   /* sq_linemin: whole pixels on the running panel's grid (SDK docs/screen-art.md "Pixel grid") */
 #define Q(v) ((v) << 10)
 #define TS 12
 static const uint8_t c_blue[4] = { 0x4D, 0x9E, 0xFF, 0xFF }, c_green[4] = { 0x00, 0xED, 0x95, 0xFF },
@@ -91,11 +92,12 @@ static char shown[TX_N][14];
 static uint8_t tx_made;
 static int32_t seen_blk[OP1_VOICES];
 
+/* every line: its width made whole pixels (at least 1), straight ones on the panel's pixel grid, so they stay sharp
+ * on each OP-1 screen panel */
 static void ln(void *r, int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t w, const uint8_t *c)
 {
     if (x0 == x1 && y0 == y1) return;
-    op1_pt a = { x0, y0 }, b = { x1, y1 };
-    op1_raster_line(r, &a, &b, w, c);
+    sq_linemin(r, x0, y0, x1, y1, w, c, 1);
 }
 static void txt(void *r, int i, const char *s)
 {
@@ -155,10 +157,10 @@ static void draw_mouth(void *r, int32_t cx, int32_t cy, int32_t w, int32_t o, in
         lo[i] = (op1_pt){ x, cy + half + ((hl * a) >> 10) - lift };
     }
     for (int i = 0; i < MOUTH_N; i++) {
-        op1_raster_line(r, &uo[i], &uo[i + 1], 0xA00, c_white);
-        op1_raster_line(r, &lo[i], &lo[i + 1], 0xA00, c_white);
-        op1_raster_line(r, &ui[i], &ui[i + 1], 0x600, c_white);
-        op1_raster_line(r, &li[i], &li[i + 1], 0x600, c_white);
+        ln(r, uo[i].x, uo[i].y, uo[i + 1].x, uo[i + 1].y, 0xA00, c_white);
+        ln(r, lo[i].x, lo[i].y, lo[i + 1].x, lo[i + 1].y, 0xA00, c_white);
+        ln(r, ui[i].x, ui[i].y, ui[i + 1].x, ui[i + 1].y, 0x600, c_white);
+        ln(r, li[i].x, li[i].y, li[i + 1].x, li[i + 1].y, 0x600, c_white);
     }
     if (o > Q(5)) {                                                     /* upper teeth: an edge and three gaps */
         int32_t ty = cy - (o >> 1) + (o >> 3) + Q(1), tx = (w * 9) >> 4, th = o >> 3;

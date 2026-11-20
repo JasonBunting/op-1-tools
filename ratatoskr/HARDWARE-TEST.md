@@ -3,7 +3,7 @@
 Every step says what to do, then what you should see or hear. If what happens is different, write down the step
 number and what happened, and keep going unless the OP-1 froze. At the end there's a short list of things to report.
 
-You need: the OP-1 on Hundekraft 3.3, the computer with the workshop open, and `build/ratatoskr.knl`. About 20
+You need: the OP-1 on Hundekraft 3.3.1, the computer with the workshop open, and `build/ratatoskr.knl`. About 20
 minutes.
 
 Words used here:
@@ -127,6 +127,14 @@ middle key through each step.
 
 1. Set density fully right, size fully right, and hold six keys at once for ten seconds.
    - Expect: no crackles, dropouts or a frozen screen. If it crackles, note which settings and how many keys.
+
+## 10. Sharper screen lines (0.2.2)
+
+1. With a sample recorded (section 3), hold a key and look closely at the screen.
+   - Expect: the waveform columns, the green region bracket, the blue playhead arrow and the white read line look crisp:
+     no soft, doubled or half-lit rows. The thin white read line may look slightly bolder than before.
+2. Turn green (width) slowly from one end to the other.
+   - Expect: the bracket's ends move a pixel at a time and stay sharp; nothing flickers.
 
 ## Report
 

@@ -21,4 +21,4 @@ Hundekraft's granular engine (synth_sdk/plugins/granular/granular.c in the Hunde
 same GPL-3.0-or-later terms with the additional permission above.
 
 The complete corresponding source of ratatoskr.knl is this folder (ratatoskr.c, ratatoskr.svg, rt_dsp.h,
-plugin.json), built and packed with tools/pack-plugin.sh against the Hundekraft 3.3 source; see the project README.
+plugin.json), built and packed with tools/pack-plugin.sh against the Hundekraft 3.3.1 source; see the project README.

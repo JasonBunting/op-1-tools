@@ -4,7 +4,7 @@
   "order": 0,
   "symbol": "ENGINE_tractprobe",
   "author": "Jason Bunting",
-  "version": "0.2",
+  "version": "0.2.1",
   "sources": ["tractprobe.c"],
   "defaults": [16384, 4000, 9000, 3000],
   "loadable": true,

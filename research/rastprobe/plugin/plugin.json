@@ -4,6 +4,6 @@
   "symbol": "FEATURE_rastprobe",
   "loadable": true,
   "author": "Jason Bunting",
-  "version": "0.2",
+  "version": "0.2.1",
   "sources": ["rastprobe.c"]
 }

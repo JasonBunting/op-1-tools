@@ -3,7 +3,7 @@
 Every step says what to do, then what you should see or hear. If what happens is different, write down the step
 number and what happened, and keep going unless the OP-1 froze. At the end there's a short list of things to report.
 
-You need: the OP-1 on Hundekraft 3.3, the computer with the workshop open, `build/mouth.knl`, and the
+You need: the OP-1 on Hundekraft 3.3.1, the computer with the workshop open, `build/mouth.knl`, and the
 `mouth/presets` folder. About 30 minutes.
 
 Words used here:
@@ -180,6 +180,14 @@ Turn talk back on (blue's page 2 to **1/8**) when done.
      how real high voices behave.
 4. Repeat section 10 (CPU) once: hold six keys with talk at **1/32** and wild at **100%**, and write down "synth" and
    "pk" again. The new low end costs a little; "pk" should still be well under 100.
+
+## 14. Sharper screen lines (0.5.2)
+
+1. Play and hold a key on **ah**, so the mouth opens, and look closely at the screen.
+   - Expect: the lips, the vowel strip and the line under each knob's value look crisp: no soft, doubled or half-lit
+     rows. The lips are a touch bolder than before.
+2. Turn blue slowly from **ee** to **oo** while holding the key.
+   - Expect: the mouth still moves smoothly, without jumping or shimmering.
 
 ## What to report
 

@@ -1,6 +1,6 @@
 # Ratatoskr
 
-A synth engine for the original OP-1 running Hundekraft 3.3: a cloud of grains read from the sampler's recording,
+A synth engine for the original OP-1 running Hundekraft 3.3.1: a cloud of grains read from the sampler's recording,
 around a playhead that scurries through it. Named for the squirrel that runs up and down the world tree.
 
 Record something into a sound running Ratatoskr, and the recording becomes a texture. The playhead moves through a region of the recording at any speed from frozen to 4x, forwards or backwards,
@@ -11,7 +11,7 @@ The idea comes from [GrainBrick](https://github.com/ETRNLIAM/GrainBrick), a gran
 Hundekraft's own `granular`, `clouds` and `hail` cover plain granular playback; Ratatoskr's difference is the moving
 playhead. See [Ratatoskr or Hundekraft's granular?](#ratatoskr-or-hundekrafts-granular) to pick between them.
 
-Status: 0.2.1. Playing well on the OP-1 so far; saving and the new Shift settings are not yet checked there. The
+Status: 0.2.2. Playing well on the OP-1 so far; saving and the new Shift settings are not yet checked there. The
 [manual](manual/manual.html) covers playing it; this README is the short version, plus building and testing.
 
 ## Ratatoskr or Hundekraft's granular?

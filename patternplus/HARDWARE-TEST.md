@@ -1,6 +1,6 @@
 # Pattern+ couch sheet and tests
 
-The grid, pages and basic chain playback have passed on the device. 0.5.2 is for Hundekraft 3.3, where the synth octave arrows now transpose what a sequencer plays, as on stock; see the octave test below. 0.5.1 adds stock's live edit: Shift + left / right while playing frees the cursor from the playhead. 0.5.0 made the cursor walk along the chain, and added Help as a key you hold to keep the cursor and HOLD on one page. Cutting, copying and pasting patterns between pages, with undo, came in 0.4. Saving is automatic and comes back after a power off; saved collections are a separate list you can name, load and start over from.
+The grid, pages and basic chain playback have passed on the device. 0.5.2 is for Hundekraft 3.3, where the synth octave arrows now transpose what a sequencer plays, as on stock; see the octave test below. 0.5.3 is a rebuild for Hundekraft 3.3.1, whose pop-up messages show capital letters, so its two save warnings start with "Pattern+". 0.5.1 adds stock's live edit: Shift + left / right while playing frees the cursor from the playhead. 0.5.0 made the cursor walk along the chain, and added Help as a key you hold to keep the cursor and HOLD on one page. Cutting, copying and pasting patterns between pages, with undo, came in 0.4. Saving is automatic and comes back after a power off; saved collections are a separate list you can name, load and start over from.
 
 ## Before you trust it with a good idea
 
@@ -75,7 +75,7 @@ In the saved view:
 
 Saving onto a used slot replaces it after you finish the name. Synth and Drum each have their own 8 slots. Green text marks the slot you last loaded or saved.
 
-If the automatic save can't be read at power on, `pattern+ save unreadable, copy kept` appears, and Pattern+ starts with an empty page. The unreadable save is copied to `patternplus/unreadable-s.txt` (Synth) or `unreadable-d.txt` (Drum) before anything is saved over it. If that copy can't be written, `pattern+ autosave off, save to slot` appears after your next few changes: your work isn't being saved automatically until the copy succeeds, so save it to a slot. You can't easily cause this on purpose, so there's no test step for it.
+If the automatic save can't be read at power on, `Pattern+ save unreadable, copy kept` appears, and Pattern+ starts with an empty page. The unreadable save is copied to `patternplus/unreadable-s.txt` (Synth) or `unreadable-d.txt` (Drum) before anything is saved over it. If that copy can't be written, `Pattern+ autosave off, save to slot` appears after your next few changes: your work isn't being saved automatically until the copy succeeds, so save it to a slot. You can't easily cause this on purpose, so there's no test step for it.
 
 The grid's other controls, including Shift + note key, do nothing in the chain and saved views.
 
