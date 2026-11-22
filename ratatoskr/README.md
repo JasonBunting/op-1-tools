@@ -13,14 +13,14 @@ The 0.3 design follows [Ratatoskr-Design-Spec.md](Ratatoskr-Design-Spec.md). Hun
 `hail` cover plain granular playback; Ratatoskr's difference is the moving playhead. See
 [Ratatoskr or Hundekraft's granular?](#ratatoskr-or-hundekrafts-granular).
 
-Status: 0.3.1, a redesign of 0.2 (a single motion knob instead of speed, drift, jumps, turns and chaos; grain shapes; a
+Status: 0.3.3, a redesign of 0.2 (a single motion knob instead of speed, drift, jumps, turns and chaos; grain shapes; a
 tree screen). Host tests pass; not yet tried on the OP-1. The last 0.2 build is `build/versions/ratatoskr-0.2.2.knl`.
 The [manual](manual/manual.html) still describes 0.2 and needs rewriting once 0.3 has been played.
 
 ## Ratatoskr or Hundekraft's granular?
 
 Both play grains from the sound's own recording (up to 6 s, recorded with the input key while the engine is selected),
-both open the core's sample browser, and in both C4 plays the recording at its own pitch. They differ in what moves:
+and in both C4 plays the recording at its own pitch. They differ in what moves:
 
 | | Hundekraft's `granular` | Ratatoskr |
 | --- | --- | --- |
@@ -44,7 +44,7 @@ both open the core's sample browser, and in both C4 plays the recording at its o
 
 Record with Ratatoskr selected rather than in the sampler before switching: when a sound switches to Ratatoskr, the
 core loads the sound's sample from the OP-1's disk, which can be an older recording than the one you just made.
-White's press opens the sampler's sample browser, to load a saved sample instead.
+Ratatoskr has no sample browser (a second press of the knob loaded a sample, too easily by accident). To use a saved sample, load it into the sound with the sampler engine first.
 
 ## Controls
 
@@ -55,7 +55,7 @@ A doubled line over a label shows the knob is on page 2.
 | --- | --- | --- |
 | Blue | **pos**: where the squirrel starts, 0–100% of the recording, shown in seconds; while playing it shows where the squirrel is | **range**: 5–100% of the recording around the position, where the squirrel may travel; slid inward at the ends to keep its size |
 | Green | **size**: grain length, 12–250 ms, logarithmic | **shape**: hann, triangle, pluck, swell, with the curve drawn on the right |
-| White | **scat**: scatter, each grain up to 0–500 ms either side of the squirrel | press: the sampler's sample browser |
+| White | **scat**: scatter, each grain up to 0–500 ms either side of the squirrel | press: nothing |
 | Orange | **motion**: hold, forward, reverse, bounce, wander, jump | **speed**: 0.05x–2x for forward, reverse and bounce (0.25x in the middle); 0.1–4 a second for wander and jump (1 in the middle) |
 
 **Shift + green: overlap**, 0.5x–4x, shown on the green label while Shift is held. A new sound starts at 2x; turning
@@ -96,9 +96,9 @@ See [HARDWARE-TEST.md](HARDWARE-TEST.md).
 
 | File | What |
 | --- | --- |
-| `plugin/ratatoskr.c` | The OP-1 glue (voices, phrases, the shared playhead, page 2, the sample browser, the overlap record) and the screen. |
+| `plugin/ratatoskr.c` | The OP-1 glue (voices, phrases, the shared playhead, page 2, the overlap record) and the screen. |
 | `plugin/rt_dsp.h` | The controls' laws, the route, the motions, the grain shapes and the grains. Integer only, no OP-1 calls. |
-| `plugin/ratatoskr.svg` | The branches and roots, and the eagle, dragon and squirrel that `ratatoskr.c` moves. |
+| `plugin/ratatoskr.svg` | The eagle, dragon and squirrel that `ratatoskr.c` places. |
 | `plugin/test/host_test.c` | Host test: the laws, the route, every motion, phrases, the shapes, grains inside the recording, pitch, loudness; writes WAVs. |
 | `manual/` | The manual (`manual.html`, its style and key images; screenshots go in `img/`). Still 0.2. |
 | `HARDWARE-TEST.md` | The device test. |

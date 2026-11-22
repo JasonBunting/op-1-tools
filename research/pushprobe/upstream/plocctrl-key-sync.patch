@@ -1,0 +1,12 @@
+--- a/ext/kennel/synth_sdk/plugins/plocctrl/plocctrl.c
++++ b/ext/kennel/synth_sdk/plugins/plocctrl/plocctrl.c
+@@ -12,7 +12,8 @@
+     op1_eng_page[0]=op1_eng_page[1]=0;
+     for(int k=0;k<4;k++){accumulator[k]=0;was_shift[k]=0;}
+ }
+-static void key_sync(void) {if(!p5_shift_held())op1_eng_page[0]=0;}
++/* key_sync runs on every key event, whatever sound is shown: only touch the shared page flags for a linked PLOC. */
++static void key_sync(void) {if(p6_linked(op1_synth_knobs(p4_slot()))&&!p5_shift_held())op1_eng_page[0]=0;}
+ static int input(const op1_input *in) {
+     int slot=p4_slot();const int16_t *raw=op1_synth_knobs(slot);
+     if(in->screen!=0x14||p4_drum_mode()||!p6_linked(raw))return 0;

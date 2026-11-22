@@ -1,0 +1,26 @@
+{
+  "name": "pushguard",
+  "kind": "feature", "cold": true,
+  "symbol": "FEATURE_pushguard",
+  "sources": ["pushguard.c"],
+  "loadable": true,
+  "author": "Jason Bunting",
+  "version": "0.1.0",
+  "claims": [],
+  "settings_title": "PUSH GUARD",
+  "settings": [
+    { "id": "on", "label": "TRIG. GUARD", "type": "onoff", "default": 1,
+      "help": "Stops a worn key from playing its note twice. It only watches the 24 note keys." },
+    { "id": "ms", "label": "WINDOW MS", "type": "number", "min": 10, "max": 300, "step": 10, "default": 50,
+      "help": "Press a key again this soon after letting go and it counts as a bounce." },
+    { "id": "windows", "label": "WINDOWS", "type": "choice", "default": 0,
+      "choices": [ {"label": "PER NOTE"}, {"label": "ALL"} ],
+      "help": "PER NOTE times each key on its own. ALL shares one window, so a quick press on another key is dropped too." },
+    { "id": "release", "label": "HOLD RELEASE", "type": "onoff", "default": 1,
+      "help": "Holds each release back for the window, so a bounce can't cut the note short. Off lets go at once." },
+    { "id": "knobs", "label": "KNOB GUARD", "type": "onoff", "default": 1,
+      "help": "Stops a worn encoder switch from pushing twice, which flips a page 2 straight back." },
+    { "id": "kms", "label": "KNOB MS", "type": "number", "min": 1, "max": 60, "step": 1, "default": 15,
+      "help": "Push an encoder again this soon after letting go and it counts as a bounce." }
+  ]
+}

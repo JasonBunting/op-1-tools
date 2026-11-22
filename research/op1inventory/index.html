@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OP-1 inventory</title>
+<style>
+  body { font: 14px/1.5 system-ui, sans-serif; margin: 24px; background: #fff; color: #222; }
+  button { font: inherit; padding: 6px 14px; }
+  #status { margin: 12px 0; }
+  #status.error { color: #9b3026; }
+  table { border-collapse: collapse; font: 12px/1.4 Consolas, monospace; white-space: nowrap; }
+  th, td { text-align: left; padding: 3px 10px 3px 0; border-bottom: 1px solid #ddd; vertical-align: top; }
+  tr.off td, tr.failed td, tr.skipped td { color: #888; }
+  .lost { color: #9b3026; }
+  pre { background: #f4f4f4; padding: 8px; overflow-x: auto; }
+</style>
+</head>
+<body>
+<h1>What's on the OP-1</h1>
+<p>Reads the plugin inventory and the switched-off list over USB MIDI, with the Hundekraft workshop's own protocol
+code. Reading changes nothing; the switched-off list is saved only when you press its button. Close the workshop tab first: only one page can talk to the OP-1.</p>
+<button id="read">Read from OP-1</button>
+<p id="status" role="status"></p>
+<div id="out"></div>
+<div id="offbox" hidden>
+  <h2>Switch plugins off</h2>
+  <p>Names from the Name column, separated by commas. They stay installed but don't load from the next restart of the
+  OP-1. Empty the box and save to switch everything back on.</p>
+  <input id="off" size="60" autocomplete="off" spellcheck="false">
+  <button id="save">Save on OP-1</button>
+</div>
+<script type="module">
+import {openWebMidi, session} from '/ws/op1push.js';
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const say = (t, err = false) => { $('#status').textContent = t; $('#status').classList.toggle('error', err); };
+
+$('#read').addEventListener('click', async () => {
+  let port;
+  $('#read').disabled = true;
+  say('Connecting…');
+  try {
+    port = await openWebMidi(navigator);
+    const s = session(port);
+    const hello = await s.hello();
+    const inv = await s.inventory();
+    if (!inv) { say('This OP-1 runs firmware without the inventory.', true); return; }
+    const off = await s.getOff(), offBoot = await s.getOff({atBoot: true});
+    const rows = inv.records.map(r => `<tr class="${esc(r.state)}"><td>${esc(r.kind)}</td><td>${esc(r.name)}</td>
+<td>${esc(r.source === 'builtin' ? 'built-in' : r.path)}</td><td>${esc(r.version)}</td><td>${esc(r.author)}</td>
+<td>${esc(r.state)}</td><td>${r.claims.map(c => `<span class="${c.state}">${esc(c.name)}${c.state === 'lost' ? ' ✗' : ''}</span>`).join(', ')}</td>
+<td>${esc(r.reason)}</td></tr>`).join('');
+    const text = inv.records.map(r => [r.kind, r.name, r.source === 'builtin' ? 'built-in' : r.path, r.version, r.state, r.reason].join('\t')).join('\n');
+    $('#out').innerHTML = `<p>Firmware protocol ${esc(hello.version)}. ${inv.records.length} entries,
+${inv.records.filter(r => r.state === 'loaded').length} running. Switched off now: ${esc(offBoot.join(', ') || 'nothing')};
+after the next restart: ${esc(off.join(', ') || 'nothing')}.</p>
+<table><thead><tr><th>Kind</th><th>Name</th><th>From</th><th>Version</th><th>Author</th><th>State</th><th>Claims</th><th>Why</th></tr></thead>
+<tbody>${rows}</tbody></table>
+<p>As text, to paste into the chat:</p><pre>${esc(text)}</pre>`;
+    $('#off').value = off.join(',');
+    $('#offbox').hidden = false;
+    say('Done.');
+  } catch (e) {
+    say(e.message + (e.hint ? ' ' + e.hint : ''), true);
+  } finally {
+    port?.close?.();
+    $('#read').disabled = false;
+  }
+});
+
+$('#save').addEventListener('click', async () => {
+  const names = $('#off').value.split(',').map(n => n.trim()).filter(n => n);
+  if (!confirm(names.length ? `Switch off at the next restart: ${names.join(', ')}?` : 'Switch every plugin back on at the next restart?')) return;
+  let port;
+  $('#save').disabled = true;
+  say('Saving…');
+  try {
+    port = await openWebMidi(navigator);
+    if (!await session(port).setOff(names)) { say('This OP-1 runs firmware without the switched-off list.', true); return; }
+    say('Saved. It takes effect when the OP-1 restarts: switch it off and on again.');
+  } catch (e) {
+    say(e.message + (e.hint ? ' ' + e.hint : ''), true);
+  } finally {
+    port?.close?.();
+    $('#save').disabled = false;
+  }
+});
+</script>
+</body>
+</html>

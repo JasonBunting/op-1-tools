@@ -1,4 +1,4 @@
-# Ratatoskr: hardware test (0.3.1)
+# Ratatoskr: hardware test (0.3.3)
 
 Every step says what to do, then what you should see or hear. If what happens is different, write down the step
 number and what happened, and keep going unless the OP-1 froze. At the end there's a short list of things to report.
@@ -24,13 +24,13 @@ Words used here:
 
 1. Press the **synth key**, then **sound key 8** (or any sound you don't mind changing).
 2. Hold **Shift** and press **T1**. Turn **blue** until **ratatoskr** is highlighted, then press **T1**.
-   - Expect: a tree in the middle of the screen: branches, a white eagle at the top, a green dragon at the roots. If
+   - Expect: a tree in the middle of the screen: a white eagle at the top, a green dragon at the roots. If
      the sound has a sample, the trunk is made of horizontal lines (the recording, from the roots up), with an orange
      squirrel to its right, halfway up, pointing at the trunk. With no sample, the trunk is missing and the screen says
      **no sample**. At the bottom, four labels in blue, green, white and orange: **pos** (seconds), **size 50 ms**,
      **scat 0 ms**, **motion hold**.
    - Take a photo of the screen either way. Note anything that overlaps, is cut off, or is hard to see (especially the
-     dark green branches).
+     dark parts of the trunk).
 
 ## 3. Record a sample into it
 
@@ -98,9 +98,8 @@ Hold a middle key through each step.
    - On **wander** or **jump** it shows how often a second: **1.0/s** in the middle, **0.1/s** fully left, **4.0/s**
      fully right.
    - Press orange again.
-4. **Sample browser:** press **white**.
-   - Expect: the core's sample browser opens, listing the sampler presets. Pick one and press **white** to load it.
-     The trunk changes to the new sample and Ratatoskr plays it.
+4. **White press:** press **white**.
+   - Expect: nothing happens; no sample browser opens.
 
 ## 7. Overlap (Shift + green)
 
@@ -128,6 +127,6 @@ Hold a middle key through each step.
 
 1. Any step that didn't match, with its number.
 2. Photos of the screen: the tree, the squirrel tilted while moving, and the shape curve.
-3. Whether the branches and the dim part of the trunk are visible enough.
+3. Whether the dim part of the trunk are visible enough.
 4. How the slow speeds (0.05x to 0.25x) sound: smooth, or rough and phasey?
 5. Anything about the controls that felt backwards or hard to find.

@@ -1,0 +1,14 @@
+{
+  "name": "pushprobe",
+  "kind": "synth",
+  "order": 0,
+  "symbol": "ENGINE_pushprobe",
+  "author": "Jason Bunting",
+  "version": "0.3.0",
+  "sources": ["pushprobe.c"],
+  "defaults": [0, 0, 0, 0],
+  "screen": {"svg": "pushprobe.svg", "symbol": "SCREEN_pushprobe"},
+  "engine_input": true,
+  "loadable": true,
+  "claims": []
+}

@@ -1,9 +1,9 @@
 /* Ratatoskr: a grain cloud for the OP-1 under Hundekraft, read around a playhead (the squirrel) that runs up and down
  * the sampler slot's recording, drawn as the trunk of Yggdrasil. The DSP is rt_dsp.h.
- * Record into the sound with the input key while ratatoskr is selected (or load a sample with white's press).
+ * Record into the sound with the input key while ratatoskr is selected.
  *   blue   : POSITION, where the squirrel starts                     press: RANGE, 5 .. 100% of the recording around it
  *   green  : SIZE, 12 .. 250 ms                                      press: SHAPE, hann / triangle / pluck / swell
- *   white  : SCATTER, 0 .. 500 ms either side                        press: the sampler's sample browser
+ *   white  : SCATTER, 0 .. 500 ms either side                        press: nothing (no sample browser: too easy to load by accident)
  *   orange : MOTION, hold / forward / reverse / bounce / wander / jump  press: SPEED, 0.05 .. 2x travel, or 0.1 .. 4
  *                                                                           targets or jumps a second
  * Shift + green (the engine's record, shown while Shift is held): OVERLAP, 2x for a new sound, 0.5 .. 4x.
@@ -111,10 +111,10 @@ static void rt_render_cb(void *self, int16_t *out, const int16_t *params)
 }
 
 const op1_engine_t ENGINE_ratatoskr = { rt_note_on, rt_render_cb, rt_note_off,
-                                        { OP1_PRESS_PAGE, OP1_PRESS_PAGE, OP1_PRESS_BROWSE, OP1_PRESS_PAGE } };
+                                        { OP1_PRESS_PAGE, OP1_PRESS_PAGE, OP1_PRESS_NONE, OP1_PRESS_PAGE } };
 
 /* ======================= screen (GUI thread) =======================
- * ratatoskr.svg holds the branches and roots, and the eagle, dragon and squirrel this moves. Drawn here:
+ * ratatoskr.svg holds the eagle, dragon and squirrel this places. Drawn here:
  *   the trunk: the recording from the roots (its start) up to the crown (its end), a row per slice, as wide as its
  *   loudest moment; the route (the range) bright, the rest dim; the eagle on the route's top, the dragon at its bottom;
  *   the squirrel at the playhead, pointing at the trunk, tilted up or down while it travels;
