@@ -13,7 +13,7 @@ The 0.3 design follows [Ratatoskr-Design-Spec.md](Ratatoskr-Design-Spec.md). Hun
 `hail` cover plain granular playback; Ratatoskr's difference is the moving playhead. See
 [Ratatoskr or Hundekraft's granular?](#ratatoskr-or-hundekrafts-granular).
 
-Status: 0.3.3, a redesign of 0.2 (a single motion knob instead of speed, drift, jumps, turns and chaos; grain shapes; a
+Status: 0.3.7, a redesign of 0.2 (a single motion knob instead of speed, drift, jumps, turns and chaos; grain shapes; a
 tree screen). Host tests pass; not yet tried on the OP-1. The last 0.2 build is `build/versions/ratatoskr-0.2.2.knl`.
 The [manual](manual/manual.html) still describes 0.2 and needs rewriting once 0.3 has been played.
 
@@ -49,13 +49,13 @@ Ratatoskr has no sample browser (a second press of the knob loaded a sample, too
 ## Controls
 
 Blue, green and orange each have a second page: press the knob until it clicks to switch, press again to switch back.
-A doubled line over a label shows the knob is on page 2.
+A second strip beside a row shows the knob is on page 2.
 
 | Knob | Page 1 | Page 2 (press) |
 | --- | --- | --- |
-| Blue | **pos**: where the squirrel starts, 0–100% of the recording, shown in seconds; while playing it shows where the squirrel is | **range**: 5–100% of the recording around the position, where the squirrel may travel; slid inward at the ends to keep its size |
+| Blue | **position**: where the squirrel starts, 0–100% of the recording, shown in seconds; while playing it shows where the squirrel is | **range**: 5–100% of the recording around the position, where the squirrel may travel; slid inward at the ends to keep its size |
 | Green | **size**: grain length, 12–250 ms, logarithmic | **shape**: hann, triangle, pluck, swell, with the curve drawn on the right |
-| White | **scat**: scatter, each grain up to 0–500 ms either side of the squirrel | press: nothing |
+| White | **scatter**: each grain up to 0–500 ms either side of the squirrel | press: nothing |
 | Orange | **motion**: hold, forward, reverse, bounce, wander, jump | **speed**: 0.05x–2x for forward, reverse and bounce (0.25x in the middle); 0.1–4 a second for wander and jump (1 in the middle) |
 
 **Shift + green: overlap**, 0.5x–4x, shown on the green label while Shift is held. A new sound starts at 2x; turning
@@ -79,12 +79,14 @@ motion carries on from where it is. Grains keep the size and shape they were lau
 ## Screen
 
 1. **The tree:** the recording runs up the trunk from the roots (its start) to the crown (its end); each row is as wide
-   as that slice's loudest moment. The range is bright, the rest dim. The eagle sits in the crown and the dragon at the roots.
+   as that slice's loudest moment. The range is bright, the rest dim. The eagle sits in the crown and the dragon at the
+   roots (pixel art from [the design spec](Ratatoskr-Design-Spec.md)); they never move.
 2. **The squirrel:** at the playhead, right of the trunk with a line pointing at it; tilted up or down while it
    travels.
 3. **Grain flashes:** white dashes left of the trunk where grains were just launched.
 4. **The shape:** with green on page 2, the grain's curve on the right.
-5. **Bottom:** each knob's name and value in its colour.
+5. **Left column:** a row per knob, top to bottom blue, green, white, orange: a small name, the value under it, and a
+   strip in the knob's colour. A second strip marks a knob on page 2.
 
 With nothing recorded on the sound, the trunk is missing, the screen says **no sample** and the keys are silent.
 

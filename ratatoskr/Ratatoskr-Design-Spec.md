@@ -3,6 +3,40 @@
 **Target:** Original Teenage Engineering OP‑1 running Hundekraft  
 **Status:** Approved screen design for implementation and on-device validation
 
+> **Decisions, 2026-11-21 (these override anything below):**
+>
+> 1. **Only the look and feel is approved.** Functional items in this spec that differ from Ratatoskr 0.3.3 are not
+>    approved and stay as 0.3.3 has them: no sample browser on white's push (0.3.3 removed it), and the *Additional
+>    parameters* table (Grain Reverse, where Overlap lives) is to be revisited later. Overlap stays on Shift + green.
+> 2. **Lowercase text.** The OP-1's native font has no capital letters, so every label and value is lowercase
+>    (`position`, `0.32 s`, `hold`), not `POSITION`.
+> 3. **No branches or roots** for now (the idea may come back later).
+> 4. **The eagle and dragon stay pinned** at the crown and the roots, whatever the Range. They do not follow the Range
+>    endpoints: inside the trunk the bars would cover them.
+> 5. **The trunk keeps 0.3.3's Range highlight:** bars inside the Range bright (`#83D8C8`), the rest dim.
+> 6. **The shape pane appears only while green is pressed** (green on page 2), as in 0.3.3. It is not shown during
+>    normal playing.
+> 7. **Grain marks stay white.**
+> 8. **Colors stay as in 0.3.3:** the knob colors (blue `#4D9EFF`, green `#00ED95`, white `#FFFFFF`, orange `#FF8C3A`) for
+>    each row's label, value and strip. The muted label color and the alternative encoder colors below are not used.
+> 9. **Text sizes:** the native text comes in fixed sizes; labels use 8 and values 12.
+> 10. **Page 2** shows as in 0.3.3: the row's label and value switch to the page-2 parameter (`range`, `shape`, `speed`),
+>     marked by a second strip beside the first.
+> 11. **While Shift is held**, the green row shows the overlap (`overlap 2x`), as in 0.3.3.
+> 12. **The squirrel keeps 0.3.3's tilt** (up or down while travelling, level when still).
+> 13. **Drawing cost:** the eagle and dragon never move, so they are drawn through the core's cached static prefix
+>     (`op1_screen_draw_cached`) and cost nothing per frame after the first; only the squirrel is live.
+> 14. **After the first device look (0.3.5):** the dragon was too small to make out, so its pixel art is scaled 1.5x
+>     with whole pixels (51 × 21, top-left at (136, 137)) and the roots move up to y = 135. The squirrel tilts 12°
+>     instead of 25°. Each value sits 5 units below its label's baseline (not 11 below with an 8-unit label, which
+>     crowded them), the label baselines are y = 33, 62, 91, 120, and each strip runs from 8 above the label's baseline
+>     to the value's foot (2 × 22).
+> 15. **0.3.6:** on the device the panel's bottom rows (below about y = 147) can sit behind the window, cutting the
+>     dragon in half, so the dragon moves up 12 units (top-left (136, 125), bottom 146) and the trunk's start with it
+>     (y = 123). The SDK's screen-art notes also leave space at the bottom.
+> 16. **0.3.7:** more room between the left column's rows: label baselines y = 21, 54, 87, 120 (33 apart; the bottom
+>     row stays put).
+
 Ratatoskr plays a recorded sample as a stream of overlapping grains. The waveform is the trunk of Yggdrasil. The squirrel is the playhead, the eagle marks the crown, and the dragon marks the roots. Turning the blue encoder puts the squirrel somewhere in the recording. Turning the orange encoder changes how he travels.
 
 ## Main controls
@@ -49,13 +83,17 @@ The left column shows the four encoder readouts. The central waveform forms the 
 | Grain marks | Keep the current live grain display. Place marks at actual grain source centers after boundary handling. Combine launches that map to the same display row. Reference mark color is `#D6EBE1`. |
 | Shape pane | On the right, place the `SHAPE` label at `(237, 58)` and the shape name at `(237, 109)`, measured at the text baseline. Use `#83B197` and `#B9E6C1` respectively. The axes run from `(237, 68)` to `(237, 93)` to `(304, 93)` in `#264D39`. Plot the active window in `#8DDCA6` across x = 237–304, with a 20-unit peak height and a reference stroke width of 1.35 logical units. |
 
-Draw the branches and roots behind the bars. For the reference frame, the four polylines are `[(156,46),(134,46),(117,39)]`, `[(156,86),(175,69),(196,69),(211,60)]`, `[(156,144),(142,144),(127,152)]` and `[(156,144),(168,146),(186,152)]`. Use `#204B37` and a 1.2-unit reference stroke. Where SVG art and generated marks share screen space, preserve legibility with draw order or disjoint bounds.
+~~Draw the branches and roots behind the bars.~~ *Not now (decision 3).* For reference, the four polylines were `[(156,46),(134,46),(117,39)]`, `[(156,86),(175,69),(196,69),(211,60)]`, `[(156,144),(142,144),(127,152)]` and `[(156,144),(168,146),(186,152)]` in `#204B37` with a 1.2-unit stroke. Where SVG art and generated marks share screen space, preserve legibility with draw order or disjoint bounds.
+
+Table notes, per the decisions above: labels and values are lowercase and in the knob colors (decisions 2 and 8); the
+eagle and dragon stay at their full-Range anchors (decision 4); grain marks are white (decision 7); the shape pane is
+shown only while green is on page 2 (decision 6).
 
 The blue readout shows selected Position while the encoder is being edited and live playhead time otherwise. Display source position in seconds, Size and Scatter in milliseconds, and the active Motion by name. Show `NO SAMPLE` in the waveform area for an empty slot. After a successful sample change, rebuild the waveform and place the squirrel at the stored Position.
 
 ### Shape display and editing
 
-Show the shape plot during normal playing, with **Size** visible in the green row. Green push enters or exits Shape editing. In Shape editing, emphasize the right pane with the green encoder color and update the name and curve as the encoder turns. The right pane supplies the Shape readout and the left row continues to show Size. In this screen update, reuse the current encoder and Shift state so each gesture still targets the same parameter.
+*Superseded by decision 6:* the shape plot appears only while green is on page 2, and the green row then shows `shape` and the shape's name, as in 0.3.3. ~~Show the shape plot during normal playing, with **Size** visible in the green row. Green push enters or exits Shape editing. In Shape editing, emphasize the right pane with the green encoder color and update the name and curve as the encoder turns. The right pane supplies the Shape readout and the left row continues to show Size.~~ In this screen update, reuse the current encoder and Shift state so each gesture still targets the same parameter.
 
 ### Native integration
 

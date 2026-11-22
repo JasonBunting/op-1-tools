@@ -1,4 +1,4 @@
-# Ratatoskr: hardware test (0.3.3)
+# Ratatoskr: hardware test (0.3.7)
 
 Every step says what to do, then what you should see or hear. If what happens is different, write down the step
 number and what happened, and keep going unless the OP-1 froze. At the end there's a short list of things to report.
@@ -24,11 +24,12 @@ Words used here:
 
 1. Press the **synth key**, then **sound key 8** (or any sound you don't mind changing).
 2. Hold **Shift** and press **T1**. Turn **blue** until **ratatoskr** is highlighted, then press **T1**.
-   - Expect: a tree in the middle of the screen: a white eagle at the top, a green dragon at the roots. If
-     the sound has a sample, the trunk is made of horizontal lines (the recording, from the roots up), with an orange
-     squirrel to its right, halfway up, pointing at the trunk. With no sample, the trunk is missing and the screen says
-     **no sample**. At the bottom, four labels in blue, green, white and orange: **pos** (seconds), **size 50 ms**,
-     **scat 0 ms**, **motion hold**.
+   - Expect: a tree in the middle of the screen, almost the full height: an eagle's head at the top, a green horned
+     dragon at the roots. If the sound has a sample, the trunk is made of thin horizontal lines (the recording, from
+     the roots up), with an orange and brown squirrel to its right, halfway up, pointing at the trunk. With no sample,
+     the trunk and squirrel are missing and the screen says **no sample**. Down the left side, four rows in blue,
+     green, white and orange, each with a small name over a larger value and a short coloured bar beside it:
+     **position** (seconds), **size 50 ms**, **scatter 0 ms**, **motion hold**.
    - Take a photo of the screen either way. Note anything that overlaps, is cut off, or is hard to see (especially the
      dark parts of the trunk).
 
@@ -80,7 +81,7 @@ Hold a middle key through each step.
 
 ## 6. Page 2 knobs
 
-1. **Range:** press **blue**. The label changes to **range 100%** and a second line appears above it. Turn it left to
+1. **Range:** press **blue**. The label changes to **range 100%** and a second bar appears beside it. Turn it left to
    about **20%**, with motion on **bounce**, and hold a key.
    - Expect: only the part of the trunk the squirrel travels stays bright; the rest goes dim. The squirrel bounces
      between the ends of the bright part. Turn blue back to page 1 (press

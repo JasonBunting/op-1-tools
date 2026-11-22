@@ -114,18 +114,23 @@ const op1_engine_t ENGINE_ratatoskr = { rt_note_on, rt_render_cb, rt_note_off,
                                         { OP1_PRESS_PAGE, OP1_PRESS_PAGE, OP1_PRESS_NONE, OP1_PRESS_PAGE } };
 
 /* ======================= screen (GUI thread) =======================
- * ratatoskr.svg holds the eagle, dragon and squirrel this places. Drawn here:
+ * The layout is Ratatoskr-Design-Spec.md's (with its 2026-11-21 decisions). ratatoskr.svg holds the eagle (crown) and
+ * the dragon (roots), which never move and are drawn through the core's cached static prefix, and the squirrel, which
+ * this places. Drawn here:
  *   the trunk: the recording from the roots (its start) up to the crown (its end), a row per slice, as wide as its
- *   loudest moment; the route (the range) bright, the rest dim; the eagle on the route's top, the dragon at its bottom;
+ *   loudest moment; the route (the range) bright, the rest dim;
  *   the squirrel at the playhead, pointing at the trunk, tilted up or down while it travels;
  *   a white flash left of the trunk at each grain just launched; "no sample" with nothing recorded;
  *   with green on page 2, the grain's shape as a curve on the right;
- *   the bottom row: each knob's name and value; a knob on page 2 shows its page-2 name and a doubled line; while
- *   Shift is held, green shows the overlap. */
+ *   the left column: a row per knob, its name and value beside a strip in its colour; a knob on page 2 shows its
+ *   page-2 name and a second strip; while Shift is held, green shows the overlap. */
 #include "op1_synth.h"
 #include "seq/seq_text.h"   /* sq_linemin: whole pixels on the running panel's grid (SDK docs/screen-art.md "Pixel grid") */
 #define Q(v) ((v) << 10)
-#define TS 12
+#define TS 12                           /* values */
+#define TS_LAB 8                        /* labels */
+#define COL_X 17                        /* the left column's text */
+static const int16_t row_base[4] = { 21, 54, 87, 120 };   /* each row's label baseline; its value 5 px below */
 static const uint8_t c_blue[4] = { 0x4D, 0x9E, 0xFF, 0xFF }, c_green[4] = { 0x00, 0xED, 0x95, 0xFF },
                      c_white[4] = { 0xFF, 0xFF, 0xFF, 0xFF }, c_orange[4] = { 0xFF, 0x8C, 0x3A, 0xFF },
                      c_grey[4] = { 0x8A, 0x8C, 0x8E, 0xFF }, c_bark[4] = { 0x8A, 0xE0, 0xCC, 0xFF },
@@ -136,7 +141,7 @@ enum { TX_LAB, TX_VAL = 4, TX_MSG = 8, TX_SHAPE, TX_TIME, TX_N };
 static uint32_t tx[TX_N][OP1_TEXT_SIZE / 4];
 static char shown[TX_N][48];
 static uint8_t tx_made;
-static void *n_eagle, *n_dragon, *n_squirrel;
+static void *n_squirrel;
 static int16_t was_pos = -1;             /* the position knob last frame, and frames left showing it rather than */
 static int16_t pos_frames;               /* the live playhead */
 static int32_t was_read = -1;
@@ -173,19 +178,22 @@ static char *dec(char *p, int32_t x, int d)                /* x in 1/10^d: 125, 
 }
 static void secs(char *p, int32_t samples44) { put(dec(p, (samples44 * 10 + 2205) / 4410, 2), " s"); }
 static void ms44(char *p, int32_t samples44) { put(num(p, (samples44 * 10 + 220) / 441), " ms"); }
-/* a node's matrix (row vectors [a b 0; c d 0; tx ty 1], Q10): turned by sin / cos (Q15), then moved to (x, y) Q10 */
-static void place(void *node, int32_t x, int32_t y, int32_t s15, int32_t c15)
+/* a node's matrix (row vectors [a b 0; c d 0; tx ty 1], Q10): turned by sin / cos (Q15) about its local point
+ * (0, py), which lands on (x, y) Q10 */
+static void place(void *node, int32_t x, int32_t y, int32_t py, int32_t s15, int32_t c15)
 {
     if (!node) return;
     int32_t c = c15 >> 5, s = s15 >> 5;
-    int32_t m[9] = { c, s, 0, -s, c, 0, x, y, 1024 };
+    int32_t m[9] = { c, s, 0, -s, c, 0, x + py * s, y - py * c, 1024 };
     op1_node_set_transform(node, m);
 }
 
 #define TRUNK_X 156
-#define ROOT_Y  96                      /* the recording's start */
-#define CROWN_Y 16                      /* its end */
-#define ROWS    40                      /* a row every 2 px */
+#define ROOT_Y  123                     /* the recording's start (the dragon below it, 125 .. 146: some panels hide the rows below ~147) */
+#define CROWN_Y 23                      /* its end */
+#define ROWS    40                      /* a row about every 3 px */
+#define SQ_X    187                     /* the squirrel's left edge; its nose 14 px above its origin's row */
+#define SQ_NOSE 14
 #define HALF_W  22                      /* the widest row's half width */
 static int32_t y_of(int32_t s, int32_t len)  /* source sample -> Q10 y */
 {
@@ -197,8 +205,6 @@ static int32_t y_of(int32_t s, int32_t len)  /* source sample -> Q10 y */
 static void rt_screen_init(void *scr)
 {
     op1_engine_shift_record(&ENGINE_ratatoskr, 1, RT_OVL_STEPS, REC_OVERLAP);
-    n_eagle = op1_find_node(scr, "eagle");
-    n_dragon = op1_find_node(scr, "dragon");
     n_squirrel = op1_find_node(scr, "squirrel");
 }
 
@@ -217,11 +223,11 @@ static void rt_screen_update(void *scr, int dt)
     rt_knobs_of(p, op1_engine_record(slot, rt_owner()), &k);
     if (!shapes_ready) { rt_shapes_init(shapes, OP1_SINE_TABLE); shapes_ready = 1; }
     if (!tx_made) {
-        for (int i = 0; i < 4; i++) {
-            op1_text_ctor(tx[TX_LAB + i], Q(8 + 78 * i), 114, TS, col4[i]);
-            op1_text_ctor(tx[TX_VAL + i], Q(8 + 78 * i), 127, TS, col4[i]);
+        for (int i = 0; i < 4; i++) {                   /* y is the text's top: 6 px above an 8's baseline, 9 a 12's */
+            op1_text_ctor(tx[TX_LAB + i], Q(COL_X), row_base[i] - 6, TS_LAB, col4[i]);
+            op1_text_ctor(tx[TX_VAL + i], Q(COL_X), row_base[i] + 5, TS, col4[i]);   /* 5 px below the label */
         }
-        op1_text_ctor(tx[TX_MSG], Q(TRUNK_X - 26), 52, TS, c_grey);
+        op1_text_ctor(tx[TX_MSG], Q(TRUNK_X - 26), 76, TS, c_grey);
         op1_text_ctor(tx[TX_SHAPE], Q(226), 30, TS, c_grey);
         op1_text_ctor(tx[TX_TIME], Q(278), 84, TS, c_grey);
         tx_made = 1;
@@ -235,20 +241,18 @@ static void rt_screen_update(void *scr, int dt)
     /* before the first note the squirrel waits at the position */
     const int32_t read = have ? rt_clamp(roam_ready ? roam.read : rt_at(k.position, len), 0, len - 1) : 0;
 
-    /* the eagle in the crown, the dragon at the roots (inside the trunk the rows would cover them; the bright rows show
-     * the range); the squirrel at the playhead, tilted the way it is going */
-    place(n_eagle, Q(TRUNK_X), Q(CROWN_Y - 2), 0, 32767);
-    place(n_dragon, Q(TRUNK_X), Q(ROOT_Y + 2), 0, 32767);
+    /* the eagle and dragon stay in the crown and at the roots (the SVG's places); the squirrel at the playhead, tilted the
+     * way it is going */
     if (have && was_read >= 0 && read != was_read) { tilt = read > was_read ? 1 : -1; still_frames = 0; }
     else if (++still_frames > 6) { tilt = 0; still_frames = 6; }
     was_read = read;
     const int32_t yp = have ? y_of(read, len) : Q(ROOT_Y);
-    const int32_t s25 = tilt ? (tilt > 0 ? 13848 : -13848) : 0, c25 = tilt ? 29697 : 32767;   /* 25 degrees */
+    const int32_t s25 = tilt ? (tilt > 0 ? 6813 : -6813) : 0, c25 = tilt ? 32051 : 32767;   /* 12 degrees */
     if (n_squirrel) {
         op1_node_set_visible(n_squirrel, have);
-        place(n_squirrel, Q(TRUNK_X + 32), yp, s25, c25);
-    }
-    op1_screen_draw(scr, dt);
+        place(n_squirrel, Q(SQ_X), yp, SQ_NOSE, s25, c25);
+        op1_screen_draw_cached(scr, dt, n_squirrel);     /* the eagle and dragon before it: a static prefix */
+    } else op1_screen_draw(scr, dt);
     void *r = op1_raster();
 
     if (have) {
@@ -269,7 +273,7 @@ static void rt_screen_update(void *scr, int dt)
         }
         ln(r, Q(TRUNK_X), Q(CROWN_Y), Q(TRUNK_X), Q(ROOT_Y), 0x400, c_bark_d);
         /* the squirrel's line to the trunk */
-        ln(r, Q(TRUNK_X + HALF_W + 2), yp, Q(TRUNK_X + 31), yp, 0x400, c_nose);
+        ln(r, Q(SQ_X - 7), yp, Q(SQ_X - 1), yp, 0x400, c_nose);
         /* the grains just launched: the newest longest */
         const uint32_t n = flashes.n, now = gblk;
         for (uint32_t i = 0; i < RT_FLASHES && i < n; i++) {
@@ -297,10 +301,12 @@ static void rt_screen_update(void *scr, int dt)
         }
     }
 
-    /* the bottom row; a doubled line marks a knob on page 2 */
+    /* the left column's strips: 2 x 22 px, from 8 above each label's baseline to its value's foot; a second one
+     * marks a knob on page 2 */
     for (int i = 0; i < 4; i++) {
-        ln(r, Q(8 + 78 * i), Q(110), Q(78 + 78 * i), Q(110), 0x800, col4[i]);
-        if (i != 2 && op1_eng_page[i]) ln(r, Q(8 + 78 * i), Q(106), Q(78 + 78 * i), Q(106), 0x800, col4[i]);
+        const int32_t y0 = Q(row_base[i] - 8), y1 = Q(row_base[i] + 14);
+        ln(r, Q(11), y0, Q(11), y1, 0x800, col4[i]);
+        if (i != 2 && op1_eng_page[i]) ln(r, Q(5), y0, Q(5), y1, 0x800, col4[i]);
     }
     char v[24];
     /* blue: the position while it is being turned (and a moment after), else where the squirrel is */
@@ -310,7 +316,7 @@ static void rt_screen_update(void *scr, int dt)
         txt(r, TX_LAB, "range");
         put(num(v, (rt_range_q15(k.range) * 100 + 16383) >> 15), "%");
     } else {
-        txt(r, TX_LAB, "pos");
+        txt(r, TX_LAB, "position");
         secs(v, (pos_frames || !have) ? rt_at(k.position, len) : read);
     }
     txt(r, TX_VAL, v);
@@ -323,7 +329,7 @@ static void rt_screen_update(void *scr, int dt)
     } else if (op1_eng_page[1]) { txt(r, TX_LAB + 1, "shape"); put(v, shape_name[rt_shape(k.shape)]); }
     else { txt(r, TX_LAB + 1, "size"); put(num(v, (rt_size(k.size) * 10 + 441) / 882), " ms"); }
     txt(r, TX_VAL + 1, v);
-    txt(r, TX_LAB + 2, "scat");
+    txt(r, TX_LAB + 2, "scatter");
     ms44(v, rt_scatter(k.scatter));
     txt(r, TX_VAL + 2, v);
     const int mo = rt_motion(k.motion);
