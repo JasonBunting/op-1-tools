@@ -1,0 +1,12 @@
+{
+  "name": "norn",
+  "kind": "synth",
+  "order": 0,
+  "symbol": "ENGINE_norn",
+  "author": "Jason Bunting",
+  "version": "0.4.1",
+  "sources": ["norn.c"],
+  "defaults": [0, 9830, 11468, 8192],
+  "loadable": true,
+  "claims": []
+}
