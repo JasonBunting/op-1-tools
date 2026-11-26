@@ -7,15 +7,18 @@
  *                        wave terrain: the path's radius)
  *   orange : MORPH      (waveshaper: triangle to ramp; FM: feedback, frequency left of centre, phase right;
  *                        formant: the carrier's shape; wave terrain: the path's centre)
- * No screen yet: the OP-1 shows its bars for the four knobs.
+ * The screen (norn_screen.c, norn.svg): three keepers holding the weave; this side tells it which notes play
+ * (norn_activity.h).
  * Hundekraft 3.3.2. Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see
  * LICENSE and NOTICE). Plaits is Copyright 2016 Emilie Gillet, MIT (see NOTICE). */
 #include "op1_plugin.h"
+#include "op1_synth.h"       /* op1_cycles */
 #include "ws_dsp.h"
 #include "fm_dsp.h"
 #include "gr_dsp.h"
 #include "wt_dsp.h"
 #include "norn_level.h"
+#include "norn_activity.h"
 
 enum { PL_WS, PL_FM, PL_GR, PL_WT };
 
@@ -28,6 +31,9 @@ typedef struct {
 } pl_voice;
 
 static pl_voice voices[OP1_VOICES];
+
+volatile uint8_t nr_held, nr_seq;
+volatile uint32_t nr_seen[8];
 
 /* blue's four zones -> a model, in enum order */
 static int pl_model(int32_t blue)
@@ -44,15 +50,22 @@ static void pl_note_on(void *self, const int16_t *params)
     fm_voice_note(&voices[i].fm);
     gr_voice_note(&voices[i].gr);
     wt_voice_note(&voices[i].wt);
+    nr_held |= (uint8_t)(1u << i);
+    nr_seq++;
 }
 
-static void pl_note_off(void *self) { (void)self; }   /* T2's release */
+static void pl_note_off(void *self)                   /* T2's release: the sound is the envelope's */
+{
+    int i = op1_voice_index(self);
+    if (i >= 0 && i < OP1_VOICES) nr_held &= (uint8_t)~(1u << i);
+}
 
 static void pl_render_cb(void *self, int16_t *out, const int16_t *params)
 {
     int i = op1_voice_index(self);
     if (i < 0 || i >= OP1_VOICES) { for (int j = 0; j < OP1_BLOCK; j++) out[j] = 0; return; }
     pl_voice *v = &voices[i];
+    nr_seen[i] = op1_cycles();
     const int32_t *inc = OP1_PITCH_INC;
     const int32_t gain = (NORN_GAIN * op1_voice_vel_gain(self)) >> 15;
     const int model = pl_model(params[0]);

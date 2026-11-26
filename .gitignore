@@ -23,3 +23,7 @@ hundekraft-*-source/
 
 # Personal working files (for example the OP-1 guide conversion)
 local/
+
+# clangd compile database (tools/compile_commands.py; absolute paths) and its index
+compile_commands.json
+.cache/

@@ -1,6 +1,6 @@
 # Ratatoskr
 
-A synth engine for the original OP-1 running Hundekraft 3.3.1: overlapping grains read from the sampler's recording,
+A synth engine for the original OP-1 running Hundekraft 3.3.2: overlapping grains read from the sampler's recording,
 around a playhead that moves through it. Named for the squirrel that runs up and down the world tree: on the screen the
 recording is Yggdrasil's trunk, the squirrel is the playhead, the eagle marks the crown and the dragon the roots.
 
@@ -13,7 +13,7 @@ The 0.3 design follows [Ratatoskr-Design-Spec.md](Ratatoskr-Design-Spec.md). Hun
 `hail` cover plain granular playback; Ratatoskr's difference is the moving playhead. See
 [Ratatoskr or Hundekraft's granular?](#ratatoskr-or-hundekrafts-granular).
 
-Status: 0.3.7, a redesign of 0.2 (a single motion knob instead of speed, drift, jumps, turns and chaos; grain shapes; a
+Status: 0.3.8, a redesign of 0.2 (a single motion knob instead of speed, drift, jumps, turns and chaos; grain shapes; a
 tree screen). Host tests pass; not yet tried on the OP-1. The last 0.2 build is `build/versions/ratatoskr-0.2.2.knl`.
 The [manual](manual/manual.html) still describes 0.2 and needs rewriting once 0.3 has been played.
 

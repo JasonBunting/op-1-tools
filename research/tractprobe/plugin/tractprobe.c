@@ -4,7 +4,7 @@
  *   green  : tongue position, back .. front
  *   white  : tongue height, open .. closed
  *   orange : breath noise
- * Hundekraft 3.3.1. Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission. */
+ * Hundekraft 3.3.2. Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission. */
 #include "op1_plugin.h"
 #include "tp_dsp.h"
 

@@ -3,7 +3,7 @@
 Every step says what to do, then what you should see or hear. If what happens is different, write down the step
 number and what happened, and keep going unless the OP-1 froze. At the end there's a short list of things to report.
 
-You need: the OP-1 on Hundekraft 3.3.1, the computer with the workshop open, `build/mouth.knl`, and the
+You need: the OP-1 on Hundekraft 3.3.2, the computer with the workshop open, `build/mouth.knl`, and the
 `mouth/presets` folder. About 30 minutes.
 
 Words used here:

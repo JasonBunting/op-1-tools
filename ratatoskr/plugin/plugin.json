@@ -4,7 +4,7 @@
   "order": 0,
   "symbol": "ENGINE_ratatoskr",
   "author": "Jason Bunting",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "sources": ["ratatoskr.c"],
   "defaults": [16384, 15400, 0, 2730],
   "page2_defaults": [32767, 4096, 16384],

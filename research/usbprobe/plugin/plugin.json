@@ -1,0 +1,15 @@
+{
+  "name": "usbprobe",
+  "kind": "synth",
+  "order": 0,
+  "symbol": "ENGINE_usbprobe",
+  "author": "Jason Bunting",
+  "version": "0.1.5",
+  "sources": ["usbprobe.c"],
+  "defaults": [0, 0, 0, 0],
+  "screen": {"svg": "usbprobe.svg", "symbol": "SCREEN_usbprobe"},
+  "engine_input": true,
+  "service": true,
+  "loadable": true,
+  "claims": []
+}

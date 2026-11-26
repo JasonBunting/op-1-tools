@@ -1,4 +1,4 @@
-/* mirror: streams the OP-1's screen over USB MIDI SysEx as changed 8x8 tiles. Hundekraft 3.3.1 SDK.
+/* mirror: streams the OP-1's screen over USB MIDI SysEx as changed 8x8 tiles. Hundekraft 3.3.2 SDK.
  * Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see LICENSE and NOTICE).
  *
  * The PC drives it with control changes on MIDI channel 16 (heard through midi_raw, which only looks):
@@ -9,13 +9,20 @@
  *   CC 122  refresh 0..16 (default 1): tiles resent per pass regardless, so anything lost heals
  * Without a viewer the plugin sends nothing. A new stream starts with the whole screen.
  *
- * Live mode: the Gfx overlay latches the raster descriptor of the frame just drawn; the main-loop service scans a few
- * tiles of that buffer per pass, compares each with a hash of what was last sent and sends changed ones within the
- * budget. Reads may tear against the next frame; the next scan resends such tiles.
+ * Live mode: the Gfx overlay latches the raster descriptor of the frame just drawn, viewer or not; the main-loop service
+ * scans a few tiles of that buffer per pass, compares each with a hash of what was last sent and sends changed ones
+ * within the budget. Reads may tear against the next frame; the next scan resends such tiles.
+ * Record frames (Hundekraft 3.3 and later, screens/guiskip.c): while the screen does not change, the core still runs
+ * every frame but draws it into a scratch buffer and only hashes it; both display buffers already hold the current
+ * picture. The overlay keeps the last display buffer then (the scratch fails known()), so a still screen keeps
+ * streaming and a viewer that connects to one gets a picture. Frames the governor skips never call the overlay.
  * Whole frames: the overlay copies one finished frame into the declared buffer (bigbuf), the service sends its changed
  * tiles over as many passes as that takes, then a FRAME marker, and asks the overlay for the next frame. The viewer
- * shows the picture only at FRAME markers, so it never shows parts of two frames. The buffer holds a 188 x 376 screen
- * (as measured) in rows of 192 pixels; without it, or on a larger screen, the plugin stays live.
+ * shows the picture only at FRAME markers, so it never shows parts of two frames. The copy is of the display buffer
+ * drawn the frame before, which is finished: what the core draws after the features' overlays (an open text entry, a
+ * toast, later features' overlays) is on it. In a record frame it is the last display buffer, and with only one buffer
+ * the frame just drawn. The buffer holds a 188 x 376 screen (as measured) in rows of 192 pixels; without it, or on a
+ * larger screen, the plugin stays live.
  *
  * Raster (mirror/docs/audit-001-framebuffer.md): r[0] RGB565 LE buffer, 0x02000000 or 0x03000000 (double buffered), r[1]
  * width, r[2] stride 512 bytes, r[3] height; portrait, the visible area is the top-left r[1] x r[3].
@@ -66,6 +73,7 @@ OP1_BIGBUF(mirror_snap, 0, SNAP_STRIDE * SNAP_H * 2u);   /* plugin.json "bigbuf"
 static volatile uint32_t r_words[4], frames, heard, budget_v = 64, scan_v = 64, mode = MODE_PALETTE | MODE_RLE,
                          refresh_n = 1;
 static volatile uint32_t snap_want, snap_ready, snap_w, snap_h;  /* overlay <-> service handshake */
+static volatile uint32_t done_words[4], r_ok, done_ok;   /* the other display buffer, drawn the frame before: finished */
 static uint32_t hashes[TILES_X * TILES_Y];
 static uint32_t passes, bytes_sent, tiles_sent, frames_sent, scan_pos, refresh_pos, heard_seen, alive_until;
 static uint16_t seq, geom_w, geom_h;
@@ -96,19 +104,27 @@ static int fits_snap(const volatile uint32_t *r) { return known(r) && r[1] <= SN
 static void overlay(void *raster, int32_t screen)
 {
     (void)screen;
-    if (!active) return;
     const uint32_t *r = raster;
-    for (int i = 0; i < 4; i++) r_words[i] = r[i];
-    frames++;
-    if (snap_want && !snap_ready && fits_snap(r) && have_snap()) {   /* a finished frame: copy its visible part */
-        const uint32_t *src = (const uint32_t *)(uintptr_t)r[0];
-        uint32_t *dst = mirror_snap.ptr, words = (r[1] + 1u) / 2u;
-        for (uint32_t y = 0; y < r[3]; y++, src += STRIDE_PX / 2u, dst += SNAP_STRIDE / 2u)
-            for (uint32_t x = 0; x < words; x++) dst[x] = src[x];
-        snap_w = r[1]; snap_h = r[3];
-        snap_want = 0;
-        snap_ready = 1;
+    const int drawn = known(r);                                  /* 0: a record frame's scratch buffer (or unknown) */
+    if (drawn) {                                                 /* latched viewer or not: a still screen has no next */
+        if (r_ok && r_words[0] != r[0]) { for (int i = 0; i < 4; i++) done_words[i] = r_words[i]; done_ok = 1; }
+        for (int i = 0; i < 4; i++) r_words[i] = r[i];
+        r_ok = 1;
     }
+    if (!active) return;
+    frames++;
+    if (!snap_want || snap_ready || !have_snap() || !r_ok) return;
+    /* a finished frame: in a drawn frame the other display buffer (the frame before, everything on it), else the last
+     * display buffer (a record frame: both hold the current picture; one buffer only: the frame just drawn) */
+    const volatile uint32_t *s = drawn && done_ok && done_words[0] != r_words[0] ? done_words : r_words;
+    if (!fits_snap(s)) return;
+    const uint32_t *src = (const uint32_t *)(uintptr_t)s[0];
+    uint32_t *dst = mirror_snap.ptr, w = s[1], h = s[3], words = (w + 1u) / 2u;
+    for (uint32_t y = 0; y < h; y++, src += STRIDE_PX / 2u, dst += SNAP_STRIDE / 2u)
+        for (uint32_t x = 0; x < words; x++) dst[x] = src[x];
+    snap_w = w; snap_h = h;
+    snap_want = 0;
+    snap_ready = 1;
 }
 
 /* ---- SysEx out ---- */

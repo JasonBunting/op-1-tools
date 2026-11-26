@@ -1,9 +1,9 @@
-# Ratatoskr: hardware test (0.3.7)
+# Ratatoskr: hardware test (0.3.8)
 
 Every step says what to do, then what you should see or hear. If what happens is different, write down the step
 number and what happened, and keep going unless the OP-1 froze. At the end there's a short list of things to report.
 
-You need: the OP-1 on Hundekraft 3.3.1, the computer with the workshop open, and `build/ratatoskr.knl`. About 25
+You need: the OP-1 on Hundekraft 3.3.2, the computer with the workshop open, and `build/ratatoskr.knl`. About 25
 minutes. 0.3.0 is a redesign: the knobs mean different things from 0.2, so a sound saved with 0.2 will sound different.
 To go back, `build/versions/ratatoskr-0.2.2.knl` is the last 0.2.
 

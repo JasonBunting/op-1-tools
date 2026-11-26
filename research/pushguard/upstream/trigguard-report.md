@@ -1,6 +1,6 @@
 # Trigger guard: guard the encoder pushes too
 
-For: Hundekraft. A patch to `plugins/trigguard` (3.3.1) with a host test, tested on the device as a renamed copy.
+For: Hundekraft. A patch to `plugins/trigguard` (applies cleanly to 3.3.2) with a host test, tested on the device as a renamed copy.
 
 ## Symptom
 
@@ -31,7 +31,7 @@ flips the page twice. The trigger guard, which handles exactly this for the note
 
 ## Change
 
-`trigguard-knobs.patch` (against the 3.3.1 tree):
+`trigguard-knobs.patch` (against the 3.3.2 tree):
 
 1. The four encoder pushes become guarded keys 25–28, after the 24 note keys.
 2. They follow the guard's existing rule with the release held back: a release, then a press of the same knob inside

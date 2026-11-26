@@ -1,0 +1,15 @@
+{
+  "name": "rotor147",
+  "kind": "fx",
+  "order": 0,
+  "symbol": "FX_rotor147",
+  "stereo": true,
+  "author": "Jason Bunting",
+  "version": "0.2.2",
+  "sources": ["rotor147.c"],
+  "defaults": [16384, 8192, 0, 32767],
+  "page2_defaults": [16384, 16384, 32767],
+  "screen": {"svg": "rotor147.svg", "symbol": "SCREEN_rotor147"},
+  "loadable": true,
+  "claims": []
+}

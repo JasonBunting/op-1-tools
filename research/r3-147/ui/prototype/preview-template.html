@@ -1,0 +1,32 @@
+<div id="rotary147-preview" aria-label="Rotary effect visual prototype">
+  <style>
+    #rotary147-preview { display:grid; gap:16px; color:var(--foreground,#222); }
+    #rotary147-preview .rotary-screen { display:block; width:100%; height:auto; aspect-ratio:2/1; background:#202020; }
+    #rotary147-preview .rotary-stage { display:flex; justify-content:center; }
+    #rotary147-preview .rotary-stage.actual .rotary-screen { width:320px; max-width:100%; }
+    #rotary147-preview .rotary-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
+    #rotary147-preview .rotary-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 24px; }
+    #rotary147-preview .rotary-field { display:grid; gap:5px; min-width:0; }
+    #rotary147-preview .rotary-field-heading { display:flex; justify-content:space-between; gap:8px; }
+    @media(max-width:420px) { #rotary147-preview .rotary-fields { grid-template-columns:1fr; } }
+  </style>
+  <div class="rotary-stage">
+    <svg class="rotary-screen" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 160" role="img" aria-label="Rotary effect screen. Horn above left, microphone below right."><title>Rotary effect</title><!-- INITIAL_SCREEN --></svg>
+  </div>
+  <div class="rotary-toolbar">
+    <button type="button" class="btn btn-primary" data-action="play" aria-pressed="false">Play rotation</button>
+    <label class="form-label">Speed <select class="form-select" data-control="mode"><option value="brake">Brake</option><option value="slow" selected>Slow</option><option value="fast">Fast</option></select></label>
+    <label class="form-check"><input class="form-check-input" type="checkbox" data-control="actual"><span class="form-check-label">Actual screen size</span></label>
+    <span class="text-small" role="status" aria-live="polite" data-status>Paused · visual preview only</span>
+  </div>
+  <div class="rotary-fields">
+    <label class="rotary-field form-label"><span class="rotary-field-heading"><span>Horn angle</span><output data-value="angle">60°</output></span><input class="form-range" type="range" min="0" max="359" value="60" data-control="angle"></label>
+    <label class="rotary-field form-label"><span class="rotary-field-heading"><span>Mic distance</span><output data-value="proximity">20%</output></span><input class="form-range" type="range" min="0" max="100" value="20" data-control="proximity"></label>
+    <label class="rotary-field form-label"><span class="rotary-field-heading"><span>Drive</span><output data-value="drive">12</output></span><input class="form-range" type="range" min="0" max="99" value="12" data-control="drive"></label>
+    <label class="rotary-field form-label"><span class="rotary-field-heading"><span>Mix</span><output data-value="mix">100%</output></span><input class="form-range" type="range" min="0" max="100" value="100" data-control="mix"></label>
+  </div>
+</div>
+<script>
+/* GEOMETRY_SCRIPT */
+/* PREVIEW_SCRIPT */
+</script>

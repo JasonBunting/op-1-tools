@@ -3,6 +3,9 @@
 For: Nicolas Franck Pauly (PLOC, https://github.com/nicolasfpauly/ploc) and Hundekraft (who bundle PLOCCTRL in the core's
 `content/`).
 
+**Fixed upstream in Hundekraft 3.3.2** (2026-11-21 kennel change in `plocctrl.c`: `key_sync` gated on `p6_linked`, plus
+`test_plocctrl_latch.c`). Not sent; PLOC's own repo got that fix instead as https://github.com/nicolasfpauly/ploc/pull/1.
+
 ## Symptom
 
 On Hundekraft 3.3.1 with PLOCCTRL 0.6.1 installed (it is bundled), any synth engine whose blue encoder push switches a

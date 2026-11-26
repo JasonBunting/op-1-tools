@@ -9,7 +9,7 @@
  * Shift + green (the engine's record, shown while Shift is held): OVERLAP, 2x for a new sound, 0.5 .. 4x.
  * The first key after all keys are up starts the squirrel at the position; more keys join it where it is; it stops
  * when the last key goes up. Keys play the grains at their pitch (C4 is the recording's own).
- * Hundekraft 3.3.1. Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see
+ * Hundekraft 3.3.2. Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see
  * LICENSE and NOTICE). */
 #include "op1_plugin.h"
 #include "rt_dsp.h"

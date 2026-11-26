@@ -4,10 +4,13 @@ Plugins and companion apps for the original OP-1 running [Hundekraft](https://hu
 
 | Project | What it is | Status | Get it |
 | --- | --- | --- | --- |
-| [OP-1 Mirror](mirror/README.md) | Shows the OP-1's screen live on Windows or an Android phone: a plugin plus two viewer apps | Works, v0.7.1 | [Releases](https://github.com/JasonBunting/op-1-tools/releases) |
+| [OP-1 Mirror](mirror/README.md) | Shows the OP-1's screen live on Windows or an Android phone: a plugin plus two viewer apps | Works, v0.7.3 | [Releases](https://github.com/JasonBunting/op-1-tools/releases) |
 | [Pattern+](patternplus/README.md) | A sequencer plugin like stock Pattern, plus pages, chains and saving | In progress, 0.5.3 | [Build from source](patternplus/README.md) |
 | [Mouth](mouth/README.md) | A singing, babbling voice synth: vowels, bodies from giant to tiny, and made-up words | In progress, 0.5.2 | [Build from source](mouth/README.md) |
 | [Ratatoskr](ratatoskr/README.md) | Grains from the sampler's recording around a squirrel playhead that holds, travels, bounces, wanders or jumps up a tree | In progress, 0.3.7 | [Build from source](ratatoskr/README.md) |
+| [Norn](norn/README.md) | Synthesis models from Mutable Instruments' Plaits; the waveshaper, two-operator FM, formant and wave terrain | Prototype, 0.5.1 | [Build from source](norn/README.md) |
+| [rotor147](rotor147/README.md) (working name) | A rotary speaker effect: horn and bass rotors with their own inertia, drive, close or distant mics | Prototype, 0.2.2 | [Build from source](rotor147/README.md) |
+| [Bifrost](bifrost/README.md) | Plug a USB MIDI keyboard straight into the OP-1 through an OTG adapter and play it, no computer needed | Prototype, 0.1.0 | [Build from source](bifrost/README.md) |
 
 Shared as-is, in the hope it helps. It is a personal project and not actively supported: issues and pull requests
 may sit unanswered, so fork freely.
@@ -17,7 +20,7 @@ may sit unanswered, so fork freely.
 1. An original OP-1 running Hundekraft 3.3. The mirror plugin also runs on 3.1.4 and 3.2.3.
 2. To build from source:
    1. the .NET 8 SDK or later, for the mirror's viewers (the Android one also needs .NET 10 and the MAUI workload);
-   2. for the plugins, WSL (Ubuntu 24.04) with a `bfin-elf` toolchain and the Hundekraft 3.3.1 source (for its SDK
+   2. for the plugins, WSL (Ubuntu 24.04) with a `bfin-elf` toolchain and the Hundekraft 3.3.2 source (for its SDK
       headers and packer).
 
 ## Layout
@@ -30,6 +33,9 @@ Each project is a folder of its own, so you can take just the piece you want:
 | `patternplus/` | Pattern+: `plugin/`, `manual/`, `docs/`, and `HARDWARE-TEST.md`, the controls and device tests. |
 | `mouth/` | Mouth: `plugin/` (engine, formant table, preset generator, host test), `presets/`, `manual/`, `HARDWARE-TEST.md`. |
 | `ratatoskr/` | Ratatoskr: `plugin/` (engine, screen, host test), `manual/`, `HARDWARE-TEST.md`. |
+| `norn/` | Norn: `plugin/` (engine, ported Plaits models, host test, comparison with Plaits), `HARDWARE-TEST.md`. |
+| `rotor147/` | rotor147: `plugin/` (DSP, adapter, host test and renders), `HARDWARE-TEST.md`. |
+| `bifrost/` | Bifrost: `plugin/` (the feature, the USB host code, host test), `manual/`, `HARDWARE-TEST.md`. |
 | `research/` | Throwaway probes; see [Research tools](#research-tools). |
 | `tools/` | Shared scripts: the toolchain build, the plugin packer and `build.sh`. |
 | `op-1-tools.slnx` | Every C# project, for Visual Studio or `dotnet build`. |
@@ -77,6 +83,9 @@ No Teenage Engineering firmware or device data is included in this repository or
 your OP-1.
 
 ## Research tools
+
+`research/usbhost/` (notes) and `research/usbprobe/` (a probe engine with a status screen) found how the OP-1 can be a
+USB host; [Bifrost](bifrost/README.md) is the result. usbprobe stays as a diagnostic for keyboards that misbehave.
 
 `research/rastprobe/` is a throwaway probe (a plugin and a Windows listener), built against the Hundekraft 3.1.4
 SDK, that was used to find the OP-1's framebuffer for the mirror. It isn't meant for everyday use.

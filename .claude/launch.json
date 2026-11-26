@@ -6,6 +6,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8765", "--bind", "127.0.0.1"],
       "port": 8765
+    },
+    {
+      "name": "workshop",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8766", "--bind", "127.0.0.1", "--directory", "D:\\src\\OP-1-Related\\local-workshop\\current"],
+      "port": 8766
     }
   ]
 }

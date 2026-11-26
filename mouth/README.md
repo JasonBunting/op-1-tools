@@ -1,6 +1,6 @@
 # Mouth
 
-A synth engine for the original OP-1 running Hundekraft 3.3.1: a voice that sings vowels and babbles made-up words.
+A synth engine for the original OP-1 running Hundekraft 3.3.2: a voice that sings vowels and babbles made-up words.
 Each note is a vocal-fold pulse shaped by five formants (the resonances that make "ee" sound like "ee"). The formant
 frequencies come from [CHIMERA](https://github.com/jamesondh/chimera-vocal-synth)'s vocal-tract model, for a man, a
 woman and a child. Six voices; every voice wanders slightly in pitch on its own, so chords sound like a small choir.

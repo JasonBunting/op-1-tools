@@ -1,0 +1,213 @@
+<div id="rotary147-preview" aria-label="Rotary effect visual prototype">
+  <style>
+    #rotary147-preview { display:grid; gap:16px; color:var(--foreground,#222); }
+    #rotary147-preview .rotary-screen { display:block; width:100%; height:auto; aspect-ratio:2/1; background:#202020; }
+    #rotary147-preview .rotary-stage { display:flex; justify-content:center; }
+    #rotary147-preview .rotary-stage.actual .rotary-screen { width:320px; max-width:100%; }
+    #rotary147-preview .rotary-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
+    #rotary147-preview .rotary-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 24px; }
+    #rotary147-preview .rotary-field { display:grid; gap:5px; min-width:0; }
+    #rotary147-preview .rotary-field-heading { display:flex; justify-content:space-between; gap:8px; }
+    @media(max-width:420px) { #rotary147-preview .rotary-fields { grid-template-columns:1fr; } }
+  </style>
+  <div class="rotary-stage">
+    <svg class="rotary-screen" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 160" role="img" aria-label="Rotary effect screen. Horn above left, microphone below right."><title>Rotary effect</title><rect width="320" height="160" fill="#202020"/><g transform="translate(19,16) scale(1.0833333333333333)" stroke="#6584ff" stroke-width="0.7" fill="none" stroke-linecap="butt" stroke-linejoin="round" aria-label="SPEED"><path d="M7 1Q5.5 0 3.5 0Q0 0 0 3Q0 5 3.5 6Q7 7 7 9Q7 12 3.5 12Q1 12 0 11" transform="translate(0,0)"/><path d="M0 12V0H3.5Q7 0 7 3.2T3.5 6.4H0" transform="translate(9,0)"/><path d="M7 0H0V12H7M0 6H6" transform="translate(18,0)"/><path d="M7 0H0V12H7M0 6H6" transform="translate(27,0)"/><path d="M0 12V0H2.5Q7 0 7 6T2.5 12Z" transform="translate(36,0)"/></g><g transform="translate(19,38) scale(1.0833333333333333)" stroke="#6584ff" stroke-width="0.7" fill="none" stroke-linecap="butt" stroke-linejoin="round" aria-label="SLOW"><path d="M7 1Q5.5 0 3.5 0Q0 0 0 3Q0 5 3.5 6Q7 7 7 9Q7 12 3.5 12Q1 12 0 11" transform="translate(0,0)"/><path d="M0 0V12H7" transform="translate(9,0)"/><path d="M3.5 0Q0 0 0 6T3.5 12Q7 12 7 6T3.5 0Z" transform="translate(18,0)"/><path d="M0 0L1.5 12 3.5 5 5.5 12 7 0" transform="translate(27,0)"/></g><g transform="translate(269,16) scale(1.0833333333333333)" stroke="#00d99b" stroke-width="0.7" fill="none" stroke-linecap="butt" stroke-linejoin="round" aria-label="MIC"><path d="M0 12V0L3.5 7 7 0V12" transform="translate(0,0)"/><path d="M3.5 0V12" transform="translate(9,0)"/><path d="M7 1Q5.5 0 3.5 0Q0 0 0 6T3.5 12Q5.5 12 7 11" transform="translate(18,0)"/></g><g transform="translate(262,38) scale(1.0833333333333333)" stroke="#00d99b" stroke-width="0.7" fill="none" stroke-linecap="butt" stroke-linejoin="round" aria-label="NEAR"><path d="M0 12V0L7 12V0" transform="translate(0,0)"/><path d="M7 0H0V12H7M0 6H6" transform="translate(9,0)"/><path d="M0 12L3.5 0 7 12M1.2 8H5.8" transform="translate(18,0)"/><path d="M0 12V0H3.5Q7 0 7 3T3.5 6H0M3.5 6L7 12" transform="translate(27,0)"/></g><g transform="translate(19,80) scale(1.0833333333333333)" stroke="#dcd5ff" stroke-width="0.7" fill="none" stroke-linecap="butt" stroke-linejoin="round" aria-label="DRIVE"><path d="M0 12V0H2.5Q7 0 7 6T2.5 12Z" transform="translate(0,0)"/><path d="M0 12V0H3.5Q7 0 7 3T3.5 6H0M3.5 6L7 12" transform="translate(9,0)"/><path d="M3.5 0V12" transform="translate(18,0)"/><path d="M0 0L3.5 12 7 0" transform="translate(27,0)"/><path d="M7 0H0V12H7M0 6H6" transform="translate(36,0)"/></g><g transform="translate(19,102) scale(1.0833333333333333)" stroke="#dcd5ff" stroke-width="0.7" fill="none" stroke-linecap="butt" stroke-linejoin="round" aria-label="12"><path d="M0 3L3.5 0V12M0 12H7" transform="translate(0,0)"/><path d="M0 2Q0 0 3.5 0Q7 0 7 3Q7 4.5 5 7L0 12H7" transform="translate(9,0)"/></g><g transform="translate(263,80) scale(1.0833333333333333)" stroke="#ff355e" stroke-width="0.7" fill="none" stroke-linecap="butt" stroke-linejoin="round" aria-label="MIX"><path d="M0 12V0L3.5 7 7 0V12" transform="translate(0,0)"/><path d="M3.5 0V12" transform="translate(9,0)"/><path d="M0 0L7 12M7 0L0 12" transform="translate(18,0)"/></g><path d="M279 101H296" stroke="#ff355e" stroke-width="1.45"/><path d="M279 107H296" stroke="#ff355e" stroke-width="1.45"/><path d="M279 113H296" stroke="#ff355e" stroke-width="1.45"/><path d="M279 119H296" stroke="#ff355e" stroke-width="1.45"/><path d="M279 125H296" stroke="#ff355e" stroke-width="1.45"/><path d="M279 131H296" stroke="#ff355e" stroke-width="1.45"/><path d="M279 137H296" stroke="#ff355e" stroke-width="1.45"/><path d="M279 143H296" stroke="#ff355e" stroke-width="1.45"/><g id="rotary-mechanism"><ellipse cx="140" cy="73" rx="9" ry="4.8" fill="none" stroke="#6584ff" stroke-width="1.3"/><path d="M137,49.13514613495402V72Q140,75 143,72V49.13514613495402" fill="#202020" stroke="#6584ff" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/><ellipse cx="140" cy="49.13514613495402" rx="3" ry="1.7" fill="#202020" stroke="#6584ff" stroke-width="1.3"/><path d="M136.278,61.73L136.136,61.203L137.651,64.99L137.812,65.583Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M142.708,53.308L143.316,53.392L147.105,56.122L146.421,56.027Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M136.136,61.203L136.136,57.385L137.651,61.172L137.651,64.99Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M141.991,53.482L142.708,53.308L146.421,56.027L145.614,56.224Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M138.009,55.097L141.991,53.482L145.614,56.224L139.759,58.599Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M136.136,57.385L136.278,56.742L137.812,60.449L137.651,61.172Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M136.278,56.742L136.684,56.082L138.269,59.706L137.812,60.449Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M137.292,55.505L138.009,55.097L139.759,58.599L138.953,59.057Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M136.684,56.082L137.292,55.505L138.953,59.057L138.269,59.706Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M146.421,56.027L147.105,56.122L152.586,59.009L151.788,58.898Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M145.614,56.224L146.421,56.027L151.788,58.898L150.847,59.127Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M137.651,64.99L137.651,61.172L138.785,66.024L138.785,70.224Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M139.759,58.599L145.614,56.224L150.847,59.127L141.244,63.021Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M137.651,61.172L137.812,60.449L138.972,65.181L138.785,66.024Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M137.812,60.449L138.269,59.706L139.505,64.314L138.972,65.181Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M151.788,58.898L152.586,59.009L159.957,61.902L158.97,61.765Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M138.953,59.057L139.759,58.599L141.244,63.021L140.303,63.556Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M138.269,59.706L138.953,59.057L140.303,63.556L139.505,64.314Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M150.847,59.127L151.788,58.898L158.97,61.765L157.805,62.048Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M138.785,70.224L138.785,66.024L139.302,72.035L139.302,76.999Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M141.244,63.021L150.847,59.127L157.805,62.048L142.347,68.318Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M158.97,61.765L159.957,61.902L168.938,64.862L167.76,64.698Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M138.785,66.024L138.972,65.181L139.534,70.991L139.302,72.035Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M157.805,62.048L158.97,61.765L167.76,64.698L166.371,65.036Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M138.972,65.181L139.505,64.314L140.194,69.918L139.534,70.991Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M140.303,63.556L141.244,63.021L142.347,68.318L141.182,68.98Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M139.505,64.314L140.303,63.556L141.182,68.98L140.194,69.918Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M139.555,78.872L139.831,77.628L140.618,76.349L141.796,75.229L143.185,74.441L166.371,65.036L167.76,64.698L168.938,64.862L169.725,65.503L170.001,66.523L170.001,73.014L169.725,74.259L168.938,75.538L167.76,76.657L166.371,77.446L143.185,86.85L141.796,87.189L140.618,87.025L139.831,86.384L139.555,85.364Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M139.302,76.999L139.302,72.035L139.555,78.872L139.555,85.364Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M142.347,68.318L157.805,62.048L166.371,65.036L143.185,74.441Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M139.302,72.035L139.534,70.991L139.831,77.628L139.555,78.872Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M139.534,70.991L140.194,69.918L140.618,76.349L139.831,77.628Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M141.182,68.98L142.347,68.318L143.185,74.441L141.796,75.229Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M140.194,69.918L141.182,68.98L141.796,75.229L140.618,76.349Z" fill="#202020" stroke="#202020" stroke-width="0.3"/><path d="M136.136,57.385L136.278,56.742M136.278,56.742L136.684,56.082M136.684,56.082L137.292,55.505M137.292,55.505L138.009,55.097M138.009,55.097L141.991,53.482M141.991,53.482L142.708,53.308M142.708,53.308L143.316,53.392M143.316,53.392L147.105,56.122M136.278,61.73L137.812,65.583M136.278,61.73L136.136,61.203M137.651,64.99L137.812,65.583M136.136,61.203L136.136,57.385M147.105,56.122L152.586,59.009M137.651,64.99L138.785,70.224M152.586,59.009L159.957,61.902M138.785,70.224L139.302,76.999M139.831,77.628L139.555,78.872M140.618,76.349L139.831,77.628M141.796,75.229L140.618,76.349M143.185,74.441L141.796,75.229M166.371,65.036L143.185,74.441M167.76,64.698L166.371,65.036M159.957,61.902L168.938,64.862M168.938,64.862L167.76,64.698M169.725,65.503L168.938,64.862M170.001,66.523L169.725,65.503M170.001,73.014L170.001,66.523M169.725,74.259L170.001,73.014M168.938,75.538L169.725,74.259M167.76,76.657L168.938,75.538M166.371,77.446L167.76,76.657M143.185,86.85L166.371,77.446M141.796,87.189L143.185,86.85M140.618,87.025L141.796,87.189M139.831,86.384L140.618,87.025M139.302,76.999L139.555,85.364M139.555,85.364L139.831,86.384M139.555,78.872L139.555,85.364" fill="none" stroke="#dcd5ff" stroke-width="1.45" stroke-linejoin="round" stroke-linecap="round"/><path d="M137,49.13514613495402V52.953522753361376M143,49.13514613495402V52.953522753361376" fill="none" stroke="#6584ff" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/><ellipse cx="140" cy="49.13514613495402" rx="3" ry="1.7" fill="#202020" stroke="#6584ff" stroke-width="1.3"/><g data-mic-distance="102.4"><ellipse cx="212.408" cy="124.2" rx="5.6" ry="2.7" stroke="#00d99b" stroke-width="1.35" fill="none"/><path d="M212.408,124.2L212.408,111.472" fill="none" stroke="#00d99b" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/><g transform="translate(212.408,111.472) rotate(35.264)"><rect x="-11" y="-5" width="22" height="10" rx="5" fill="#202020" stroke="#00d99b" stroke-width="1.4"/><path d="M-3,-2V2M1,-2V2M5,-2V2" fill="none" stroke="#00d99b" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round"/></g></g></g></svg>
+  </div>
+  <div class="rotary-toolbar">
+    <button type="button" class="btn btn-primary" data-action="play" aria-pressed="false">Play rotation</button>
+    <label class="form-label">Speed <select class="form-select" data-control="mode"><option value="brake">Brake</option><option value="slow" selected>Slow</option><option value="fast">Fast</option></select></label>
+    <label class="form-check"><input class="form-check-input" type="checkbox" data-control="actual"><span class="form-check-label">Actual screen size</span></label>
+    <span class="text-small" role="status" aria-live="polite" data-status>Paused · visual preview only</span>
+  </div>
+  <div class="rotary-fields">
+    <label class="rotary-field form-label"><span class="rotary-field-heading"><span>Horn angle</span><output data-value="angle">60°</output></span><input class="form-range" type="range" min="0" max="359" value="60" data-control="angle"></label>
+    <label class="rotary-field form-label"><span class="rotary-field-heading"><span>Mic distance</span><output data-value="proximity">20%</output></span><input class="form-range" type="range" min="0" max="100" value="20" data-control="proximity"></label>
+    <label class="rotary-field form-label"><span class="rotary-field-heading"><span>Drive</span><output data-value="drive">12</output></span><input class="form-range" type="range" min="0" max="99" value="12" data-control="drive"></label>
+    <label class="rotary-field form-label"><span class="rotary-field-heading"><span>Mix</span><output data-value="mix">100%</output></span><input class="form-range" type="range" min="0" max="100" value="100" data-control="mix"></label>
+  </div>
+</div>
+<script>
+/* Shared vector geometry: no browser APIs, fonts, dependencies or firmware code. */
+(function (root) {
+  'use strict';
+  const C = { bg: '#202020', blue: '#6584ff', green: '#00d99b', white: '#dcd5ff', red: '#ff355e', dim: '#493357' };
+  const SQ = Math.SQRT1_2, ORIGIN = [140, 73], MIC_DIR = [SQ, SQ];
+  const f = n => Number(n.toFixed(3));
+  const fmt = p => `${f(p[0])},${f(p[1])}`;
+  const cross = (a,b) => [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+  const sub = (a,b) => a.map((v,i)=>v-b[i]);
+  const dot = (a,b) => a.reduce((s,v,i)=>s+v*b[i],0);
+  function rotate(p, a) { return [p[0]*Math.cos(a)-p[1]*Math.sin(a),p[0]*Math.sin(a)+p[1]*Math.cos(a),p[2]]; }
+  function project(p) { return [ORIGIN[0]+p[0],ORIGIN[1]+SQ*(p[1]-p[2])]; }
+  function path(points, close=false) { return `M${points.map(fmt).join('L')}${close?'Z':''}`; }
+  function stroke(d,color,width=1.35,fill='none') { return `<path d="${d}" fill="${fill}" stroke="${color}" stroke-width="${width}" stroke-linejoin="round" stroke-linecap="round"/>`; }
+  function ring(x,w,h,r) {
+    const pts=[];
+    for (const [cy,cz,start] of [[w-r,h-r,0],[-w+r,h-r,90],[-w+r,-h+r,180],[w-r,-h+r,270]]) {
+      for (let j=0;j<5;j++) { const t=(start+j*22.5)*Math.PI/180; pts.push([x,cy+r*Math.cos(t),16+cz+r*Math.sin(t)]); }
+    }
+    return pts;
+  }
+  const sections = [[0,3.3,3.6,1.6],[4,4.3,3.8,1.8],[9,6.2,4.3,2.1],[15,9.2,5.2,2.6],[22,13,6.5,3.1]];
+  const rings=sections.map(s=>ring(...s).map(p=>p.map(v=>v*1.35))), N=rings[0].length;
+  const vertices=rings.flat();
+  const radius=Math.max(...vertices.map(v=>Math.hypot(v[0],v[1])));
+  const faces=[];
+  for(let r=0;r<rings.length-1;r++) for(let j=0;j<N;j++) {
+    const ids=[r*N+j,r*N+(j+1)%N,(r+1)*N+(j+1)%N,(r+1)*N+j];
+    let normal=cross(sub(vertices[ids[1]],vertices[ids[0]]),sub(vertices[ids[3]],vertices[ids[0]]));
+    const mid=ids.map(i=>vertices[i]).reduce((a,p)=>a.map((v,k)=>v+p[k]/4),[0,0,0]);
+    if(dot(normal,[0,mid[1],mid[2]-21.6])<0) normal=normal.map(v=>-v);
+    faces.push({ids,normal});
+  }
+  faces.push({ids:Array.from({length:N},(_,j)=>j),normal:[-1,0,0],cap:'back'});
+  faces.push({ids:Array.from({length:N},(_,j)=>(rings.length-1)*N+j),normal:[1,0,0],cap:'mouth'});
+  const edges=new Map();
+  faces.forEach((face,fi)=>face.ids.forEach((a,j)=>{const b=face.ids[(j+1)%face.ids.length], key=[a,b].sort((x,y)=>x-y).join(':'); if(!edges.has(key))edges.set(key,{a,b,faces:[]});edges.get(key).faces.push(fi);}));
+  function horn(angle) {
+    const world=vertices.map(p=>rotate(p,angle)), pts=world.map(project);
+    const visible=faces.map(face=>dot(rotate(face.normal,angle),[0,SQ,SQ])>1e-7);
+    const order=faces.map((face,i)=>({face,i,depth:face.ids.reduce((s,j)=>s+SQ*(world[j][1]+world[j][2])/face.ids.length,0)})).filter(o=>visible[o.i]).sort((a,b)=>a.depth-b.depth);
+    let out=order.map(o=>`<path d="${path(o.face.ids.map(j=>pts[j]),true)}" fill="${C.bg}" stroke="${C.bg}" stroke-width="0.3"/>`).join('');
+    // Silhouette edges plus the visible mouth/back rims, never a transparent wireframe.
+    let outline='';
+    for(const edge of edges.values()) {
+      const seen=edge.faces.filter(i=>visible[i]);
+      const rim=seen.some(i=>faces[i].cap);
+      if(seen.length===1 || rim) outline+=`M${fmt(pts[edge.a])}L${fmt(pts[edge.b])}`;
+    }
+    out+=stroke(outline,C.white,1.45);
+    return out;
+  }
+  function pivot() {
+    const bottom=project([0,0,0]),top=project([0,0,33.75]);
+    return `<ellipse cx="${bottom[0]}" cy="${bottom[1]}" rx="9" ry="4.8" fill="none" stroke="${C.blue}" stroke-width="1.3"/>`+
+      stroke(`M${top[0]-3},${top[1]}V${bottom[1]-1}Q${bottom[0]},${bottom[1]+2} ${bottom[0]+3},${bottom[1]-1}V${top[1]}`,C.blue,1.3,C.bg)+
+      `<ellipse cx="${top[0]}" cy="${top[1]}" rx="3" ry="1.7" fill="${C.bg}" stroke="${C.blue}" stroke-width="1.3"/>`;
+  }
+  function pivotTip() {
+    const a=project([0,0,33.75]),b=project([0,0,28.35]);
+    return stroke(`M${a[0]-3},${a[1]}V${b[1]}M${a[0]+3},${a[1]}V${b[1]}`,C.blue,1.3)+`<ellipse cx="${a[0]}" cy="${a[1]}" rx="3" ry="1.7" fill="${C.bg}" stroke="${C.blue}" stroke-width="1.3"/>`;
+  }
+  function microphone(proximity) {
+    const distance=96+Math.max(0,Math.min(100,proximity))*0.32;
+    const base=project([distance*MIC_DIR[0],distance*MIC_DIR[1],0]);
+    const head=project([distance*MIC_DIR[0],distance*MIC_DIR[1],18]);
+    const angle=180/Math.PI*Math.atan2(SQ*MIC_DIR[1],MIC_DIR[0]);
+    return `<g data-mic-distance="${f(distance)}">`+
+      `<ellipse cx="${f(base[0])}" cy="${f(base[1])}" rx="5.6" ry="2.7" stroke="${C.green}" stroke-width="1.35" fill="none"/>`+
+      stroke(`M${fmt(base)}L${fmt(head)}`,C.green,1.35)+
+      `<g transform="translate(${fmt(head)}) rotate(${f(angle)})"><rect x="-11" y="-5" width="22" height="10" rx="5" fill="${C.bg}" stroke="${C.green}" stroke-width="1.4"/>`+
+      stroke('M-3,-2V2M1,-2V2M5,-2V2',C.green,1.25)+`</g></g>`;
+  }
+  // Single-stroke lettering keeps the corner treatment independent of installed fonts.
+  const glyph={
+    A:'M0 12L3.5 0 7 12M1.2 8H5.8',B:'M0 12V0H3.5Q7 0 7 3T3.5 6H0M3.5 6Q7 6 7 9T3.5 12H0',
+    C:'M7 1Q5.5 0 3.5 0Q0 0 0 6T3.5 12Q5.5 12 7 11',D:'M0 12V0H2.5Q7 0 7 6T2.5 12Z',E:'M7 0H0V12H7M0 6H6',F:'M7 0H0V12M0 6H6',
+    I:'M3.5 0V12',M:'M0 12V0L3.5 7 7 0V12',N:'M0 12V0L7 12V0',
+    P:'M0 12V0H3.5Q7 0 7 3.2T3.5 6.4H0',R:'M0 12V0H3.5Q7 0 7 3T3.5 6H0M3.5 6L7 12',
+    S:'M7 1Q5.5 0 3.5 0Q0 0 0 3Q0 5 3.5 6Q7 7 7 9Q7 12 3.5 12Q1 12 0 11',
+    L:'M0 0V12H7',O:'M3.5 0Q0 0 0 6T3.5 12Q7 12 7 6T3.5 0Z',
+    W:'M0 0L1.5 12 3.5 5 5.5 12 7 0',V:'M0 0L3.5 12 7 0',K:'M0 0V12M7 0L0 6 7 12',
+    T:'M0 0H7M3.5 0V12',X:'M0 0L7 12M7 0L0 12',
+    '0':'M3.5 0Q0 0 0 6T3.5 12Q7 12 7 6T3.5 0Z',
+    '1':'M0 3L3.5 0V12M0 12H7',
+    '2':'M0 2Q0 0 3.5 0Q7 0 7 3Q7 4.5 5 7L0 12H7',
+    '3':'M0 1Q7 -2 7 3Q7 6 3.5 6Q7 6 7 9Q7 14 0 11',
+    '4':'M6 12V0L0 8H7','5':'M7 0H0V6Q7 3 7 9Q7 13 0 11',
+    '6':'M7 1Q0 -3 0 7V9Q0 12 3.5 12Q7 12 7 9Q7 5 0 7',
+    '7':'M0 0H7L2 12','8':'M3.5 6Q0 6 0 3T3.5 0Q7 0 7 3T3.5 6Q0 6 0 9T3.5 12Q7 12 7 9T3.5 6',
+    '9':'M0 11Q7 15 7 5V3Q7 0 3.5 0Q0 0 0 3Q0 7 7 5'
+  };
+  function text(value,x,y,height,color,width=.7) {
+    const scale=height/12;
+    return `<g transform="translate(${x},${y}) scale(${scale})" stroke="${color}" stroke-width="${width}" fill="none" stroke-linecap="butt" stroke-linejoin="round" aria-label="${value}">`+
+      [...value].map((c,i)=>`<path d="${glyph[c]||''}" transform="translate(${i*9},0)"/>`).join('')+'</g>';
+  }
+  function corners(state) {
+    const mic=state.proximity<34?'NEAR':state.proximity>66?'FAR':'MID';
+    return text('SPEED',19,16,13,C.blue)+text(state.mode.toUpperCase(),19,38,13,C.blue)+
+      text('MIC',269,16,13,C.green)+text(mic,262,38,13,C.green)+
+      text('DRIVE',19,80,13,C.white)+text(String(state.drive),19,102,13,C.white)+
+      text('MIX',263,80,13,C.red)+Array.from({length:8},(_,i)=>`<path d="M279 ${101+i*6}H296" stroke="${i>=8-Math.round(state.mix*8/100)?C.red:C.dim}" stroke-width="1.45"/>`).join('');
+  }
+  function scene(state) {
+    return '<rect width="320" height="160" fill="'+C.bg+'"/>'+corners(state)+
+      `<g id="rotary-mechanism">${pivot()}${horn(state.angle)}${pivotTip()}${microphone(state.proximity)}</g>`;
+  }
+  function svg(state) { return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 160" width="320" height="160" role="img" aria-label="Rotary effect with a rotating horn and a microphone arranged diagonally"><title>Rotary effect screen</title>${scene(state)}</svg>`; }
+  const api={C,ORIGIN,vertices,faces,radius,project,rotate,horn,pivot,pivotTip,microphone,corners,scene,svg,
+    defaults:{angle:1.05,proximity:20,drive:12,mix:100,mode:'slow'},
+    // Conservative bound: invert the 45-degree projection of the entire mic capsule.
+    micMinimumRadius:96-18};
+  if(typeof module==='object' && module.exports)module.exports=api;
+  else root.Rotor147Geometry=api;
+})(globalThis);
+
+(function(){
+  'use strict';
+  const root=document.getElementById('rotary147-preview');
+  const G=globalThis.Rotor147Geometry, screen=root.querySelector('.rotary-screen');
+  const state={...G.defaults}, control=name=>root.querySelector(`[data-control="${name}"]`);
+  const value=name=>root.querySelector(`[data-value="${name}"]`);
+  const play=root.querySelector('[data-action="play"]'),status=root.querySelector('[data-status]');
+  let running=false, speed=.8, last=0, raf=0, savedSignature='';
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+  function render(){
+    screen.innerHTML='<title>Rotary effect</title>'+G.scene(state);
+    const degrees=Math.round(state.angle*180/Math.PI)%360;
+    control('angle').value=degrees; value('angle').textContent=degrees+'°';
+    for(const key of ['proximity','drive','mix']) {control(key).value=state[key];value(key).textContent=state[key]+(key==='drive'?'':'%');}
+    control('mode').value=state.mode;
+  }
+  function updateStatus(){
+    play.textContent=running?'Pause rotation':'Play rotation';play.setAttribute('aria-pressed',String(running));
+    status.textContent=(running?(state.mode==='brake'?'Coasting to brake':'Rotating'): 'Paused')+' · visual preview only';
+  }
+  function save(){
+    const snapshot={modelContent:{design:'Short scoop, diagonal arrangement; no guide dashes',mode:state.mode,proximity:state.proximity,drive:state.drive,mix:state.mix},privateContent:{angle:state.angle,actual:control('actual').checked}};
+    savedSignature=JSON.stringify(snapshot);
+    if(window.openai?.setWidgetState)window.openai.setWidgetState(snapshot).catch(()=>{});
+  }
+  function restore(snapshot){
+    const m=snapshot?.modelContent||{}, p=snapshot?.privateContent||{};
+    if(['slow','fast','brake'].includes(m.mode))state.mode=m.mode;
+    for(const key of ['proximity','drive','mix'])if(Number.isFinite(m[key]))state[key]=Math.max(0,Math.min(key==='drive'?99:100,m[key]));
+    if(Number.isFinite(p.angle))state.angle=((p.angle%(Math.PI*2))+Math.PI*2)%(Math.PI*2);
+    control('actual').checked=!!p.actual;
+    root.querySelector('.rotary-stage').classList.toggle('actual',!!p.actual);
+    speed=state.mode==='fast'?6.7:state.mode==='slow'?.8:0;
+    render();updateStatus();
+  }
+  function step(now){
+    if(!running)return;
+    const dt=last?Math.min(.05,(now-last)/1000):0; last=now;
+    const target=state.mode==='fast'?6.7:state.mode==='slow'?.8:0;
+    const slew=target>speed?5.9:state.mode==='brake'?3.35:3.94;
+    const change=Math.sign(target-speed)*Math.min(Math.abs(target-speed),slew*dt);
+    state.angle=(state.angle+(speed+change/2)*dt*Math.PI*2)%(Math.PI*2);
+    speed+=change;render();
+    if(state.mode==='brake' && speed===0) {running=false;updateStatus();status.textContent='Stopped · visual preview only';save();return;}
+    raf=requestAnimationFrame(step);
+  }
+  function pause(){running=false;cancelAnimationFrame(raf);last=0;updateStatus();}
+  play.addEventListener('click',()=>{if(running)pause();else{running=true;last=0;updateStatus();raf=requestAnimationFrame(step);}save();});
+  control('mode').addEventListener('change',()=>{state.mode=control('mode').value;render();updateStatus();save();});
+  control('angle').addEventListener('input',()=>{pause();state.angle=Number(control('angle').value)*Math.PI/180;render();});
+  control('angle').addEventListener('change',save);
+  for(const key of ['proximity','drive','mix']) {
+    control(key).addEventListener('input',()=>{state[key]=Number(control(key).value);render();});
+    control(key).addEventListener('change',save);
+  }
+  control('actual').addEventListener('change',()=>{root.querySelector('.rotary-stage').classList.toggle('actual',control('actual').checked);save();});
+  document.addEventListener('visibilitychange',()=>{last=0;if(document.hidden&&running)pause();});
+  reduced.addEventListener('change',e=>{if(e.matches)pause();});
+  window.addEventListener('openai:set_globals',e=>{
+    const snapshot=e.detail?.globals?.widgetState;
+    if(snapshot && JSON.stringify(snapshot)!==savedSignature){pause();restore(snapshot);}
+  });
+  restore(window.openai?.widgetState);
+  // Explicit Play is required, including when reduced-motion is requested.
+})();
+
+</script>

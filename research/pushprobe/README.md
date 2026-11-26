@@ -54,4 +54,4 @@ Reading it:
 
 Blue's page 2 was turned off by PLOCCTRL (bundled with Hundekraft): its `key_sync`, which the core calls on every key
 event, clears `op1_eng_page[0]` unless Shift is held, with no check that a PLOC sound is shown. Switching PLOCCTRL off
-fixed it on the device. `upstream/` holds the report (`plocctrl-report.md`) and a one-line patch.
+fixed it on the device. `upstream/` holds the report (`plocctrl-report.md`) and a one-line patch; Hundekraft 3.3.2 ships the same fix, so it no longer needs sending.

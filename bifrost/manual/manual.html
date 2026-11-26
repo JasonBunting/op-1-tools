@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bifrost Manual</title>
+<meta name="description" content="Bifrost, a feature for the OP-1 under Hundekraft: plug a USB MIDI keyboard straight into the OP-1 and play it.">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+<header><a href="manual.html" class="wordmark">Bifrost <span>a bridge for hundekraft</span></a><span class="edition">ORIGINAL OP–1 · HUNDEKRAFT 3.3.2 · BIFROST 0.1.0</span></header>
+<main>
+<section class="intro"><div class="eyebrow">BIFROST / MANUAL</div><h1>Your keyboard, straight in.</h1><p>Bifrost lets you plug a USB MIDI keyboard or controller straight into the OP-1, with no computer in between, and play it. The OP-1 powers the keyboard from its battery and plays its notes as it plays MIDI from a computer.</p></section>
+<div class="manual-grid">
+<details class="toc" open><summary>Contents</summary><ol>
+<li><a href="#need">What you need</a></li>
+<li><a href="#start">Get started</a></li>
+<li><a href="#play">Playing</a></li>
+<li><a href="#plug">Plugging and unplugging</a></li>
+<li><a href="#off">Turning it off</a></li>
+<li><a href="#messages">Messages</a></li>
+<li><a href="#limits">Limits</a></li>
+<li><a href="#credits">Where it comes from</a></li>
+</ol></details>
+<article class="manual-body">
+
+<section class="chapter" id="need"><h2>What you need</h2>
+<ol>
+<li>An original OP-1 running Hundekraft 3.3.2, with Bifrost installed.</li>
+<li>A <strong>mini-USB OTG adapter</strong> or OTG cable: a mini-USB plug on one end, a full-size USB socket on the other.</li>
+<li>A class-compliant USB MIDI keyboard or controller: one that works on a computer without installing a driver. Most do.</li>
+</ol>
+<aside class="note note-warning"><span>Warning</span><p>It has to be a real OTG adapter. Inside the plug, an OTG adapter connects the mini-USB plug's fifth pin (ID) to ground, and that is what tells the OP-1 to be the host. Many adapters sold as "mini USB OTG" are plain plugs that look the same and do nothing. The cable that came with the OP-1 is not an OTG cable.</p></aside>
+</section>
+
+<section class="chapter" id="start"><h2>Get started</h2>
+<ol>
+<li>Install <code>bifrost.knl</code> from the Hundekraft workshop's <strong>Your plugins</strong> page. Building it is described in the <a href="../README.md">Bifrost README</a>. The OP-1 restarts.</li>
+<li>Unplug the computer's USB cable from the OP-1.</li>
+<li>Plug the OTG adapter into the OP-1 and the keyboard's USB cable into the adapter. The order doesn't matter.</li>
+<li>Within about 5 seconds the keyboard lights up and a pop-up shows its name, such as <span class="lcd">MPK mini 3 connected</span>.</li>
+<li>Play.</li>
+</ol>
+</section>
+
+<section class="chapter" id="play"><h2>Playing</h2>
+<p>The OP-1 treats the keyboard exactly as it treats MIDI from a computer, so everything the OP-1 and Hundekraft do with MIDI works: velocity, chords, the sequencers, recording to tape, and Hundekraft's MIDI features. Teenage Engineering's guide covers how the OP-1 handles MIDI: <a href="https://teenage.engineering/guides/op-1">the OP-1 guide</a>.</p>
+<p>Bifrost works whatever sound or mode you are in. Pick sounds on the OP-1 as usual and play them from the keyboard.</p>
+<aside class="note note-tip"><span>Tip</span><p>If the keyboard lights up and "connected" shows but nothing plays, check its MIDI channel against the OP-1's. Setting the keyboard to channel 1 is the quickest test.</p></aside>
+</section>
+
+<section class="chapter" id="plug"><h2>Plugging and unplugging</h2>
+<ol>
+<li><strong>Unplug the keyboard</strong> from the adapter at any time. A pop-up says it was unplugged. Plug it (or another one) back in and it connects again within a second or two.</li>
+<li><strong>Take the adapter out</strong> of the OP-1 and the USB port goes back to normal within a few seconds: plug the computer in and the workshop, disk mode and Mirror work as usual.</li>
+<li><strong>Disk mode</strong> (<span class="okey okey-text">Shift</span> + <span class="okey okey-text">COM</span>, then <span class="okey okey-text">T3</span>) needs the computer, so starting it ends Bifrost's host mode.</li>
+</ol>
+</section>
+
+<section class="chapter" id="off"><h2>Turning it off</h2>
+<ol>
+<li>Hold <span class="okey okey-text">Shift</span> and press <img class="okey" src="keys/help.png" alt="help" title="help">, then press <span class="okey okey-text">T3</span>. The settings page opens.</li>
+<li>Hold <span class="okey okey-text">Shift</span> and turn <span class="enc enc-b">blue</span> until the page titled <span class="lcd">BIFROST</span> shows.</li>
+<li>Set <span class="lcd">USB KEYBOARD</span> off.</li>
+</ol>
+<p>Off, Bifrost does nothing at all and the USB port behaves exactly as on a stock OP-1. Turn it back on the same way.</p>
+</section>
+
+<section class="chapter" id="messages"><h2>Messages</h2>
+<div class="table"><table><thead><tr><th scope="col">Pop-up</th><th scope="col">Means</th></tr></thead><tbody>
+<tr><td data-label="Pop-up"><span class="lcd">MPK mini 3 connected</span></td><td data-label="Means">A MIDI device is plugged in and playing. The name is the one the device gives itself; <span class="lcd">usb device</span> when it gives none.</td></tr>
+<tr><td data-label="Pop-up"><span class="lcd">MPK mini 3 unplugged</span></td><td data-label="Means">It was unplugged. Plug it back in when you like.</td></tr>
+<tr><td data-label="Pop-up"><span class="lcd">...: not a midi device</span></td><td data-label="Means">A flash drive, a mouse or anything else that isn't USB MIDI. Bifrost leaves it alone; unplug it.</td></tr>
+<tr><td data-label="Pop-up"><span class="lcd">...: usb setup failed</span></td><td data-label="Means">The device didn't answer as expected. Unplug it and plug it in again.</td></tr>
+<tr><td data-label="Pop-up"><span class="lcd">bifrost: no 5v on the usb port</span></td><td data-label="Means">The OP-1 couldn't power the port. Bifrost tries again after 30 seconds.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="chapter" id="limits"><h2>Limits</h2>
+<ol>
+<li>Notes go one way, from the keyboard to the OP-1. Nothing is sent back to the keyboard.</li>
+<li>One device at a time, plugged in directly. USB hubs aren't supported.</li>
+<li>While the adapter is in, the OP-1 powers the port from its battery and doesn't charge. Take the adapter out when you're done.</li>
+<li>Only USB MIDI devices: no flash drives, mice or audio.</li>
+</ol>
+</section>
+
+<section class="chapter" id="credits"><h2>Where it comes from</h2>
+<p>The OP-1's hardware can be a USB host, but its stock firmware never uses that. How the OP-1 switches its port into host mode and powers it was worked out from the stock firmware and from how Opus, LizardMan's OP-1 firmware mod, does it on the same hardware. Bifrost's code is its own.</p>
+</section>
+
+</article>
+</div>
+</main>
+<footer><span>Bifrost by Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission.</span><span>Styled after the hundekraft manual; key images from it. Not affiliated with Teenage Engineering or Hundekraft.</span></footer>
+</body>
+</html>

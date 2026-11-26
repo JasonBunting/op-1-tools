@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="320px" height="160px" viewBox="0 0 320 160">
+<!-- norn: PLACEHOLDER figures until the keepers' artwork (norn/design/Claude-UI-Handoff.md) arrives: a head, a body and
+     an arm reaching to each thread's start (the hands in norn_weave.h). The whole SVG is static (the cached part);
+     norn_screen.c draws the strip, the weave and its highlights over it. -->
+<path fill="#709cff" d="M55.22 57.31 L53.61 61.20 L49.72 62.81 L45.83 61.20 L44.22 57.31 L45.83 53.42 L49.72 51.81 L53.61 53.42Z"/>
+<path fill="#709cff" d="M43.72 64.31 L53.72 64.31 L57.72 79.31 L39.72 79.31Z"/>
+<path fill="#709cff" d="M52.72 66.31 L78.72 72.11 L78.72 73.91 L52.72 68.81Z"/>
+<path fill="#709cff" d="M59.63 88.57 L58.02 92.46 L54.13 94.07 L50.24 92.46 L48.63 88.57 L50.24 84.68 L54.13 83.07 L58.02 84.68Z"/>
+<path fill="#709cff" d="M48.13 95.57 L58.13 95.57 L62.13 110.57 L44.13 110.57Z"/>
+<path fill="#709cff" d="M57.13 97.57 L83.13 103.37 L83.13 105.17 L57.13 100.07Z"/>
+<path fill="#709cff" d="M62.94 120.20 L61.33 124.09 L57.44 125.70 L53.55 124.09 L51.94 120.20 L53.55 116.31 L57.44 114.70 L61.33 116.31Z"/>
+<path fill="#709cff" d="M51.44 127.20 L61.44 127.20 L65.44 142.20 L47.44 142.20Z"/>
+<path fill="#709cff" d="M60.44 129.20 L86.44 135.00 L86.44 136.80 L60.44 131.70Z"/>
+</svg>

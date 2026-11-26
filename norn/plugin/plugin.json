@@ -4,9 +4,10 @@
   "order": 0,
   "symbol": "ENGINE_norn",
   "author": "Jason Bunting",
-  "version": "0.4.1",
-  "sources": ["norn.c"],
+  "version": "0.5.1",
+  "sources": ["norn.c", "norn_screen.c"],
   "defaults": [0, 9830, 11468, 8192],
+  "screen": {"svg": "norn.svg", "symbol": "SCREEN_norn"},
   "loadable": true,
   "claims": []
 }

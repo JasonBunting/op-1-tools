@@ -1,0 +1,24 @@
+Bifrost - USB MIDI keyboards plugged straight into the Teenage Engineering OP-1, as a Hundekraft (kennel) feature plugin
+Copyright (C) 2026 Jason Bunting
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
+License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+version. It is distributed WITHOUT ANY WARRANTY; see the GNU General Public License (LICENSE) for details.
+
+It is built with Hundekraft's kennel SDK (https://hundekraft.github.io/op1-workshop/), which is GPL-3.0-or-later
+with the additional permission below, and is distributed under the same terms. The rest of this repository (the
+viewers, tools and docs) is MIT licensed; see the LICENSE file at the repository root.
+
+ADDITIONAL PERMISSION (GPL-3.0 section 7)
+As an additional permission, you may combine this program, or a work based on it, with the Teenage Engineering OP-1
+firmware (original or patched) and convey the resulting combination, provided that the parts of the combination
+that are this program or based on it are conveyed under the terms of the GPL with this additional permission. The
+OP-1 firmware itself is not covered by this license.
+
+HOW IT WAS LEARNED
+How the OP-1's hardware switches its USB port into host mode and powers it was worked out from the stock R246
+firmware and by studying how Opus (LizardMan's OP-1 firmware mod) does it on the same hardware. The code in this
+plugin is written from that understanding; it contains no code from Opus.
+
+The plugin (bifrost.c, bf_usb.c, bf_usb.h, usb_desc.h, plugin.json) is built and packed with tools/pack-plugin.sh
+against the Hundekraft 3.3.2 source; see the project README.

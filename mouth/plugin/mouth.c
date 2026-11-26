@@ -5,7 +5,7 @@
  *   white  : breath (fully right whispers)                  press: WILD: how far and how sharply it babbles
  *   orange : vibrato depth, then speed (warble)
  * Page 2 uses word 7, so there is no hidden preset trim.
- * Hundekraft 3.3.1. Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see
+ * Hundekraft 3.3.2. Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see
  * LICENSE and NOTICE). */
 #include "op1_plugin.h"
 #include "fm_dsp.h"

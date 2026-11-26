@@ -1,0 +1,15 @@
+{
+  "name": "bifrost",
+  "kind": "feature",
+  "symbol": "FEATURE_bifrost",
+  "sources": ["bifrost.c", "bf_usb.c"],
+  "loadable": true,
+  "author": "Jason Bunting",
+  "version": "0.1.0",
+  "claims": [],
+  "settings_title": "BIFROST",
+  "settings": [
+    { "id": "on", "label": "USB KEYBOARD", "type": "onoff", "default": 1,
+      "help": "Plays the OP-1 from a USB MIDI keyboard plugged in through a mini-USB OTG adapter. Off leaves the USB port as stock." }
+  ]
+}

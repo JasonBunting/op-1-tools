@@ -12,12 +12,13 @@ OP-1 (Hundekraft)                               Windows PC
              ◄── settings + keep-alive as CCs ──
 ```
 
-Status: works on Windows and Android with a real OP-1 running Hundekraft 3.1.4 or 3.2.3 (built for 3.3.1; not yet checked on it): about 40 fps on the OP-1
-side, no lost messages, no audible effect on audio.
+Status: works on Windows and Android with a real OP-1 running Hundekraft 3.1.4 or 3.2.3 (built for 3.3.2; not yet checked on it): about 40 fps on the OP-1
+side, no lost messages, no audible effect on audio. 0.7.3 fixes the picture freezing on Hundekraft 3.3 and later while
+the OP-1's screen holds still: since 3.3 the core skips drawing unchanged frames, and Mirror used to stop there.
 
 ## Requirements
 
-1. An original OP-1 running Hundekraft 3.3.1, 3.2.3 or 3.1.4.
+1. An original OP-1 running Hundekraft 3.3.2, 3.2.3 or 3.1.4.
 2. Windows 10/11 (64-bit) or an Android 8+ phone with USB-C.
 
 No need to build anything: the [Releases](https://github.com/JasonBunting/op-1-tools/releases) page has
@@ -99,7 +100,7 @@ Same plugin, different viewer: `mobile/` (.NET MAUI, Android 8+ with USB host su
 `host_test.c` needs a 256x400 24-bit BMP of a screen and the SDK headers. In WSL:
 
 ```bash
-gcc -O2 -I<hundekraft-3.3.1-source>/ext/kennel/synth_sdk mirror/plugin/test/host_test.c -o /tmp/host_test
+gcc -O2 -I<hundekraft-3.3.2-source>/ext/kennel/synth_sdk mirror/plugin/test/host_test.c -o /tmp/host_test
 /tmp/host_test frame.bmp mirror.syx
 ```
 
@@ -135,7 +136,7 @@ From Git Bash, on a clean commit:
 
 ## Notes
 
-1. The plugin calls an unexported firmware routine at a fixed address. It is built against Hundekraft 3.3.1, was
+1. The plugin calls an unexported firmware routine at a fixed address. It is built against Hundekraft 3.3.2, was
    checked on the device on 3.2.3 and 3.1.4, and a later core may need checking.
 2. The viewer sends controller messages 118–122 on MIDI channel 16. On Hundekraft 3.2.3 and later, leave the COM
    screen's PARAM CH off or on another channel: on channel 16, message 118 would keep setting the tape input level.

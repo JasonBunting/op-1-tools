@@ -3,7 +3,7 @@
 # Run from Git Bash on Windows (it uses WSL for the plugin and dotnet for the viewers).
 #   mirror/release.sh [--publish] [--allow-dirty] [tag]      tag defaults to mirror-v<plugin.json version>
 # Needs (in the environment, or in .env at the repository root, except the password):
-#   HUNDEKRAFT_KENNEL   WSL path of ext/kennel in the Hundekraft 3.3.1 source (the plugin's SDK and packer)
+#   HUNDEKRAFT_KENNEL   WSL path of ext/kennel in the Hundekraft 3.3.2 source (the plugin's SDK and packer)
 #   OP1_KEYSTORE        Windows path of the Android signing keystore (alias op1mirror), made once:
 #                         keytool -genkeypair -keystore op1mirror.keystore -alias op1mirror -keyalg RSA -keysize 2048 -validity 36500
 #                       Keep it and its password safe and out of the repo: updates to the app must be signed with it.
@@ -29,7 +29,7 @@ tag="${tag:-mirror-v$version}"
 out="build/release/$tag"
 
 fail() { echo "release: $*" >&2; exit 1; }
-[ -n "${HUNDEKRAFT_KENNEL:-}" ] || fail "set HUNDEKRAFT_KENNEL to the WSL path of the Hundekraft 3.3.1 source's ext/kennel"
+[ -n "${HUNDEKRAFT_KENNEL:-}" ] || fail "set HUNDEKRAFT_KENNEL to the WSL path of the Hundekraft 3.3.2 source's ext/kennel"
 [ -n "${OP1_KEYSTORE:-}" ] && [ -f "$OP1_KEYSTORE" ] || fail "set OP1_KEYSTORE to the Android keystore (see the top of this script)"
 [ -n "${OP1_KEYSTORE_PASS:-}" ] || fail "set OP1_KEYSTORE_PASS to the keystore's password"
 if [ "$allow_dirty" = 0 ] && [ -n "$(git status --porcelain --untracked-files=no)" ]; then
@@ -60,7 +60,7 @@ commit="$(git rev-parse --short HEAD)"
 cat > "$out/notes.md" <<EOF
 Mirror the OP-1's screen on Windows or Android. Built from $commit. Shared as-is and not actively supported.
 
-**Needs** an original OP-1 running Hundekraft 3.3.1 (or 3.3, 3.2.3, 3.1.4).
+**Needs** an original OP-1 running Hundekraft 3.3.2 (or 3.3.2, 3.3, 3.2.3, 3.1.4).
 
 1. **mirror.knl**: the OP-1 plugin. In the Hundekraft workshop: Your plugins → drop it in → Review changes → Send to
    OP-1 → T1 on the OP-1. Then close the browser completely (it holds the OP-1's MIDI port).

@@ -11,7 +11,10 @@ The repository is organized by project, so anyone can take one piece without the
    2. `patternplus/`: `plugin/`, `manual/`, `docs/`, `HARDWARE-TEST.md`, `README.md`
    3. `mouth/`: `plugin/` (with `gen_tables.py`, `presets.py` and `test/`), `presets/`, `manual/`, `README.md`, `HARDWARE-TEST.md`
    4. `ratatoskr/`: `plugin/` (with `test/`), `manual/`, `README.md`, `HARDWARE-TEST.md`
-   5. `research/<tool>/`: throwaway probes, such as `rastprobe/` (`plugin/`, `listener/`)
+   5. `norn/`: `plugin/` (with `gen_tables.py` and `test/`), `docs/`, `design/`, `README.md`, `HARDWARE-TEST.md`
+   6. `rotor147/`: `plugin/` (with `rc_dsp.h` and `test/`), `README.md`, `HARDWARE-TEST.md`
+   7. `bifrost/`: `plugin/` (with `test/`), `manual/`, `README.md`, `HARDWARE-TEST.md`
+   8. `research/<tool>/`: throwaway probes, such as `rastprobe/` (`plugin/`, `listener/`)
 2. Only shared things live at the root: `README.md` (an index of the projects), `LICENSE`, `CLAUDE.md`, `.env.example`,
    `op-1-tools.slnx` and `tools/` (scripts every project uses). Don't create root-level `docs/`, `firmware/`,
    `desktop/` or `mobile/` folders, or loose notes at the root.
@@ -34,9 +37,11 @@ The repository is organized by project, so anyone can take one piece without the
 2. `dotnet build op-1-tools.slnx` builds every C# project.
 3. Each project's README has its host tests and, where there is one, its release steps. Release tags are per
    project: `mirror-v<version>`, `patternplus-v<version>`, `mouth-v<version>`.
+4. `python tools/compile_commands.py` writes `compile_commands.json` (Git ignores it) for clangd: every plugin's C
+   sources and host tests, against the SDK in `.env`. Run it again after adding a plugin, a source file or a test.
 
 ## Hundekraft core
 
-Every plugin, doc, build path and release script follows the core installed on the OP-1 (3.3.1 at the time of
+Every plugin, doc, build path and release script follows the core installed on the OP-1 (3.3.2 at the time of
 writing). On a core upgrade, rebuild every plugin and update every reference in one pass. The official plugin guide is
 https://hundekraft.github.io/op1-workshop/llms.txt.
