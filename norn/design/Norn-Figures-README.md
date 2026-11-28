@@ -16,9 +16,9 @@ Use `norn-figures.svg` as the static Three Keepers artwork. This is a hand-autho
 
 | Path | Authored coordinate pairs, including Bézier control points |
 | --- | ---: |
-| `figure-top` | 119 |
-| `figure-mid` | 243 |
-| `figure-bot` | 121 |
+| `figure-top` | 127 |
+| `figure-mid` | 251 |
+| `figure-bot` | 120 |
 
 These counts describe SVG path data, not the number of vertices after a renderer tessellates curves. If the SDK's 256-point limit applies to tessellated output, verify the compiler's result and split the middle figure's components as needed. Do not discard contour points or close separate subpaths together.
 
@@ -35,6 +35,8 @@ Coordinates are in the final 320 × 160 viewBox, with no additional transform. E
 The SVG contains no anchor circles to remove. Draw the generated threads from these points beneath the figure artwork so the fingers cover the contact point. The empty right-hand canvas is reserved for that live weave.
 
 ## Validation and use
+
+Face revision, 2026-11-26: softened the nose, mouth, cheek, and chin contours; replaced the sharp eyes with relaxed closed eyes; reduced the older Norn's facial cuts to one short age crease. Robes, hoods, braid, arms, hands, placement, blue fill, and thread anchors are unchanged. `Norn-Faces-Preview.html` shows the revision at native size and compares the older face before and after.
 
 Validated as XML and checked against the element, fill, coordinate-count, and vertical-bound constraints. Inspected in a browser enlarged and at 320 × 160. Device compilation and OP-1 rendering are not yet validated.
 

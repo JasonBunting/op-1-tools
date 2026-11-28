@@ -8,9 +8,9 @@ Plugins and companion apps for the original OP-1 running [Hundekraft](https://hu
 | [Pattern+](patternplus/README.md) | A sequencer plugin like stock Pattern, plus pages, chains and saving | In progress, 0.5.3 | [Build from source](patternplus/README.md) |
 | [Mouth](mouth/README.md) | A singing, babbling voice synth: vowels, bodies from giant to tiny, and made-up words | In progress, 0.5.2 | [Build from source](mouth/README.md) |
 | [Ratatoskr](ratatoskr/README.md) | Grains from the sampler's recording around a squirrel playhead that holds, travels, bounces, wanders or jumps up a tree | In progress, 0.3.7 | [Build from source](ratatoskr/README.md) |
-| [Norn](norn/README.md) | Synthesis models from Mutable Instruments' Plaits; the waveshaper, two-operator FM, formant and wave terrain | Prototype, 0.5.1 | [Build from source](norn/README.md) |
+| [Norn](norn/README.md) | Synthesis models from Mutable Instruments' Plaits; the waveshaper, two-operator FM, formant and wave terrain | Prototype, 0.5.2 | [Build from source](norn/README.md) |
 | [rotor147](rotor147/README.md) (working name) | A rotary speaker effect: horn and bass rotors with their own inertia, drive, close or distant mics | Prototype, 0.2.2 | [Build from source](rotor147/README.md) |
-| [Bifrost](bifrost/README.md) | Plug a USB MIDI keyboard straight into the OP-1 through an OTG adapter and play it, no computer needed | Prototype, 0.1.0 | [Build from source](bifrost/README.md) |
+| [Bifrost](bifrost/README.md) | Plug a USB MIDI keyboard straight into the OP-1 through an OTG adapter and play it, no computer needed | Prototype, 0.2.0 | [Build from source](bifrost/README.md) |
 
 Shared as-is, in the hope it helps. It is a personal project and not actively supported: issues and pull requests
 may sit unanswered, so fork freely.

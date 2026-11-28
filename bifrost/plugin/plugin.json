@@ -2,14 +2,37 @@
   "name": "bifrost",
   "kind": "feature",
   "symbol": "FEATURE_bifrost",
-  "sources": ["bifrost.c", "bf_usb.c"],
+  "sources": [
+    "bifrost.c",
+    "bf_usb.c",
+    "bf_knobs.c"
+  ],
   "loadable": true,
   "author": "Jason Bunting",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "claims": [],
   "settings_title": "BIFROST",
   "settings": [
-    { "id": "on", "label": "USB KEYBOARD", "type": "onoff", "default": 1,
-      "help": "Plays the OP-1 from a USB MIDI keyboard plugged in through a mini-USB OTG adapter. Off leaves the USB port as stock." }
+    {
+      "id": "on",
+      "label": "USB KEYBOARD",
+      "type": "onoff",
+      "default": 1,
+      "help": "Plays the OP-1 from a USB MIDI keyboard plugged in through a mini-USB OTG adapter. Off leaves the USB port as stock."
+    },
+    {
+      "id": "knobs",
+      "label": "KNOB MAP",
+      "type": "onoff",
+      "default": 1,
+      "help": "Your controller's knobs turn the OP-1's four encoders: the first four learned on page 1, the next four on page 2."
+    },
+    {
+      "id": "learn",
+      "label": "LEARN KNOBS",
+      "type": "onoff",
+      "default": 0,
+      "help": "Turn on, then turn each knob a little: top row left to right, then the bottom row. Goes off by itself after eight."
+    }
   ]
 }

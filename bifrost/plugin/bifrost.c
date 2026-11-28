@@ -10,11 +10,12 @@
  *   other     a device that isn't MIDI (or wouldn't set up): wait for it to be unplugged.
  * Losing the session or the A side (a keyboard's inrush, the adapter pulled) runs the powered start again; when that
  * doesn't give host mode, the adapter is gone and the port goes back to the computer. Disk mode and the settings row
- * end host mode at once.
+ * end host mode at once. The knob map (bf_knobs.c) turns the encoders from a controller's knobs.
  * Copyright (C) 2026 Jason Bunting. GPL-3.0-or-later with the OP-1 firmware permission (see LICENSE and NOTICE). */
 #pragma GCC optimize("no-tree-loop-distribute-patterns")          /* the firmware has no memcpy / memset */
 #include "op1_feature.h"
 #include "bf_usb.h"
+#include "bf_knobs.h"
 
 #define FEAT "bifrost"
 #define CYC_MS 400000ull
@@ -102,7 +103,7 @@ static void service(void)
             break;
         }
         if (!host) { restart(); break; }
-        if (st == ST_RUN) bfu_poll_midi();
+        if (st == ST_RUN) bfu_poll_midi(bfk_take);
         break;
     }
 }
@@ -117,13 +118,13 @@ static void read_settings(void)
 static void event(int id, int32_t arg)
 {
     switch (id) {
-    case OP1_EV_BOOT_DONE: t_boot = now(); read_settings(); break;
-    case OP1_EV_SETTING: read_settings(); break;
+    case OP1_EV_BOOT_DONE: t_boot = now(); read_settings(); bfk_load(); break;
+    case OP1_EV_SETTING: read_settings(); bfk_settings(); break;
     case OP1_EV_DISK:                                            /* arg 1: disk mode starts (the computer gets the port) */
         disk = arg != 0;
         if (disk && active()) stop(ST_IDLE);
         break;
-    case OP1_EV_SERVICE: service(); break;
+    case OP1_EV_SERVICE: service(); bfk_service(); break;
     }
 }
 

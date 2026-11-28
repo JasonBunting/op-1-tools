@@ -271,7 +271,7 @@ static int push_packet(const uint8_t *pk)
     return ok;
 }
 
-int bfu_poll_midi(void)
+int bfu_poll_midi(int (*take)(const uint8_t *pk))
 {
     uint8_t buf[64];
     U_INDEX = HOST_EP;
@@ -285,6 +285,6 @@ int bfu_poll_midi(void)
     U_RXCSR = RX_REQPKT;
     if (n > (int)sizeof buf) n = sizeof buf;
     int q = 0;
-    for (int i = 0; i + 4 <= n; i += 4) q += push_packet(buf + i);
+    for (int i = 0; i + 4 <= n; i += 4) if (!take || !take(buf + i)) q += push_packet(buf + i);
     return q;
 }

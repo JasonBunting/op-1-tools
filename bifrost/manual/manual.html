@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="manual.css">
 </head>
 <body>
-<header><a href="manual.html" class="wordmark">Bifrost <span>a bridge for hundekraft</span></a><span class="edition">ORIGINAL OP–1 · HUNDEKRAFT 3.3.2 · BIFROST 0.1.0</span></header>
+<header><a href="manual.html" class="wordmark">Bifrost <span>a bridge for hundekraft</span></a><span class="edition">ORIGINAL OP–1 · HUNDEKRAFT 3.3.2 · BIFROST 0.2.0</span></header>
 <main>
 <section class="intro"><div class="eyebrow">BIFROST / MANUAL</div><h1>Your keyboard, straight in.</h1><p>Bifrost lets you plug a USB MIDI keyboard or controller straight into the OP-1, with no computer in between, and play it. The OP-1 powers the keyboard from its battery and plays its notes as it plays MIDI from a computer.</p></section>
 <div class="manual-grid">
@@ -15,6 +15,7 @@
 <li><a href="#need">What you need</a></li>
 <li><a href="#start">Get started</a></li>
 <li><a href="#play">Playing</a></li>
+<li><a href="#knobs">Knobs: your controller as the OP-1's encoders</a><ol><li><a href="#learn">Learning your knobs</a></li><li><a href="#pages">Page 1 and page 2</a></li></ol></li>
 <li><a href="#plug">Plugging and unplugging</a></li>
 <li><a href="#off">Turning it off</a></li>
 <li><a href="#messages">Messages</a></li>
@@ -48,6 +49,29 @@
 <aside class="note note-tip"><span>Tip</span><p>If the keyboard lights up and "connected" shows but nothing plays, check its MIDI channel against the OP-1's. Setting the keyboard to channel 1 is the quickest test.</p></aside>
 </section>
 
+<section class="chapter" id="knobs"><h2>Knobs: your controller as the OP-1's encoders</h2>
+<p>If your controller has knobs, Bifrost can make them turn the OP-1's four encoders. Eight knobs work best: the first four turn <span class="enc enc-b">blue</span>, <span class="enc enc-g">green</span>, <span class="enc enc-w">white</span> and <span class="enc enc-o">orange</span> on page 1, and the next four turn the same encoders on page 2. A controller with four knobs gets page 1 only.</p>
+<p>The knobs turn the encoders, they don't set values. So nothing jumps when you change sounds: a knob always moves a value from wherever it is, as the OP-1's own encoder does. That works on every screen: the engine, the envelope, the effects, the LFOs and the mixer.</p>
+<div class="sub">
+<h3 id="learn">Learning your knobs</h3>
+<p>Bifrost doesn't know your controller's knobs until you show it, once:</p>
+<ol>
+<li>Plug the controller in, so <span class="lcd">... connected</span> shows.</li>
+<li>Hold <span class="okey okey-text">Shift</span> and press <img class="okey" src="keys/help.png" alt="help" title="help">, then <span class="okey okey-text">T3</span>. Hold <span class="okey okey-text">Shift</span> and turn <span class="enc enc-b">blue</span> to the <span class="lcd">BIFROST</span> page.</li>
+<li>Set <span class="lcd">LEARN KNOBS</span> on. A pop-up asks for the top row's left knob.</li>
+<li>Turn each knob a little, one at a time, in this order: the top row left to right, then the bottom row left to right. After each, a pop-up names the next one.</li>
+<li>After the eighth, <span class="lcd">8 knobs learned</span> shows and <span class="lcd">LEARN KNOBS</span> goes off by itself. With fewer knobs, set it off yourself after the last one.</li>
+</ol>
+<p>Bifrost remembers the knobs across restarts. It also works out by itself whether each knob sends a position or a change, so either setting on the controller works. If yours offers a "relative" mode for its knobs, use it: a knob that sends positions stops at its ends, while a relative one can keep turning.</p>
+</div>
+<div class="sub">
+<h3 id="pages">Page 1 and page 2</h3>
+<p>On a plugin engine's main page, pushing an encoder switches it to its page 2. Your controller's knobs can't be pushed, so Bifrost pushes for you: turn a bottom-row knob and its encoder switches to page 2 first, then turns. Turn a top-row knob and it switches back. You see the page change on the OP-1, as if you had pushed the encoder.</p>
+<aside class="note note-note"><span>Note</span><p>Some engines use an encoder's push for something else, a freeze switch for one. When a push doesn't switch the page, Bifrost pushes once more straight away, which puts that switch back, and the bottom-row knob turns page 1 instead until you change sounds.</p></aside>
+<p>To turn the knob map off and let your controller's knobs send plain MIDI, set <span class="lcd">KNOB MAP</span> off on the <span class="lcd">BIFROST</span> page.</p>
+</div>
+</section>
+
 <section class="chapter" id="plug"><h2>Plugging and unplugging</h2>
 <ol>
 <li><strong>Unplug the keyboard</strong> from the adapter at any time. A pop-up says it was unplugged. Plug it (or another one) back in and it connects again within a second or two.</li>
@@ -78,6 +102,7 @@
 <section class="chapter" id="limits"><h2>Limits</h2>
 <ol>
 <li>Notes go one way, from the keyboard to the OP-1. Nothing is sent back to the keyboard.</li>
+<li>The knob map is for knobs. Faders, pads and buttons send their MIDI as usual.</li>
 <li>One device at a time, plugged in directly. USB hubs aren't supported.</li>
 <li>While the adapter is in, the OP-1 powers the port from its battery and doesn't charge. Take the adapter out when you're done.</li>
 <li>Only USB MIDI devices: no flash drives, mice or audio.</li>

@@ -36,6 +36,8 @@ void bfu_keep_charger_off(void);    /* while the OP-1 powers the port: R246 must
 void bfu_wait_ms(uint32_t ms);
 
 int bfu_enumerate(bfu_dev *d);      /* bus reset, then address, descriptors, configuration, the MIDI endpoint; -BFU_E_* */
-int bfu_poll_midi(void);            /* MIDI packets into R246's receive ring -> packets queued, -1 on an error */
+/* MIDI packets into R246's receive ring -> packets queued, -1 on an error. take (may be 0) sees each USB-MIDI packet
+ * first and returns 1 to keep it from the OP-1. */
+int bfu_poll_midi(int (*take)(const uint8_t *pk));
 uint32_t bfu_dropped(void);         /* packets the full ring refused */
 #endif

@@ -4,10 +4,10 @@ A synth engine for the original OP-1 running Hundekraft 3.3.2, built from the sy
 Instruments' [Plaits](https://pichenettes.github.io/mutable-instruments-documentation/modules/plaits/manual/). Not a
 Mutable Instruments product.
 
-**Status: prototype 0.5.1.** All four planned models, chosen with blue: the waveshaper (31%), two-operator FM (24% of the
+**Status: prototype 0.5.2.** All four planned models, chosen with blue: the waveshaper (31%), two-operator FM (24% of the
 CPU for six voices), the formant model (25%), and wave terrain (new in 0.4.0, 31%). The plugin is
 68 KB, most of it Plaits' wavetables for three of wave terrain's terrains. 0.5.0 adds the screen
-("Three Keepers", `design/Claude-UI-Handoff.md`) with placeholder figures until their artwork arrives.
+("Three Keepers", `design/Claude-UI-Handoff.md`) with Astra's three keepers (0.5.2).
 
 ## Controls
 
@@ -32,7 +32,8 @@ waveform.
 | Path | What |
 | --- | --- |
 | `plugin/norn.c` | The engine: the model choice, knobs, notes, velocity. |
-| `plugin/norn_screen.c`, `plugin/norn.svg` | The screen; the SVG holds the figures (placeholders for now). |
+| `plugin/norn_screen.c`, `plugin/norn.svg` | The screen; the SVG holds the figures. |
+| `plugin/gen_figures.py` | Writes `norn.svg` from Astra's `design/norn-figures.svg` in the subset R246 draws. |
 | `plugin/norn_weave.h` | The weave's geometry in integers (the mockup's formulas). |
 | `plugin/norn_activity.h` | Which notes play, from the engine to the screen. |
 | `plugin/ws_dsp.h` | The waveshaper in integers, ported from Plaits; its header lists every change from Plaits. |
